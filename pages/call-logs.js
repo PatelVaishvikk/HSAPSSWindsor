@@ -197,10 +197,6 @@ export default function CallLogs() {
              row.student_id ? `${row.student_id.first_name} ${row.student_id.last_name}` : 
              'Unknown Student'}
             </div>
-            <div className="text-muted small">
-            {row.student ? row.student.mail_id :
-             row.student_id ? row.student_id.mail_id : 'No email'}
-            </div>
           </div>
         </div>
       )
@@ -271,9 +267,9 @@ export default function CallLogs() {
       <Navbar />
 
       <div className="container-fluid py-4">
-        <div className="d-flex justify-content-between align-items-center mb-4">
+        <div className="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
           <h1 className="h3 mb-0">Call Logs</h1>
-          <Button variant="primary" onClick={handleAddCallLog}>
+          <Button variant="primary" onClick={handleAddCallLog} className="w-100 w-md-auto">
             <i className="fas fa-plus me-2"></i>Add Call Log
           </Button>
         </div>
@@ -281,7 +277,7 @@ export default function CallLogs() {
         <div className="card">
           <div className="card-body">
             <div className="row mb-3">
-              <div className="col-md-4">
+              <div className="col-12 col-md-4">
                 <div className="input-group">
                   <span className="input-group-text">
                     <i className="fas fa-search"></i>
@@ -296,22 +292,27 @@ export default function CallLogs() {
               </div>
             </div>
 
-            {mounted && (
-              <DataTable
-                columns={columns}
-                data={callLogs}
-                progressPending={loading}
-                pagination
-                paginationServer
-                paginationTotalRows={totalRows}
-                onChangeRowsPerPage={handlePerRowsChange}
-                onChangePage={handlePageChange}
-                paginationPerPage={perPage}
-                paginationRowsPerPageOptions={[10, 25, 50, 100]}
-                sortServer
-                responsive
-              />
-            )}
+            <div className="table-responsive-sm">
+              {mounted && (
+                <DataTable
+                  columns={columns}
+                  data={callLogs}
+                  progressPending={loading}
+                  pagination
+                  paginationServer
+                  paginationTotalRows={totalRows}
+                  onChangeRowsPerPage={handlePerRowsChange}
+                  onChangePage={handlePageChange}
+                  paginationPerPage={perPage}
+                  paginationRowsPerPageOptions={[10, 25, 50, 100]}
+                  sortServer
+                  responsive
+                  customStyles={{
+                    table: { style: { minWidth: '600px' } },
+                  }}
+                />
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -415,6 +416,25 @@ export default function CallLogs() {
           </Toast.Body>
         </Toast>
       </div>
+
+      <style jsx global>{`
+        @media (max-width: 576px) {
+          .card-body, .modal-content {
+            padding: 0.75rem !important;
+          }
+          .d-flex.justify-content-between.align-items-center.mb-4 {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 0.75rem !important;
+          }
+          .input-group .form-control {
+            font-size: 1rem;
+          }
+          .table-responsive-sm {
+            overflow-x: auto;
+          }
+        }
+      `}</style>
     </>
   );
 }
