@@ -1,0 +1,153 @@
+.attendancePage {
+  background-color: #f8f9fa;
+  min-height: 100vh;
+  padding-bottom: 2rem;
+}
+
+.studentName {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.attendanceStatus {
+  display: flex;
+  align-items: center;
+}
+
+.present {
+  color: #28a745;
+}
+
+.absent {
+  color: #dc3545;
+}
+
+.actionButtons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.attendanceChart {
+  height: 200px;
+  margin: 1rem 0;
+}
+
+/* DataTable styles */
+.dataTable :global(.rdt_TableHeader) {
+  background-color: #f8f9fa;
+  padding: 1rem;
+  font-weight: bold;
+}
+
+.dataTable :global(.rdt_TableRow) {
+  transition: background-color 0.2s;
+}
+
+.dataTable :global(.rdt_TableRow:hover) {
+  background-color: #f1f3f5;
+}
+
+/* Toast styles */
+.toastWrapper :global(.toast) {
+  min-width: 250px;
+}
+
+/* Card styles */
+.cardWrapper :global(.card) {
+  border: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.3s;
+}
+
+.cardWrapper :global(.card:hover) {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Progress bar styles */
+.progressWrapper :global(.progress) {
+  height: 1.5rem;
+  border-radius: 0.75rem;
+}
+
+.progressWrapper :global(.progress-bar) {
+  transition: width 0.6s ease;
+}
+
+/* Form control styles */
+.formWrapper :global(.form-control),
+.formWrapper :global(.form-select) {
+  border-radius: 0.5rem;
+  border: 1px solid #dee2e6;
+  padding: 0.75rem;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.formWrapper :global(.form-control:focus),
+.formWrapper :global(.form-select:focus) {
+  border-color: #80bdff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Button styles */
+.buttonWrapper :global(.btn) {
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+}
+
+.buttonWrapper :global(.btn:hover) {
+  transform: translateY(-1px);
+}
+
+/* Modal styles */
+.modalWrapper :global(.modal-content) {
+  border-radius: 1rem;
+  border: none;
+}
+
+.modalWrapper :global(.modal-header) {
+  border-bottom: 1px solid #dee2e6;
+  padding: 1.5rem;
+}
+
+.modalWrapper :global(.modal-body) {
+  padding: 1.5rem;
+}
+
+/* Badge styles */
+.badgeWrapper :global(.badge) {
+  padding: 0.5rem 0.75rem;
+  border-radius: 1rem;
+  font-weight: 500;
+}
+
+/* Spinner styles */
+.spinnerWrapper :global(.spinner-border) {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-width: 0.2em;
+}
+
+/* QR Scanner styles */
+.qrWrapper :global(.qr-scanner) {
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+  border-radius: 1rem;
+  overflow: hidden;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .attendanceChart {
+    height: 150px;
+  }
+
+  .buttonWrapper :global(.btn) {
+    padding: 0.375rem 0.75rem;
+  }
+} 
