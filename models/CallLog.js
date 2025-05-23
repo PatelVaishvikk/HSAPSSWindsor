@@ -12,6 +12,12 @@ const CallLogSchema = new mongoose.Schema({
     enum: ['Completed', 'No Answer', 'Left Message', 'Rescheduled', 'Dialed'],
     default: 'Completed'
   },
+  call_reason: {
+    type: String,
+    enum: ['General', 'Job', 'Coming', 'Other'],
+    default: 'General',
+    required: [true, 'Call reason is required']
+  },
   notes: {
     type: String,
     trim: true,
