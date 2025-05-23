@@ -1,244 +1,211 @@
-// File: pages/api/call-logs/index.js
-
-import connectDb from '../../../config/db';
-import CallLog from '../../../models/CallLog';
-import Student from '../../../models/Student';
+import connectDb from '../../lib/db';
+import CallLog from '../../models/CallLog';
+import Student from '../../models/Student';
 import mongoose from 'mongoose';
 
 export default async function handler(req, res) {
-    // Ensure DB connection
-    try {
-        await connectDb();
-    } catch (error) {
-        console.error('!!! Database Connection Error:', error);
-        return res.status(503).json({ error: 'Database connection failed', details: error.message });
-    }
+  await connectDb();
+  const { method } = req;
 
-    if (req.method === 'GET') {
-        console.log('\n--- [API GET /api/call-logs] ---');
-        console.log('Request Query Parameters:', req.query);
-
-        // Get all filter params
+  switch (method) {
+    case 'GET': {
+      try {
         const {
-            page = 1,
-            limit = 10,
-            search = '',
-            status = '',
-            reason = '',
-            student = '',
-            dateFrom = '',
-            dateTo = '',
-            recent = ''
+          page,
+          limit,
+          search,
+          studentIds,
+          countOnly,
+          status = '',
+          reason = '',
+          student = '',
+          dateFrom = '',
+          dateTo = '',
+          recent = '',
         } = req.query;
 
-        const pageNumber = parseInt(page, 10);
-        let limitNumber = parseInt(limit, 10);
-
-        // Cap the limit to a reasonable maximum (e.g., 100)
-        const MAX_LIMIT = 100;
-        if (limitNumber > MAX_LIMIT) limitNumber = MAX_LIMIT;
-        if (isNaN(pageNumber) || isNaN(limitNumber) || pageNumber < 1 || limitNumber < 1) {
-            return res.status(400).json({ error: 'Invalid page or limit parameters. Page and limit must be positive integers.' });
-        }
-        const skip = (pageNumber - 1) * limitNumber;
-
-        try {
-            // --- Build Filter Object ---
-            let filter = {};
-            const trimmedSearch = search.trim();
-
-            // 1. Search filter
-            if (trimmedSearch) {
-                const regex = new RegExp(trimmedSearch, 'i');
-                const matchingStudents = await Student.find({
-                    $or: [
-                        { first_name: regex },
-                        { last_name: regex },
-                        { mail_id: regex },
-                        { phone: regex }
-                    ]
-                }).select('_id').lean();
-                const studentIds = matchingStudents.map(student => student._id);
-
-                filter.$or = [
-                    { notes: regex },
-                    { status: regex }
-                ];
-                if (studentIds.length > 0) {
-                    filter.$or.push({ student_id: { $in: studentIds } });
-                }
-            }
-
-            // 2. Status filter (can handle comma-separated for multi-select)
-            if (status) {
-                if (status.includes(',')) {
-                    filter.status = { $in: status.split(',') };
-                } else {
-                    filter.status = status;
-                }
-            }
-
-            // 3. Reason filter (can handle comma-separated for multi-select)
-            if (reason) {
-                if (reason.includes(',')) {
-                    filter.call_reason = { $in: reason.split(',') };
-                } else {
-                    filter.call_reason = reason;
-                }
-            }
-
-            // 4. Student filter
-            if (student) {
-                filter.student_id = student;
-            }
-
-            // 5. Date filter
-            if (dateFrom || dateTo) {
-                filter.createdAt = {};
-                if (dateFrom) filter.createdAt.$gte = new Date(dateFrom);
-                if (dateTo) filter.createdAt.$lte = new Date(dateTo);
-            }
-
-            // 6. Recent filter (if you want logs only from last 7 days, for example)
-            if (recent === '1') {
-                const sevenDaysAgo = new Date();
-                sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-                filter.createdAt = { ...(filter.createdAt || {}), $gte: sevenDaysAgo };
-            }
-
-            // --- Query & Pagination ---
-            const sortField = 'createdAt';
-            const total = await CallLog.countDocuments(filter);
-
-            let callLogs = [];
-            if (total > 0 && skip < total) {
-                callLogs = await CallLog.find(filter)
-                    .populate({
-                        path: 'student_id',
-                        select: 'first_name last_name mail_id phone',
-                        model: Student
-                    })
-                    .sort({ [sortField]: -1 })
-                    .skip(skip)
-                    .limit(limitNumber)
-                    .lean();
-            }
-
-            const processedLogs = callLogs.map(log => ({
-                ...log,
-                _id: log._id.toString(),
-                student_id: log.student_id ? { ...log.student_id, _id: log.student_id._id.toString() } : null,
-                date: log[sortField] ? new Date(log[sortField]).toISOString() : null,
-                follow_up_date: log.follow_up_date ? new Date(log.follow_up_date).toISOString() : null,
-            }));
-
-            res.status(200).json({
-                callLogs: processedLogs,
-                total,
-                currentPage: pageNumber,
-                totalPages: Math.ceil(total / limitNumber),
-            });
-
-        } catch (error) {
-            console.error('!!! Error during GET /api/call-logs:', error);
-            res.status(500).json({ error: 'Server error while fetching call logs', details: error.message });
+        // --- Multi-student counts shortcut ---
+        if (studentIds && countOnly === '1') {
+          const ids = studentIds.split(',');
+          const counts = {};
+          const results = await CallLog.aggregate([
+            { $match: { student_id: { $in: ids.map(id => mongoose.Types.ObjectId(id)) } } },
+            { $group: { _id: '$student_id', count: { $sum: 1 } } }
+          ]);
+          results.forEach(r => { counts[r._id.toString()] = r.count; });
+          ids.forEach(id => { if (!counts[id]) counts[id] = 0; });
+          return res.status(200).json({ counts });
         }
 
-    } else if (req.method === 'POST') {
-        // ... (unchanged POST handler)
-        const { student_id, status, notes, needs_follow_up, follow_up_date, call_reason, timestamp } = req.body;
+        const pageNum = parseInt(page || '1', 10);
+        const limitNum = parseInt(limit || '10', 10);
+        const skip = (pageNum - 1) * limitNum;
 
-        if (!student_id) {
-            return res.status(400).json({
-                error: 'Missing required field',
-                details: 'Student ID is required.',
-            });
+        // --- FILTER BUILDING ---
+        let filter = {};
+
+        // 1. SEARCH LOGIC
+        if (search && search.trim()) {
+          const term = search.trim();
+          const regex = new RegExp(term, 'i');
+          const matchingStudents = await Student.find({
+            $or: [
+              { first_name: regex },
+              { last_name: regex },
+              { mail_id: regex },
+              { phone: regex }
+            ]
+          }).select('_id');
+          const studentIdsArr = matchingStudents.map(s => s._id);
+          filter.$or = [
+            { notes: regex },
+            { status: regex }
+          ];
+          if (studentIdsArr.length > 0) {
+            filter.$or.push({ student_id: { $in: studentIdsArr } });
+          }
         }
 
-        try {
-            const studentExists = await Student.findById(student_id).lean();
-            if (!studentExists) {
-                return res.status(404).json({ error: 'Student not found', details: `No student found with ID ${student_id}` });
-            }
-        } catch (error) {
-            if (error.name === 'CastError') {
-                return res.status(400).json({ error: 'Invalid Student ID format' });
-            }
-            return res.status(500).json({ error: 'Server error checking student', details: error.message });
+        // 2. STATUS filter
+        if (status) {
+          if (status.includes(',')) {
+            filter.status = { $in: status.split(',') };
+          } else {
+            filter.status = status;
+          }
         }
 
-        if (needs_follow_up && !follow_up_date) {
-            return res.status(400).json({
-                error: 'Missing follow-up date',
-                details: 'Follow-up date is required when "Needs Follow-up" is checked.',
-            });
+        // 3. REASON filter (key fix)
+        if (reason) {
+          if (reason.includes(',')) {
+            filter.call_reason = { $in: reason.split(',') };
+          } else {
+            filter.call_reason = reason;
+          }
         }
 
-        try {
-            const newCallLogData = {
-                student_id,
-                status: status || 'Completed',
-                notes: notes || '',
-                needs_follow_up: !!needs_follow_up,
-                call_reason: call_reason || 'General',
-                timestamp: timestamp ? new Date(timestamp) : undefined,
-                ...(!!needs_follow_up && follow_up_date && { follow_up_date: new Date(follow_up_date) }),
-            };
-
-            const newCallLog = new CallLog(newCallLogData);
-            const savedCallLog = await newCallLog.save();
-
-            const populatedLog = await CallLog.findById(savedCallLog._id)
-                .populate({
-                    path: 'student_id',
-                    select: 'first_name last_name mail_id phone',
-                    model: Student
-                })
-                .lean();
-
-            const responseLog = {
-                ...populatedLog,
-                _id: populatedLog._id.toString(),
-                student_id: populatedLog.student_id ? { ...populatedLog.student_id, _id: populatedLog.student_id._id.toString() } : null,
-                date: populatedLog.createdAt ? new Date(populatedLog.createdAt).toISOString() : null,
-                follow_up_date: populatedLog.follow_up_date ? new Date(populatedLog.follow_up_date).toISOString() : null,
-            };
-
-            res.status(201).json({
-                message: 'Call log created successfully',
-                callLog: responseLog,
-            });
-        } catch (error) {
-            if (error.name === 'ValidationError') {
-                const messages = Object.values(error.errors).map(e => e.message);
-                return res.status(400).json({ error: 'Validation Error', details: messages.join('; ') });
-            }
-            res.status(500).json({
-                error: 'Server error while saving call log',
-                details: error.message,
-            });
+        // 4. STUDENT filter
+        if (student) {
+          filter.student_id = student;
         }
 
-    } else if (req.method === 'DELETE') {
-        const { id } = req.query;
-        if (!id) {
-            return res.status(400).json({ error: 'Missing call log ID in request query' });
-        }
-        if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({ error: 'Invalid Call Log ID format' });
+        // 5. DATE RANGE filter (on timestamp)
+        if (dateFrom || dateTo) {
+          filter.timestamp = {};
+          if (dateFrom) filter.timestamp.$gte = new Date(dateFrom);
+          if (dateTo) filter.timestamp.$lte = new Date(dateTo);
         }
 
-        try {
-            const deletedCallLog = await CallLog.findByIdAndDelete(id);
-            if (!deletedCallLog) {
-                return res.status(404).json({ error: 'Call log not found with the provided ID' });
-            }
-            res.status(200).json({ message: 'Call log deleted successfully', deletedId: id });
-        } catch (error) {
-            res.status(500).json({ error: 'Server error while deleting call log', details: error.message });
+        // 6. RECENT ONLY (last 7 days)
+        if (recent === '1') {
+          const sevenDaysAgo = new Date();
+          sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+          filter.timestamp = { ...(filter.timestamp || {}), $gte: sevenDaysAgo };
         }
-    } else {
-        res.setHeader('Allow', ['GET', 'POST', 'DELETE']);
-        res.status(405).json({ error: `Method ${req.method} Not Allowed` });
+
+        // --- COUNT FOR PAGINATION ---
+        const total = await CallLog.countDocuments(filter);
+
+        // --- FETCH LOGS + POPULATE STUDENT INFO ---
+        const logsQuery = CallLog.find(filter)
+          .populate('student_id')
+          .sort({ timestamp: -1 })
+          .skip(skip)
+          .limit(limitNum);
+
+        const logs = await logsQuery.lean();
+
+        const callLogs = logs.map(log => {
+          const studentInfo = log.student_id || null;
+          if (studentInfo && studentInfo._id) {
+            studentInfo._id = studentInfo._id.toString();
+          }
+          return {
+            _id: log._id.toString(),
+            student: studentInfo ? { ...studentInfo } : null,
+            status: log.status,
+            call_reason: log.call_reason || 'General',
+            notes: log.notes,
+            needs_follow_up: log.needs_follow_up,
+            follow_up_date: log.follow_up_date ? new Date(log.follow_up_date).toISOString() : null,
+            date: log.timestamp ? new Date(log.timestamp).toISOString() : null,
+            timestamp: log.timestamp ? new Date(log.timestamp).toISOString() : null,
+          };
+        });
+
+        res.status(200).json({ callLogs, total, currentPage: pageNum });
+      } catch (err) {
+        console.error('Error fetching call logs:', err);
+        res.status(500).json({ error: 'Failed to fetch call logs' });
+      }
+      break;
     }
+
+    case 'POST': {
+      try {
+        const data = req.body;
+        if (!data.student_id) {
+          return res.status(400).json({ error: 'Student ID is required' });
+        }
+        const student = await Student.findById(data.student_id);
+        if (!student) {
+          return res.status(404).json({ error: 'Student not found' });
+        }
+        if (data.follow_up_date) {
+          data.follow_up_date = new Date(data.follow_up_date);
+        }
+        let timestamp = Date.now();
+        if (data.timestamp) {
+          const parsedTimestamp = new Date(data.timestamp);
+          if (!isNaN(parsedTimestamp.getTime())) {
+            timestamp = parsedTimestamp;
+          }
+        }
+        const newCallLog = new CallLog({
+          student_id: data.student_id,
+          status: data.status || 'Completed',
+          call_reason: data.call_reason || 'General',
+          notes: data.notes || '',
+          needs_follow_up: !!data.needs_follow_up,
+          follow_up_date: data.follow_up_date || (data.needs_follow_up ? undefined : null),
+          timestamp
+        });
+        await newCallLog.save();
+        const callLogObj = newCallLog.toObject();
+        callLogObj._id = callLogObj._id.toString();
+        res.status(201).json({ callLog: callLogObj });
+      } catch (err) {
+        console.error('Error saving call log:', err);
+        if (err.name === 'ValidationError') {
+          const messages = Object.values(err.errors).map(e => e.message);
+          return res.status(400).json({ error: messages.join('; ') });
+        }
+        res.status(500).json({ error: 'Failed to save call log' });
+      }
+      break;
+    }
+
+    case 'DELETE': {
+      const { id } = req.query;
+      if (!id) {
+        return res.status(400).json({ error: 'Missing call log id' });
+      }
+      try {
+        const deletedLog = await CallLog.findByIdAndDelete(id);
+        if (!deletedLog) {
+          return res.status(404).json({ error: 'Call log not found' });
+        }
+        res.status(200).json({ message: 'Call log deleted successfully' });
+      } catch (err) {
+        console.error('Error deleting call log:', err);
+        res.status(500).json({ error: 'Failed to delete call log' });
+      }
+      break;
+    }
+
+    default: {
+      res.setHeader('Allow', ['GET', 'POST', 'DELETE']);
+      res.status(405).json({ error: `Method ${method} not allowed` });
+    }
+  }
 }
