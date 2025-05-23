@@ -1,6 +1,7 @@
 import connectDb from '../../lib/db';
 import CallLog from '../../models/CallLog';
 import Student from '../../models/Student';
+import mongoose from 'mongoose';
 
 export default async function handler(req, res) {
   await connectDb();
@@ -9,30 +10,45 @@ export default async function handler(req, res) {
   switch (method) {
     case 'GET': {
       try {
-        const { page, limit, search, studentIds, countOnly } = req.query;
-        // If requesting counts for multiple students
+        const {
+          page,
+          limit,
+          search,
+          studentIds,
+          countOnly,
+          status = '',
+          reason = '',
+          student = '',
+          dateFrom = '',
+          dateTo = '',
+          recent = '',
+        } = req.query;
+
+        // --- Multi-student counts shortcut ---
         if (studentIds && countOnly === '1') {
           const ids = studentIds.split(',');
           const counts = {};
           const results = await CallLog.aggregate([
-            { $match: { student_id: { $in: ids.map(id => (typeof id === 'string' ? require('mongoose').Types.ObjectId(id) : id)) } } },
+            { $match: { student_id: { $in: ids.map(id => mongoose.Types.ObjectId(id)) } } },
             { $group: { _id: '$student_id', count: { $sum: 1 } } }
           ]);
           results.forEach(r => { counts[r._id.toString()] = r.count; });
-          // Ensure all ids are present (even if 0)
           ids.forEach(id => { if (!counts[id]) counts[id] = 0; });
           return res.status(200).json({ counts });
         }
+
         const pageNum = parseInt(page || '1', 10);
         const limitNum = parseInt(limit || '10', 10);
         const skip = (pageNum - 1) * limitNum;
 
-        // Build filter for search (by student name/email/phone or notes or status)
+        // --- FILTER BUILDING ---
         let filter = {};
+
+        // 1. SEARCH LOGIC
         if (search && search.trim()) {
           const term = search.trim();
           const regex = new RegExp(term, 'i');
-          // Find matching students by name, email, or phone
+          // Find matching students by name/email/phone
           const matchingStudents = await Student.find({
             $or: [
               { first_name: regex },
@@ -41,32 +57,68 @@ export default async function handler(req, res) {
               { phone: regex }
             ]
           }).select('_id');
-          const studentIds = matchingStudents.map(s => s._id);
+          const studentIdsArr = matchingStudents.map(s => s._id);
           filter.$or = [
             { notes: regex },
             { status: regex }
           ];
-          if (studentIds.length > 0) {
-            filter.$or.push({ student_id: { $in: studentIds } });
+          if (studentIdsArr.length > 0) {
+            filter.$or.push({ student_id: { $in: studentIdsArr } });
           }
         }
 
-        // Total count for pagination
+        // 2. STATUS filter (comma separated for multi-select)
+        if (status) {
+          if (status.includes(',')) {
+            filter.status = { $in: status.split(',') };
+          } else {
+            filter.status = status;
+          }
+        }
+
+        // 3. REASON filter (call_reason, comma separated)
+        if (reason) {
+          if (reason.includes(',')) {
+            filter.call_reason = { $in: reason.split(',') };
+          } else {
+            filter.call_reason = reason;
+          }
+        }
+
+        // 4. STUDENT filter
+        if (student) {
+          filter.student_id = student;
+        }
+
+        // 5. DATE RANGE filter (on timestamp)
+        if (dateFrom || dateTo) {
+          filter.timestamp = {};
+          if (dateFrom) filter.timestamp.$gte = new Date(dateFrom);
+          if (dateTo) filter.timestamp.$lte = new Date(dateTo);
+        }
+
+        // 6. RECENT ONLY (last 7 days)
+        if (recent === '1') {
+          const sevenDaysAgo = new Date();
+          sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+          filter.timestamp = { ...(filter.timestamp || {}), $gte: sevenDaysAgo };
+        }
+
+        // --- COUNT FOR PAGINATION ---
         const total = await CallLog.countDocuments(filter);
 
-        // Fetch call logs with pagination and populate student info
+        // --- FETCH LOGS + POPULATE STUDENT INFO ---
         const logsQuery = CallLog.find(filter)
           .populate('student_id')
-          .sort({ timestamp: -1 })  // newest call logs first
+          .sort({ timestamp: -1 })
           .skip(skip)
           .limit(limitNum);
-        const logs = await logsQuery.lean({ virtuals: false });  // get plain objects
 
-        // Transform logs: attach student object and formatted date
+        const logs = await logsQuery.lean();
+
+        // --- FORMAT LOGS FOR FRONTEND ---
         const callLogs = logs.map(log => {
-          // Rename and include student info
           const studentInfo = log.student_id || null;
-          // Convert ObjectIds to strings and Dates to ISO strings
           if (studentInfo && studentInfo._id) {
             studentInfo._id = studentInfo._id.toString();
           }
@@ -74,10 +126,12 @@ export default async function handler(req, res) {
             _id: log._id.toString(),
             student: studentInfo ? { ...studentInfo } : null,
             status: log.status,
+            call_reason: log.call_reason || 'General',
             notes: log.notes,
             needs_follow_up: log.needs_follow_up,
             follow_up_date: log.follow_up_date ? new Date(log.follow_up_date).toISOString() : null,
-            date: new Date(log.timestamp).toISOString()  // date of call (as ISO string)
+            date: log.timestamp ? new Date(log.timestamp).toISOString() : null,
+            timestamp: log.timestamp ? new Date(log.timestamp).toISOString() : null,
           };
         });
 
@@ -88,10 +142,10 @@ export default async function handler(req, res) {
       }
       break;
     }
+
     case 'POST': {
       try {
         const data = req.body;
-        // Validate that a student ID is provided
         if (!data.student_id) {
           return res.status(400).json({ error: 'Student ID is required' });
         }
@@ -115,10 +169,11 @@ export default async function handler(req, res) {
         const newCallLog = new CallLog({
           student_id: data.student_id,
           status: data.status || 'Completed',
+          call_reason: data.call_reason || 'General',
           notes: data.notes || '',
           needs_follow_up: !!data.needs_follow_up,
           follow_up_date: data.follow_up_date || (data.needs_follow_up ? undefined : null),
-          timestamp // set the timestamp
+          timestamp
         });
         await newCallLog.save();
         const callLogObj = newCallLog.toObject();
@@ -134,6 +189,7 @@ export default async function handler(req, res) {
       }
       break;
     }
+
     case 'DELETE': {
       const { id } = req.query;
       if (!id) {
@@ -151,6 +207,7 @@ export default async function handler(req, res) {
       }
       break;
     }
+
     default: {
       res.setHeader('Allow', ['GET', 'POST', 'DELETE']);
       res.status(405).json({ error: `Method ${method} not allowed` });
