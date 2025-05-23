@@ -1,21 +1,26 @@
 import { useState, useEffect } from 'react';
-import { Container, Card, Table, Button, Form, Row, Col, Alert, Tabs, Tab, Spinner, Modal } from 'react-bootstrap';
+import {
+  Container, Table, Button, Form, Row, Col, Alert, Tabs, Tab, Spinner, Modal, Badge, InputGroup, Card, OverlayTrigger, Tooltip, Offcanvas
+} from 'react-bootstrap';
 import Navbar from '../components/Navbar';
 import Head from 'next/head';
 
 const UNIT_OPTIONS = ['kg', 'g', 'L', 'ml', 'pcs', 'pack', 'dozen', 'other'];
 
 export default function GroceryPage() {
-  // Grocery stock state
+  // States
   const [items, setItems] = useState([]);
   const [itemsLoading, setItemsLoading] = useState(true);
   const [itemsError, setItemsError] = useState('');
-  const [newItem, setNewItem] = useState({ name: '', quantity: '', unit: '', minStock: '', note: '' });
+  const [showAddEdit, setShowAddEdit] = useState(false);
   const [editIndex, setEditIndex] = useState(null);
-  const [editItem, setEditItem] = useState({});
+  const [modalItem, setModalItem] = useState({ name: '', quantity: '', unit: '', minStock: '', note: '' });
+  const [filter, setFilter] = useState('');
   const [tab, setTab] = useState('stock');
+  const [toast, setToast] = useState({ show: false, type: '', msg: '' });
+  const [dark, setDark] = useState(false);
 
-  // Sabha usage state
+  // Sabha
   const [sabhaRecords, setSabhaRecords] = useState([]);
   const [sabhaLoading, setSabhaLoading] = useState(true);
   const [sabhaError, setSabhaError] = useState('');
@@ -23,96 +28,108 @@ export default function GroceryPage() {
   const [sabhaGrocery, setSabhaGrocery] = useState({ name: '', quantity: '', unit: '' });
   const [sabhaDeleteLoading, setSabhaDeleteLoading] = useState(null);
 
-  // Modal state for adding new item
-  const [showAddModal, setShowAddModal] = useState(false);
-  const handleOpenAddModal = () => setShowAddModal(true);
-  const handleCloseAddModal = () => setShowAddModal(false);
-
-  // Fetch grocery items from API
+  // Fetch items
   useEffect(() => {
     setItemsLoading(true);
-    setItemsError('');
     fetch('/api/grocery')
       .then(res => res.json())
       .then(data => {
         setItems(data.items || []);
         setItemsLoading(false);
       })
-      .catch(err => {
+      .catch(() => {
         setItemsError('Failed to load grocery items');
         setItemsLoading(false);
       });
   }, []);
 
-  // Fetch sabha records from API
+  // Fetch sabha
   useEffect(() => {
     setSabhaLoading(true);
-    setSabhaError('');
     fetch('/api/sabha-grocery')
       .then(res => res.json())
       .then(data => {
         setSabhaRecords(data.records || []);
         setSabhaLoading(false);
       })
-      .catch(err => {
+      .catch(() => {
         setSabhaError('Failed to load sabha records');
         setSabhaLoading(false);
       });
   }, []);
 
-  // Add new grocery item
-  const handleAddItem = async () => {
-    if (!newItem.name || !newItem.quantity || !newItem.unit) return;
-    try {
-      const res = await fetch('/api/grocery', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...newItem, quantity: Number(newItem.quantity), minStock: Number(newItem.minStock) || 0 })
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to add item');
-      setItems([...items, data.item]);
-      setNewItem({ name: '', quantity: '', unit: '', minStock: '', note: '' });
-    } catch (err) {
-      setItemsError(err.message);
+  // Dashboard data
+  const lowStockCount = items.filter(item => item.minStock && item.quantity <= item.minStock).length;
+  const toBuyCount = items.filter(item => item.toBuy).length;
+
+  // Modal helpers
+  const openAddModal = () => {
+    setModalItem({ name: '', quantity: '', unit: '', minStock: '', note: '' });
+    setEditIndex(null);
+    setShowAddEdit(true);
+  };
+  const openEditModal = idx => {
+    setModalItem(items[idx]);
+    setEditIndex(idx);
+    setShowAddEdit(true);
+  };
+
+  // Add/Edit submit
+  const handleModalSave = async () => {
+    if (!modalItem.name || !modalItem.quantity || !modalItem.unit) return;
+    if (editIndex === null) {
+      // Add
+      try {
+        const res = await fetch('/api/grocery', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...modalItem, quantity: Number(modalItem.quantity), minStock: Number(modalItem.minStock) || 0 })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to add item');
+        setItems([...items, data.item]);
+        setShowAddEdit(false);
+        setToast({ show: true, type: 'success', msg: 'Added new grocery item!' });
+      } catch (err) {
+        setItemsError(err.message);
+      }
+    } else {
+      // Edit
+      try {
+        const res = await fetch(`/api/grocery?id=${modalItem._id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...modalItem, quantity: Number(modalItem.quantity), minStock: Number(modalItem.minStock) || 0 })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to update item');
+        const updated = [...items];
+        updated[editIndex] = data.item;
+        setItems(updated);
+        setShowAddEdit(false);
+        setToast({ show: true, type: 'success', msg: 'Changes saved.' });
+      } catch (err) {
+        setItemsError(err.message);
+      }
     }
   };
 
-  // Edit grocery item
-  const handleEditItem = (idx) => {
-    setEditIndex(idx);
-    setEditItem(items[idx]);
-  };
-  const handleSaveEdit = async () => {
-    try {
-      const res = await fetch(`/api/grocery?id=${editItem._id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...editItem, quantity: Number(editItem.quantity), minStock: Number(editItem.minStock) || 0 })
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to update item');
-      const updated = [...items];
-      updated[editIndex] = data.item;
-      setItems(updated);
-      setEditIndex(null);
-      setEditItem({});
-    } catch (err) {
-      setItemsError(err.message);
-    }
-  };
-  const handleDeleteItem = async (idx) => {
+  // Delete item
+  const handleDeleteItem = async idx => {
     const id = items[idx]._id;
     try {
       const res = await fetch(`/api/grocery?id=${id}`, { method: 'DELETE' });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to delete item');
       setItems(items.filter((_, i) => i !== idx));
+      setToast({ show: true, type: 'danger', msg: 'Deleted grocery item.' });
     } catch (err) {
       setItemsError(err.message);
     }
   };
-  const handleToggleToBuy = async (idx) => {
+
+  // Toggle buy
+  const handleToggleToBuy = async idx => {
     const item = items[idx];
     try {
       const res = await fetch(`/api/grocery?id=${item._id}`, {
@@ -130,7 +147,36 @@ export default function GroceryPage() {
     }
   };
 
-  // Add grocery used in Sabha
+  // Filter
+  const filteredItems = items.filter(
+    i =>
+      (!filter || i.name.toLowerCase().includes(filter.toLowerCase()) || (i.unit && i.unit.toLowerCase().includes(filter.toLowerCase())))
+  );
+
+  // Bulk actions
+  const handleBulkDeleteToBuy = async () => {
+    const toDelete = items.filter(i => i.toBuy);
+    for (let item of toDelete) {
+      await fetch(`/api/grocery?id=${item._id}`, { method: 'DELETE' });
+    }
+    setItems(items.filter(i => !i.toBuy));
+    setToast({ show: true, type: 'danger', msg: 'Deleted all "To Buy" items.' });
+  };
+  const handleBulkMarkBought = async () => {
+    await Promise.all(
+      items.filter(i => i.toBuy).map(i =>
+        fetch(`/api/grocery?id=${i._id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...i, toBuy: false })
+        })
+      )
+    );
+    setItems(items.map(i => ({ ...i, toBuy: false })));
+    setToast({ show: true, type: 'success', msg: 'Marked all as bought.' });
+  };
+
+  // Sabha features
   const handleAddSabhaGrocery = () => {
     if (!sabhaGrocery.name || !sabhaGrocery.quantity || !sabhaGrocery.unit) return;
     setNewSabha({
@@ -139,7 +185,6 @@ export default function GroceryPage() {
     });
     setSabhaGrocery({ name: '', quantity: '', unit: '' });
   };
-  // Add Sabha record
   const handleAddSabha = async () => {
     if (!newSabha.date || !newSabha.menu) return;
     try {
@@ -151,7 +196,6 @@ export default function GroceryPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to add sabha record');
       setSabhaRecords([data.record, ...sabhaRecords]);
-      // Optionally deduct used groceries from stock
       setItems(items.map(item => {
         const used = (newSabha.groceriesUsed || []).find(g => g.name === item.name);
         if (used) {
@@ -160,19 +204,19 @@ export default function GroceryPage() {
         return item;
       }));
       setNewSabha({ date: '', menu: '', groceriesUsed: [] });
+      setToast({ show: true, type: 'success', msg: 'Sabha recorded!' });
     } catch (err) {
       setSabhaError(err.message);
     }
   };
-
-  // Delete Sabha record
-  const handleDeleteSabha = async (id) => {
+  const handleDeleteSabha = async id => {
     setSabhaDeleteLoading(id);
     try {
       const res = await fetch(`/api/sabha-grocery?id=${id}`, { method: 'DELETE' });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to delete sabha record');
-      setSabhaRecords(sabhaRecords.filter((rec) => rec._id !== id));
+      setSabhaRecords(sabhaRecords.filter(rec => rec._id !== id));
+      setToast({ show: true, type: 'danger', msg: 'Sabha record deleted.' });
     } catch (err) {
       setSabhaError(err.message);
     } finally {
@@ -180,8 +224,36 @@ export default function GroceryPage() {
     }
   };
 
-  // Shopping list: items marked toBuy or below minStock
   const shoppingList = items.filter(item => item.toBuy || (item.minStock && item.quantity <= item.minStock));
+
+  // Toast auto-hide
+  useEffect(() => {
+    if (toast.show) {
+      const t = setTimeout(() => setToast({ ...toast, show: false }), 2300);
+      return () => clearTimeout(t);
+    }
+  }, [toast]);
+
+  // Auto dark mode
+  useEffect(() => {
+    setDark(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  }, []);
+
+  // Stats with animation
+  function AnimatedStat({ end }) {
+    const [val, setVal] = useState(0);
+    useEffect(() => {
+      let v = 0, frame;
+      function step() {
+        v += Math.ceil((end - v) / 6);
+        setVal(v);
+        if (v !== end) frame = requestAnimationFrame(step);
+      }
+      step();
+      return () => cancelAnimationFrame(frame);
+    }, [end]);
+    return <span>{val}</span>;
+  }
 
   return (
     <>
@@ -189,274 +261,382 @@ export default function GroceryPage() {
         <title>Grocery Management - HSAPSS Windsor</title>
       </Head>
       <Navbar />
-      <Container className="py-4">
-        <h2 className="fw-bold mb-4">Grocery Management</h2>
-        <Tabs activeKey={tab} onSelect={setTab} className="mb-4">
-          <Tab eventKey="stock" title="Stock">
-            <div className="d-flex flex-wrap gap-3 mb-5">
-              {itemsLoading ? (
-                <div className="w-100 text-center py-4"><Spinner animation="border" /></div>
-              ) : itemsError ? (
-                <Alert variant="danger" className="w-100">{itemsError}</Alert>
-              ) : items.length === 0 ? (
-                <Alert variant="info" className="w-100">No items in stock.</Alert>
-              ) : (
-                items.map((item, idx) => {
-                  const isLow = item.minStock && item.quantity <= item.minStock;
-                  return (
-                    <Card key={item._id} className="grocery-card position-relative flex-grow-1" style={{ minWidth: 260, maxWidth: 340 }}>
-                      <Card.Body>
-                        <div className="d-flex align-items-center justify-content-between mb-2">
-                          <Card.Title className="mb-0 fw-bold">{item.name}</Card.Title>
-                          <div>
-                            <Button size="sm" variant="outline-primary" className="me-1" onClick={() => handleEditItem(idx)} title="Edit"><i className="fas fa-edit"></i></Button>
-                            <Button size="sm" variant="outline-danger" onClick={() => handleDeleteItem(idx)} title="Delete"><i className="fas fa-trash"></i></Button>
-                          </div>
-                        </div>
-                        <div className="mb-2">
-                          <span className="fs-5 fw-semibold">{item.quantity}</span> <span className="text-muted">{item.unit}</span>
-                        </div>
-                        <div className="mb-2">
-                          <span className="badge bg-secondary me-2">Min: {item.minStock || 0}</span>
-                          {item.note && <span className="badge bg-info text-dark">{item.note}</span>}
-                        </div>
-                        <div className="mb-2">
-                          {item.toBuy ? (
-                            <span className="badge bg-danger"><i className="fas fa-shopping-cart me-1"></i>To Buy</span>
-                          ) : isLow ? (
-                            <span className="badge bg-warning text-dark"><i className="fas fa-exclamation-triangle me-1"></i>Low</span>
-                          ) : (
-                            <span className="badge bg-success"><i className="fas fa-check me-1"></i>In Stock</span>
-                          )}
-                        </div>
-                        <div className="form-check form-switch">
-                          <input className="form-check-input" type="checkbox" checked={item.toBuy} onChange={() => handleToggleToBuy(idx)} id={`toBuySwitch${item._id}`} />
-                          <label className="form-check-label" htmlFor={`toBuySwitch${item._id}`}>Mark as To Buy</label>
-                        </div>
-                        {editIndex === idx && (
-                          <div className="mt-3">
-                            <Form.Group className="mb-2">
-                              <Form.Label visuallyHidden>Name</Form.Label>
-                              <Form.Control size="sm" value={editItem.name} onChange={e => setEditItem({ ...editItem, name: e.target.value })} />
-                            </Form.Group>
-                            <Form.Group className="mb-2">
-                              <Form.Label visuallyHidden>Quantity</Form.Label>
-                              <Form.Control size="sm" type="number" value={editItem.quantity} onChange={e => setEditItem({ ...editItem, quantity: e.target.value })} />
-                            </Form.Group>
-                            <Form.Group className="mb-2">
-                              <Form.Label visuallyHidden>Unit</Form.Label>
-                              <Form.Select size="sm" value={editItem.unit} onChange={e => setEditItem({ ...editItem, unit: e.target.value })}>
-                                <option value="">Select</option>
-                                {UNIT_OPTIONS.map(u => <option key={u} value={u}>{u}</option>)}
-                              </Form.Select>
-                            </Form.Group>
-                            <Form.Group className="mb-2">
-                              <Form.Label visuallyHidden>Min Stock</Form.Label>
-                              <Form.Control size="sm" type="number" value={editItem.minStock} onChange={e => setEditItem({ ...editItem, minStock: e.target.value })} />
-                            </Form.Group>
-                            <Form.Group className="mb-2">
-                              <Form.Label visuallyHidden>Note</Form.Label>
-                              <Form.Control size="sm" value={editItem.note || ''} onChange={e => setEditItem({ ...editItem, note: e.target.value })} placeholder="e.g. half a 10lb bag left" />
-                            </Form.Group>
-                            <div className="d-flex gap-2">
-                              <Button size="sm" variant="success" onClick={handleSaveEdit} title="Save"><i className="fas fa-check"></i></Button>
-                              <Button size="sm" variant="secondary" onClick={() => setEditIndex(null)} title="Cancel"><i className="fas fa-times"></i></Button>
-                            </div>
-                          </div>
-                        )}
-                      </Card.Body>
-                    </Card>
-                  );
-                })
-              )}
-            </div>
-            {/* Floating Add Button */}
-            <Button
-              className="position-fixed rounded-circle shadow-lg"
-              style={{ right: 32, bottom: 32, width: 60, height: 60, zIndex: 1050, fontSize: 28, display: tab === 'stock' ? 'inline-flex' : 'none', alignItems: 'center', justifyContent: 'center' }}
-              variant="success"
-              onClick={handleOpenAddModal}
-              title="Add New Item"
-            >
-              <i className="fas fa-plus"></i>
+      <div className={dark ? "glass-bg dark-bg" : "glass-bg"}>
+        <Container className="py-4">
+          {/* HEADER */}
+          <div className="d-flex flex-column flex-md-row align-items-center justify-content-between mb-3 gap-3">
+            <h2 className="fw-bolder mb-0" style={{ letterSpacing: 1, color: dark ? '#fff' : '#2b2243' }}>🛒 Grocery Dashboard</h2>
+            <Button onClick={() => setDark(!dark)} className="rounded-pill" variant={dark ? "light" : "dark"} size="sm">
+              <i className={`fas fa-${dark ? "sun" : "moon"}`}></i>
             </Button>
-            {/* Add Item Modal */}
-            <Modal show={showAddModal} onHide={handleCloseAddModal} centered>
-              <Modal.Header closeButton>
-                <Modal.Title>Add New Grocery Item</Modal.Title>
-              </Modal.Header>
-              <Modal.Body>
-                <Form>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Name</Form.Label>
-                    <Form.Control placeholder="Name" value={newItem.name} onChange={e => setNewItem({ ...newItem, name: e.target.value })} />
-                  </Form.Group>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Quantity</Form.Label>
-                    <Form.Control type="number" placeholder="Quantity" value={newItem.quantity} onChange={e => setNewItem({ ...newItem, quantity: e.target.value })} />
-                  </Form.Group>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Unit</Form.Label>
-                    <Form.Select value={newItem.unit} onChange={e => setNewItem({ ...newItem, unit: e.target.value })}>
-                      <option value="">Unit</option>
-                      {UNIT_OPTIONS.map(u => <option key={u} value={u}>{u}</option>)}
-                    </Form.Select>
-                  </Form.Group>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Min Stock</Form.Label>
-                    <Form.Control type="number" placeholder="Min Stock" value={newItem.minStock} onChange={e => setNewItem({ ...newItem, minStock: e.target.value })} />
-                  </Form.Group>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Note</Form.Label>
-                    <Form.Control placeholder="Note (optional)" value={newItem.note || ''} onChange={e => setNewItem({ ...newItem, note: e.target.value })} />
-                  </Form.Group>
-                </Form>
-              </Modal.Body>
-              <Modal.Footer>
-                <Button variant="secondary" onClick={handleCloseAddModal}>Cancel</Button>
-                <Button variant="success" onClick={() => { handleAddItem(); handleCloseAddModal(); }}>Add</Button>
-              </Modal.Footer>
-            </Modal>
-            <style jsx global>{`
-              .grocery-card {
-                transition: box-shadow 0.2s;
-              }
-              .grocery-card:hover {
-                box-shadow: 0 4px 24px rgba(0,0,0,0.12);
-              }
-              @media (max-width: 600px) {
-                .grocery-card { min-width: 90vw; max-width: 98vw; }
-                .position-fixed[title='Add New Item'] { right: 16px !important; bottom: 16px !important; width: 48px !important; height: 48px !important; font-size: 22px !important; }
-              }
-            `}</style>
-          </Tab>
-          <Tab eventKey="shopping" title="Shopping List">
-            <Card>
-              <Card.Header>Shopping List</Card.Header>
-              <Card.Body>
+          </div>
+          {/* DASHBOARD MINI-STATS */}
+          <Row className="mb-4 g-3">
+            <Col xs={12} sm={4}>
+              <Card className="glass-card stat-card border-0">
+                <Card.Body>
+                  <div className="stat-number"><AnimatedStat end={items.length} /></div>
+                  <div className="stat-label">Total Items</div>
+                </Card.Body>
+              </Card>
+            </Col>
+            <Col xs={6} sm={4}>
+              <Card className="glass-card stat-card border-0">
+                <Card.Body>
+                  <div className="stat-number text-warning"><AnimatedStat end={lowStockCount} /></div>
+                  <div className="stat-label">Low Stock</div>
+                </Card.Body>
+              </Card>
+            </Col>
+            <Col xs={6} sm={4}>
+              <Card className="glass-card stat-card border-0">
+                <Card.Body>
+                  <div className="stat-number text-danger"><AnimatedStat end={toBuyCount} /></div>
+                  <div className="stat-label">To Buy</div>
+                </Card.Body>
+              </Card>
+            </Col>
+          </Row>
+          {/* TABS */}
+          <Tabs activeKey={tab} onSelect={setTab} className="mb-3 glass-tabs sticky-top">
+            <Tab eventKey="stock" title="Stock">
+              <div className="mb-3 d-flex flex-wrap gap-2 align-items-center">
+                <InputGroup style={{ maxWidth: 320 }}>
+                  <InputGroup.Text><i className="fas fa-search"></i></InputGroup.Text>
+                  <Form.Control
+                    placeholder="Filter groceries…"
+                    value={filter}
+                    onChange={e => setFilter(e.target.value)}
+                  />
+                </InputGroup>
+                <OverlayTrigger placement="top" overlay={<Tooltip>Add new grocery</Tooltip>}>
+                  <Button className="rounded-pill fw-bold glass-btn" variant="success" onClick={openAddModal}><i className="fas fa-plus"></i> Add Grocery</Button>
+                </OverlayTrigger>
+                <Button className="rounded-pill glass-btn" variant="outline-danger" onClick={handleBulkDeleteToBuy} disabled={!toBuyCount}>
+                  <i className="fas fa-trash me-1"></i> Delete All "To Buy"
+                </Button>
+                <Button className="rounded-pill glass-btn" variant="outline-primary" onClick={handleBulkMarkBought} disabled={!toBuyCount}>
+                  <i className="fas fa-check me-1"></i> Mark All Bought
+                </Button>
+              </div>
+              <div className="glass-table-responsive mb-5">
                 {itemsLoading ? (
-                  <div className="text-center py-4"><Spinner animation="border" /></div>
+                  <div className="text-center py-5"><Spinner animation="border" /></div>
                 ) : itemsError ? (
                   <Alert variant="danger">{itemsError}</Alert>
-                ) : shoppingList.length === 0 ? (
-                  <Alert variant="info">No items to buy. All stocks are sufficient!</Alert>
                 ) : (
-                  <Table bordered responsive hover className="align-middle">
-                    <thead>
+                  <Table bordered hover responsive className="glass-table align-middle">
+                    <thead className="table-light sticky-top glass-thead">
                       <tr>
                         <th>Name</th>
-                        <th>Quantity</th>
+                        <th>Qty</th>
                         <th>Unit</th>
-                        <th>Min Stock</th>
+                        <th>Min</th>
+                        <th>Status</th>
+                        <th>To Buy</th>
+                        <th style={{ width: 120 }}>Actions</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {shoppingList.map((item, idx) => (
-                        <tr key={item._id}>
-                          <td>{item.name}</td>
-                          <td>{item.quantity}</td>
-                          <td>{item.unit}</td>
-                          <td>{item.minStock}</td>
+                      {filteredItems.length === 0 && (
+                        <tr>
+                          <td colSpan={7} className="empty-state-td">
+                            <div className="empty-art mb-2">🍎</div>
+                            <div className="text-muted">No groceries found</div>
+                          </td>
                         </tr>
-                      ))}
-                    </tbody>
-                  </Table>
-                )}
-              </Card.Body>
-            </Card>
-          </Tab>
-          <Tab eventKey="sabha" title="Sabha Usage / History">
-            <Card>
-              <Card.Header>Sabha Usage / History</Card.Header>
-              <Card.Body>
-                <h6 className="mb-3">Record Sabha Dinner</h6>
-                <Row className="g-2 align-items-end mb-3">
-                  <Col md={3}><Form.Control size="sm" type="date" value={newSabha.date} onChange={e => setNewSabha({ ...newSabha, date: e.target.value })} /></Col>
-                  <Col md={3}><Form.Control size="sm" placeholder="Menu (e.g., Pav Bhaji)" value={newSabha.menu} onChange={e => setNewSabha({ ...newSabha, menu: e.target.value })} /></Col>
-                  <Col md={2}><Form.Control size="sm" placeholder="Grocery Name" value={sabhaGrocery.name} onChange={e => setSabhaGrocery({ ...sabhaGrocery, name: e.target.value })} /></Col>
-                  <Col md={2}><Form.Control size="sm" type="number" placeholder="Qty Used" value={sabhaGrocery.quantity} onChange={e => setSabhaGrocery({ ...sabhaGrocery, quantity: e.target.value })} /></Col>
-                  <Col md={1}><Form.Control size="sm" placeholder="Unit" value={sabhaGrocery.unit} onChange={e => setSabhaGrocery({ ...sabhaGrocery, unit: e.target.value })} /></Col>
-                  <Col md={1}><Button size="sm" variant="secondary" onClick={handleAddSabhaGrocery}>Add</Button></Col>
-                </Row>
-                {newSabha.groceriesUsed && newSabha.groceriesUsed.length > 0 && (
-                  <Table bordered size="sm" className="mb-3">
-                    <thead><tr><th>Grocery</th><th>Qty Used</th><th>Unit</th></tr></thead>
-                    <tbody>
-                      {newSabha.groceriesUsed.map((g, idx) => (
-                        <tr key={idx}><td>{g.name}</td><td>{g.quantity}</td><td>{g.unit}</td></tr>
-                      ))}
-                    </tbody>
-                  </Table>
-                )}
-                <Button size="sm" variant="success" onClick={handleAddSabha}>Save Sabha Record</Button>
-                <hr />
-                <h6>Sabha History</h6>
-                {sabhaLoading ? (
-                  <div className="text-center py-4"><Spinner animation="border" /></div>
-                ) : sabhaError ? (
-                  <Alert variant="danger">{sabhaError}</Alert>
-                ) : sabhaRecords.length === 0 ? (
-                  <Alert variant="info">No Sabha records yet.</Alert>
-                ) : (
-                  <Table bordered responsive hover className="align-middle">
-                    <thead>
-                      <tr>
-                        <th>Date</th>
-                        <th>Menu</th>
-                        <th>Groceries Used</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {sabhaRecords.map((rec) => (
-                        <tr key={rec._id}>
-                          <td>{rec.date
-                            ? (() => {
-                                const d = new Date(rec.date);
-                                if (isNaN(d.getTime())) {
-                                  return rec.date.slice(0, 10);
-                                }
-                                return d.toLocaleDateString('en-CA', {
-                                  year: 'numeric',
-                                  month: 'long',
-                                  day: 'numeric'
-                                });
-                              })()
-                            : ''}
-                          </td>
-                          <td>{rec.menu}</td>
-                          <td>
-                            <ul className="mb-0">
-                              {(rec.groceriesUsed || []).map((g, i) => (
-                                <li key={i}>{g.name} - {g.quantity} {g.unit}</li>
-                              ))}
-                            </ul>
-                          </td>
-                          <td>
-                            <Button
-                              size="sm"
-                              variant="danger"
-                              title="Delete"
-                              onClick={() => handleDeleteSabha(rec._id)}
-                              disabled={sabhaDeleteLoading === rec._id}
-                            >
-                              {sabhaDeleteLoading === rec._id ? (
-                                <Spinner animation="border" size="sm" />
+                      )}
+                      {filteredItems.map((item, idx) => {
+                        const isLow = item.minStock && item.quantity <= item.minStock;
+                        return (
+                          <tr key={item._id} className="glass-row">
+                            <td>
+                              <span className="avatar-circle me-2">{item.name[0]?.toUpperCase() || '?'}</span>
+                              <b>{item.name}</b>
+                              {item.note && <span className="badge bg-info ms-2 glass-badge">{item.note}</span>}
+                            </td>
+                            <td>{item.quantity}</td>
+                            <td>{item.unit}</td>
+                            <td>{item.minStock || 0}</td>
+                            <td>
+                              {item.toBuy ? (
+                                <Badge bg="danger" className="glow-badge"><i className="fas fa-shopping-cart me-1"></i>To Buy</Badge>
+                              ) : isLow ? (
+                                <Badge bg="warning" text="dark" className="glow-badge"><i className="fas fa-exclamation-triangle me-1"></i>Low</Badge>
                               ) : (
-                                <i className="fas fa-trash"></i>
+                                <Badge bg="success" className="glow-badge"><i className="fas fa-check me-1"></i>In Stock</Badge>
                               )}
-                            </Button>
-                          </td>
-                        </tr>
-                      ))}
+                            </td>
+                            <td>
+                              <Form.Check
+                                type="switch"
+                                id={`toBuySwitch${item._id}`}
+                                checked={!!item.toBuy}
+                                onChange={() => handleToggleToBuy(items.indexOf(item))}
+                                style={{ fontSize: 18 }}
+                              />
+                            </td>
+                            <td className="action-cell">
+                              <Button size="sm" variant="outline-primary" className="me-2"
+                                onClick={() => openEditModal(items.indexOf(item))} title="Edit"><i className="fas fa-edit"></i></Button>
+                              <Button size="sm" variant="outline-danger"
+                                onClick={() => handleDeleteItem(items.indexOf(item))} title="Delete"><i className="fas fa-trash"></i></Button>
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </Table>
                 )}
-              </Card.Body>
-            </Card>
-          </Tab>
-        </Tabs>
-      </Container>
+              </div>
+            </Tab>
+            <Tab eventKey="shopping" title="Shopping List">
+              <Table bordered responsive hover className="align-middle glass-table">
+                <thead className="table-light sticky-top glass-thead"><tr><th>Name</th><th>Qty</th><th>Unit</th><th>Min</th></tr></thead>
+                <tbody>
+                  {shoppingList.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="empty-state-td">
+                        <div className="empty-art mb-2">🛍️</div>
+                        <div className="text-muted">No items to buy. All stocks are sufficient!</div>
+                      </td>
+                    </tr>
+                  ) : (
+                    shoppingList.map((item, idx) => (
+                      <tr key={item._id}>
+                        <td>{item.name}</td>
+                        <td>{item.quantity}</td>
+                        <td>{item.unit}</td>
+                        <td>{item.minStock}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </Table>
+            </Tab>
+            <Tab eventKey="sabha" title="Sabha Usage / History">
+              <Card className="mb-3 glass-card">
+                <Card.Header className="gradient-header">
+                  Record Sabha Dinner
+                </Card.Header>
+                <Card.Body>
+                  <Row className="g-2 align-items-end mb-3">
+                    <Col md={3}><Form.Control size="sm" type="date" value={newSabha.date} onChange={e => setNewSabha({ ...newSabha, date: e.target.value })} /></Col>
+                    <Col md={3}><Form.Control size="sm" placeholder="Menu (e.g., Pav Bhaji)" value={newSabha.menu} onChange={e => setNewSabha({ ...newSabha, menu: e.target.value })} /></Col>
+                    <Col md={2}><Form.Control size="sm" placeholder="Grocery Name" value={sabhaGrocery.name} onChange={e => setSabhaGrocery({ ...sabhaGrocery, name: e.target.value })} /></Col>
+                    <Col md={2}><Form.Control size="sm" type="number" placeholder="Qty Used" value={sabhaGrocery.quantity} onChange={e => setSabhaGrocery({ ...sabhaGrocery, quantity: e.target.value })} /></Col>
+                    <Col md={1}><Form.Control size="sm" placeholder="Unit" value={sabhaGrocery.unit} onChange={e => setSabhaGrocery({ ...sabhaGrocery, unit: e.target.value })} /></Col>
+                    <Col md={1}><Button size="sm" variant="secondary" onClick={handleAddSabhaGrocery}>Add</Button></Col>
+                  </Row>
+                  {newSabha.groceriesUsed && newSabha.groceriesUsed.length > 0 && (
+                    <Table bordered size="sm" className="mb-3 glass-table">
+                      <thead><tr><th>Grocery</th><th>Qty Used</th><th>Unit</th></tr></thead>
+                      <tbody>
+                        {newSabha.groceriesUsed.map((g, idx) => (
+                          <tr key={idx}><td>{g.name}</td><td>{g.quantity}</td><td>{g.unit}</td></tr>
+                        ))}
+                      </tbody>
+                    </Table>
+                  )}
+                  <Button size="sm" variant="success" className="rounded-pill" onClick={handleAddSabha}>Save Sabha Record</Button>
+                </Card.Body>
+              </Card>
+              <h5 className="mb-3 fw-semibold" style={{ color: dark ? '#d7e0f8' : '#294375' }}>Sabha Usage Timeline</h5>
+              {sabhaLoading ? (
+                <div className="text-center py-4"><Spinner animation="border" /></div>
+              ) : sabhaError ? (
+                <Alert variant="danger">{sabhaError}</Alert>
+              ) : (
+                <div className="sabha-timeline">
+                  {sabhaRecords.length === 0 ? (
+                    <Alert variant="info">No Sabha records yet.</Alert>
+                  ) : (
+                    sabhaRecords.map((rec, i) => (
+                      <div key={rec._id} className="sabha-timeline-item">
+                        <div className="sabha-dot"></div>
+                        <div className="sabha-content glass-card">
+                          <div className="fw-bold">{rec.menu}</div>
+                          <div className="small text-muted mb-1">
+                            {rec.date
+                              ? (() => {
+                                  const d = new Date(rec.date);
+                                  if (isNaN(d.getTime())) {
+                                    return rec.date.slice(0, 10);
+                                  }
+                                  return d.toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' });
+                                })()
+                              : ''}
+                          </div>
+                          <div className="mb-1">
+                            <span className="text-muted small">Used: </span>
+                            {(rec.groceriesUsed || []).map((g, j) => (
+                              <Badge key={j} bg="info" text="dark" className="me-2 glass-badge">{g.name} {g.quantity} {g.unit}</Badge>
+                            ))}
+                          </div>
+                          <Button size="sm" variant="danger" className="mt-1"
+                            onClick={() => handleDeleteSabha(rec._id)}
+                            disabled={sabhaDeleteLoading === rec._id}>
+                            {sabhaDeleteLoading === rec._id ? <Spinner animation="border" size="sm" /> : <i className="fas fa-trash"></i>}
+                          </Button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+            </Tab>
+          </Tabs>
+        </Container>
+        {/* Right Offcanvas Add/Edit Modal */}
+        <Offcanvas show={showAddEdit} onHide={() => setShowAddEdit(false)} placement="end" className="glass-offcanvas">
+          <Offcanvas.Header closeButton className="glass-offcanvas-header">
+            <Offcanvas.Title>
+              <i className={`fas fa-${editIndex !== null ? 'edit' : 'plus'} me-2`}></i>
+              {editIndex !== null ? 'Edit Grocery' : 'Add Grocery'}
+            </Offcanvas.Title>
+          </Offcanvas.Header>
+          <Offcanvas.Body className="glass-offcanvas-body">
+            <Form>
+              <Form.Group className="mb-3">
+                <Form.Label className="fw-semibold">Name</Form.Label>
+                <Form.Control
+                  size="lg"
+                  type="text"
+                  placeholder="Enter item name"
+                  value={modalItem.name}
+                  onChange={e => setModalItem({ ...modalItem, name: e.target.value })}
+                  autoFocus
+                  style={{ borderRadius: 12, fontSize: 18 }}
+                />
+              </Form.Group>
+              <Row>
+                <Col md={5}>
+                  <Form.Group className="mb-3">
+                    <Form.Label className="fw-semibold">Quantity</Form.Label>
+                    <Form.Control
+                      size="lg"
+                      type="number"
+                      placeholder="0"
+                      min={0}
+                      value={modalItem.quantity}
+                      onChange={e => setModalItem({ ...modalItem, quantity: e.target.value })}
+                      style={{ borderRadius: 12, fontSize: 18 }}
+                    />
+                  </Form.Group>
+                </Col>
+                <Col md={4}>
+                  <Form.Group className="mb-3">
+                    <Form.Label className="fw-semibold">Unit</Form.Label>
+                    <Form.Select
+                      size="lg"
+                      value={modalItem.unit}
+                      onChange={e => setModalItem({ ...modalItem, unit: e.target.value })}
+                      style={{ borderRadius: 12, fontSize: 18 }}
+                    >
+                      <option value="">Select</option>
+                      {UNIT_OPTIONS.map(u => (
+                        <option key={u} value={u}>{u}</option>
+                      ))}
+                    </Form.Select>
+                  </Form.Group>
+                </Col>
+                <Col md={3}>
+                  <Form.Group className="mb-3">
+                    <Form.Label className="fw-semibold">Min Stock</Form.Label>
+                    <Form.Control
+                      size="lg"
+                      type="number"
+                      placeholder="0"
+                      min={0}
+                      value={modalItem.minStock}
+                      onChange={e => setModalItem({ ...modalItem, minStock: e.target.value })}
+                      style={{ borderRadius: 12, fontSize: 18 }}
+                    />
+                  </Form.Group>
+                </Col>
+              </Row>
+              <Form.Group className="mb-3">
+                <Form.Label className="fw-semibold">Note</Form.Label>
+                <Form.Control
+                  size="lg"
+                  type="text"
+                  placeholder="e.g. half a 10lb bag left"
+                  value={modalItem.note || ''}
+                  onChange={e => setModalItem({ ...modalItem, note: e.target.value })}
+                  style={{ borderRadius: 12, fontSize: 18 }}
+                />
+              </Form.Group>
+              <div className="d-flex gap-2 justify-content-end pt-2">
+                <Button variant="outline-secondary" size="lg" onClick={() => setShowAddEdit(false)} style={{ borderRadius: 8 }}>Cancel</Button>
+                <Button variant="success" size="lg" style={{ borderRadius: 8, minWidth: 120 }} onClick={handleModalSave}>
+                  <i className={`fas fa-${editIndex !== null ? 'save' : 'plus'} me-2`}></i>
+                  {editIndex !== null ? 'Save Changes' : 'Add Item'}
+                </Button>
+              </div>
+            </Form>
+          </Offcanvas.Body>
+        </Offcanvas>
+        {/* Toast Notification */}
+        {toast.show && (
+          <div className={`position-fixed bottom-0 end-0 p-4 z-3`} style={{ minWidth: 220 }}>
+            <Alert variant={toast.type} className="d-flex align-items-center shadow-lg border-0" onClose={() => setToast({ ...toast, show: false })} dismissible>
+              <i className={`fas fa-${toast.type === 'danger' ? 'times-circle' : 'check-circle'} me-2`}></i>
+              <div>{toast.msg}</div>
+            </Alert>
+          </div>
+        )}
+      </div>
+      {/* Modern Glass Styles */}
+      <style jsx global>{`
+        body, .glass-bg {
+          background: linear-gradient(135deg,#e8efff 0%,#f4f6fa 80%);
+          min-height: 100vh;
+        }
+        .dark-bg, .glass-bg.dark-bg {
+          background: linear-gradient(135deg,#181e2b 0%,#36405b 100%) !important;
+          color: #e9ecf7;
+        }
+        .glass-card, .glass-table, .glass-thead, .glass-table-responsive, .glass-offcanvas, .glass-offcanvas-body {
+          background: rgba(255,255,255,0.75) !important;
+          backdrop-filter: blur(7px);
+        }
+        .dark-bg .glass-card, .dark-bg .glass-table, .dark-bg .glass-thead, .dark-bg .glass-table-responsive, .dark-bg .glass-offcanvas, .dark-bg .glass-offcanvas-body {
+          background: rgba(34,34,59,0.80) !important;
+          color: #f7fafc;
+        }
+        .glass-card { border-radius: 18px !important; box-shadow: 0 4px 24px rgba(0,0,0,0.13) !important; }
+        .stat-card { min-height: 94px; text-align: center; }
+        .stat-number { font-size: 2.5rem; font-weight: bold; }
+        .stat-label { font-size: 1.12rem; color: #7782a5; letter-spacing: 0.05em; }
+        .glass-table { border-radius: 14px; box-shadow: 0 2px 16px rgba(60,80,120,0.07); }
+        .glass-thead { background: linear-gradient(90deg,#c2e9fb 0%,#f9f6ff 100%); }
+        .dark-bg .glass-thead { background: linear-gradient(90deg,#292945 0%,#223 100%); }
+        .avatar-circle { display: inline-block; width: 33px; height: 33px; border-radius: 50%; background: #cee5fd; color: #223; font-weight: bold; line-height: 33px; text-align: center; font-size: 1.3em; }
+        .dark-bg .avatar-circle { background: #24376b; color: #cbe6ff; }
+        .glow-badge { box-shadow: 0 0 8px #dbeafe; font-weight: 500; }
+        .glass-btn { box-shadow: 0 1px 6px rgba(44,164,255,0.07); font-weight: 500; }
+        .glass-table-responsive { padding: 1rem 0.5rem 2.5rem 0.5rem; border-radius: 1.2rem; }
+        .glass-row { transition: background 0.18s, transform 0.14s; }
+        .glass-row:hover { background: #e0e7ef !important; transform: scale(1.012); }
+        .dark-bg .glass-row:hover { background: #23243a !important; }
+        .empty-state-td { text-align: center; padding: 1.8em 0.2em; background: transparent; }
+        .empty-art { font-size: 2.2em; opacity: 0.65; }
+        .gradient-header { background: linear-gradient(90deg,#79c2fa 0%,#e2d2fa 100%); color: #28345a; font-weight: 600; letter-spacing: 0.04em; }
+        .sabha-timeline { border-left: 4px solid #bcdffb; margin-left: 10px; padding-left: 30px; }
+        .sabha-timeline-item { position: relative; margin-bottom: 2.5rem; }
+        .sabha-dot { position: absolute; left: -33px; top: 7px; width: 18px; height: 18px; background: #51cf66; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 0 4px #bcdffb; }
+        .sabha-content { background: rgba(255,255,255,0.89); border-radius: 10px; box-shadow: 0 2px 10px rgba(100,180,220,0.06); padding: 0.8rem 1.2rem; }
+        .dark-bg .sabha-content { background: rgba(34,34,59,0.90); }
+        .glass-offcanvas { background: rgba(255,255,255,0.96) !important; }
+        .dark-bg .glass-offcanvas { background: rgba(40,44,69,0.97) !important; }
+        .glass-offcanvas-header, .glass-offcanvas-body { border: none !important; }
+        @media (max-width: 600px) {
+          .glass-table-responsive { padding: 0.5rem 0.05rem 3rem 0.05rem; border-radius: 0; }
+          .stat-number { font-size: 2rem; }
+          .glass-card { min-height: 60px; }
+          .avatar-circle { width: 28px; height: 28px; font-size: 1em; }
+        }
+      `}</style>
     </>
   );
-} 
+}
