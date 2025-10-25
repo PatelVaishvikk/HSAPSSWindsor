@@ -1,4 +1,4 @@
-// pages/_app.js
+﻿// pages/_app.js
 import React, { useEffect } from 'react';
 import Head from 'next/head';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -118,3 +118,4 @@ const MyApp = ({ Component, pageProps }) => {
 };
 
 export default MyApp;
+

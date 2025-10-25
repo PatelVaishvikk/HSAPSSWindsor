@@ -1,7 +1,15 @@
-/* globals.css: Global Variables & Base Styles */
+﻿/* globals.css: Global Variables & Base Styles */
 
 /* CSS Variables */
 :root {
+    /* Bootstrap overrides */
+    --bs-modal-bg: #ffffff;
+    --bs-modal-border-color: #e5e7eb;
+    --bs-modal-header-border-color: #e5e7eb;
+    --bs-modal-footer-border-color: #e5e7eb;
+    --bs-offcanvas-bg: #ffffff;
+    --bs-offcanvas-border-color: #e5e7eb;
+
     /* Color Palette */
     --primary-color: #2563eb; /* Blue */
     --primary-dark: #1e40af;
@@ -158,6 +166,12 @@ body.dark-mode {
     --text-main: #f3f4f6;
     --text-muted: #a1a1aa;
     --border: #2d3748;
+    --bs-modal-bg: #23272f;
+    --bs-modal-border-color: #2d3748;
+    --bs-modal-header-border-color: #2d3748;
+    --bs-modal-footer-border-color: #2d3748;
+    --bs-offcanvas-bg: #23272f;
+    --bs-offcanvas-border-color: #2d3748;
   }
   
   /* Example component overrides for dark mode */
@@ -166,9 +180,9 @@ body.dark-mode {
     border-bottom: 1px solid var(--border);
   }
   
-  body.dark-mode .card,
-  body.dark-mode .table,
-  body.dark-mode .modal-content {
+body.dark-mode .card,
+body.dark-mode .table,
+body.dark-mode .modal-content {
     background: var(--card-bg);
     color: var(--text-main);
     box-shadow: var(--shadow);
@@ -201,12 +215,38 @@ body.dark-mode {
     color: var(--text-main);
   }
   
-  .card, .modal-content {
+.card {
     background: var(--card-bg);
     box-shadow: var(--shadow);
     border-radius: var(--radius);
     border: 1px solid var(--border);
     transition: box-shadow var(--transition), background var(--transition);
+  }
+
+.modal-content {
+    background: #ffffff;
+    box-shadow: 0 24px 48px rgba(15, 23, 42, 0.16);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    transition: box-shadow var(--transition), background var(--transition);
+  }
+
+.solid-modal {
+    background-color: #ffffff !important;
+    border-radius: var(--radius-md) !important;
+    border: 1px solid var(--border) !important;
+    box-shadow: var(--shadow-md) !important;
+  }
+
+  .solid-modal .modal-header,
+  .solid-modal .modal-footer {
+    background-color: #ffffff !important;
+    border-color: var(--border) !important;
+  }
+
+.modal-backdrop.show {
+    opacity: 0.45;
+    backdrop-filter: blur(4px);
   }
   
   .btn {
@@ -284,3 +324,8 @@ body.dark-mode {
     overflow: hidden;
   }
     
+
+
+
+
+

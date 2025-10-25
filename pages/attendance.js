@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+﻿import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Head from 'next/head';
 import {
   Container,
@@ -684,7 +684,7 @@ export default function AttendancePage() {
       cell: row => (
         <div className="d-flex">
           <Button
-            variant="outline-primary"
+            variant="primary"
             size="sm"
             onClick={() => viewHistory(row)}
             className="me-1 me-md-2 d-flex align-items-center"
@@ -693,7 +693,7 @@ export default function AttendancePage() {
             <span className="d-md-none">Hist</span>
           </Button>
           <Button
-            variant="outline-danger"
+            variant="danger"
             size="sm"
             onClick={() => confirmDelete('student', row._id, assemblyDate)}
             disabled={loadingStates.deleting}
@@ -756,7 +756,7 @@ export default function AttendancePage() {
         {/* Mobile header */}
         <div className="d-flex d-md-none justify-content-between align-items-center mb-3">
           <Button
-            variant="outline-secondary"
+            variant="secondary"
             onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
             className="me-2"
           >
@@ -978,7 +978,7 @@ export default function AttendancePage() {
                     <div className="d-flex justify-content-between align-items-center mb-3">
                       <h5 className="mb-0">Attendance Summary</h5>
                       <Button 
-                        variant="outline-primary" 
+                        variant="primary" 
                         size="sm"
                         onClick={() => {
                           fetchAttendanceData(assemblyDate);
@@ -1139,7 +1139,7 @@ export default function AttendancePage() {
             <Stack direction="horizontal" gap={2} className="flex-wrap justify-content-between">
               <Stack direction="horizontal" gap={2} className="flex-wrap">
                 <Button
-                  variant="outline-danger"
+                  variant="danger"
                   onClick={() => confirmDelete('date', null, assemblyDate)}
                   disabled={loadingStates.deleting}
                   size="sm"
@@ -1243,6 +1243,7 @@ export default function AttendancePage() {
           onHide={() => setModalStates(prev => ({ ...prev, studentHistory: false }))}
           size="lg"
           scrollable
+          contentClassName="solid-modal"
         >
           <Modal.Header closeButton>
             <Modal.Title>
@@ -1379,6 +1380,7 @@ export default function AttendancePage() {
             show={modalStates.studentHistory}
             onHide={() => setModalStates(prev => ({ ...prev, studentHistory: false }))}
             size="lg"
+            contentClassName="solid-modal"
           >
             <Modal.Header closeButton>
               <Modal.Title>
@@ -1477,6 +1479,7 @@ export default function AttendancePage() {
           onHide={() => setModalStates(prev => ({ ...prev, datesHistory: false }))}
           size="xl"
           scrollable
+          contentClassName="solid-modal"
         >
           <Modal.Header closeButton>
             <Modal.Title>Attendance History by Date</Modal.Title>
@@ -1526,7 +1529,7 @@ export default function AttendancePage() {
                             <small className="text-muted">Total: {dateData.totalCount} students</small>
                           </div>
                           <Button
-                            variant="outline-primary"
+                            variant="primary"
                             size="sm"
                             onClick={() => {
                               setAssemblyDate(dateData.date);
@@ -1585,7 +1588,20 @@ export default function AttendancePage() {
             </Button>
           </Modal.Footer>
         </Modal>
+      <style jsx global>{`
+        .solid-modal {
+          background-color: #ffffff !important;
+          border-radius: 1rem !important;
+          border: none !important;
+          box-shadow: 0 24px 48px rgba(15, 23, 42, 0.16) !important;
+        }
+        .solid-modal .modal-header,
+        .solid-modal .modal-footer {
+          border-color: #e9ecef !important;
+        }
+      `}</style>
       </Container>
     </div>
   );
 }
+

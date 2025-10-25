@@ -1,6 +1,13 @@
-/* global.css: Component Styles & Utilities */
+﻿/* global.css: Component Styles & Utilities */
 
 :root {
+  --bs-modal-bg: #ffffff;
+  --bs-modal-border-color: #e5e7eb;
+  --bs-modal-header-border-color: #e5e7eb;
+  --bs-modal-footer-border-color: #e5e7eb;
+  --bs-offcanvas-bg: #ffffff;
+  --bs-offcanvas-border-color: #e5e7eb;
+
   /* Modern color palette */
   --primary-color: #4f46e5;
   --primary-light: #818cf8;
@@ -836,11 +843,9 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
 /* Glassmorphism Effects */
 .glass-card {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
 }
 
 /* Responsive Design */
@@ -897,3 +902,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   .toast-container { left: 1rem; right: 1rem; bottom: 1rem; }
   .toast { margin: 0 auto; max-width: 100%; }
 }
+
+
+
+

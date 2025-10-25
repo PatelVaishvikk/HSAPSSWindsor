@@ -35,7 +35,8 @@
     "react-qr-scanner": "^1.0.0-alpha.11",
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
-    "styled-components": "^6.1.17"
+    "styled-components": "^6.1.17",
+    "twilio": "^4.23.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

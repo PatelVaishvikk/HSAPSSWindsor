@@ -22,9 +22,10 @@ export default async function handler(req, res) {
           dateFrom = '',
           dateTo = '',
           recent = '',
+          study = '',
+          sort = 'recent',
         } = req.query;
 
-        // --- Multi-student counts shortcut ---
         if (studentIds && countOnly === '1') {
           const ids = studentIds.split(',');
           const counts = {};
@@ -38,26 +39,83 @@ export default async function handler(req, res) {
         }
 
         const pageNum = parseInt(page || '1', 10);
-        const limitNum = parseInt(limit || '10', 10);
-        const skip = (pageNum - 1) * limitNum;
+        const limitParsed = parseInt(limit || '10', 10);
+        const limitNum = Number.isNaN(limitParsed) ? 10 : Math.max(limitParsed, 0);
+        const skip = limitNum > 0 ? (pageNum - 1) * limitNum : 0;
 
-        // --- FILTER BUILDING ---
-        let filter = {};
+        const normalizeObjectId = (value) => {
+          if (!value || !mongoose.Types.ObjectId.isValid(value)) return null;
+          return new mongoose.Types.ObjectId(value);
+        };
 
-        // 1. SEARCH LOGIC
+        const emptySummary = {
+          statusCounts: {},
+          reasonCounts: {},
+          studyCounts: {},
+          followUps: {
+            total: 0,
+            overdue: 0,
+          },
+          lastActivity: null,
+        };
+
+        const filter = {};
+        let allowedStudentIdsSet = null;
+
+        if (student) {
+          const normalizedStudentId = normalizeObjectId(student);
+          if (!normalizedStudentId) {
+            return res.status(400).json({ error: 'Invalid student id' });
+          }
+          allowedStudentIdsSet = new Set([normalizedStudentId.toString()]);
+        }
+
+        if (study && study.trim()) {
+          const trimmedStudy = study.trim();
+          const studyQuery =
+            trimmedStudy === '__none__'
+              ? {
+                  $or: [
+                    { study: { $exists: false } },
+                    { study: '' },
+                    { study: null }
+                  ]
+                }
+              : { study: trimmedStudy };
+          const studyMatches = await Student.find(studyQuery).select('_id').lean();
+          const studyIdStrings = studyMatches.map((s) => s._id.toString());
+
+          if (allowedStudentIdsSet) {
+            allowedStudentIdsSet = new Set(
+              studyIdStrings.filter((id) => allowedStudentIdsSet.has(id))
+            );
+          } else {
+            allowedStudentIdsSet = new Set(studyIdStrings);
+          }
+
+          if (!allowedStudentIdsSet.size) {
+            return res.status(200).json({
+              callLogs: [],
+              total: 0,
+              currentPage: pageNum,
+              summary: emptySummary,
+            });
+          }
+        }
+
         if (search && search.trim()) {
           const term = search.trim();
           const regex = new RegExp(term, 'i');
-          // Find matching students by name/email/phone
           const matchingStudents = await Student.find({
             $or: [
               { first_name: regex },
               { last_name: regex },
               { mail_id: regex },
-              { phone: regex }
+              { phone: regex },
+              { study: regex }
             ]
           }).select('_id');
-          const studentIdsArr = matchingStudents.map(s => s._id);
+          const studentIdsArr = matchingStudents.map((s) => s._id);
           filter.$or = [
             { notes: regex },
             { status: regex }
@@ -67,7 +125,6 @@ export default async function handler(req, res) {
           }
         }
 
-        // 2. STATUS filter (comma separated for multi-select)
         if (status) {
           if (status.includes(',')) {
             filter.status = { $in: status.split(',') };
@@ -76,7 +133,6 @@ export default async function handler(req, res) {
           }
         }
 
-        // 3. REASON filter (call_reason, comma separated)
         if (reason) {
           if (reason.includes(',')) {
             filter.call_reason = { $in: reason.split(',') };
@@ -85,64 +141,323 @@ export default async function handler(req, res) {
           }
         }
 
-        // 4. STUDENT filter
-        if (student) {
-          filter.student_id = student;
-        }
-
-        // 5. DATE RANGE filter (on timestamp)
         if (dateFrom || dateTo) {
           filter.timestamp = {};
           if (dateFrom) filter.timestamp.$gte = new Date(dateFrom);
           if (dateTo) filter.timestamp.$lte = new Date(dateTo);
         }
 
-        // 6. RECENT ONLY (last 7 days)
         if (recent === '1') {
           const sevenDaysAgo = new Date();
           sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
           filter.timestamp = { ...(filter.timestamp || {}), $gte: sevenDaysAgo };
         }
 
-        // --- COUNT FOR PAGINATION ---
-        const total = await CallLog.countDocuments(filter);
+        if (allowedStudentIdsSet && allowedStudentIdsSet.size) {
+          const allowedIds = Array.from(allowedStudentIdsSet).map(
+            (id) => new mongoose.Types.ObjectId(id)
+          );
+          filter.student_id =
+            allowedIds.length === 1 ? allowedIds[0] : { $in: allowedIds };
+        }
 
-        // --- FETCH LOGS + POPULATE STUDENT INFO ---
-        const logsQuery = CallLog.find(filter)
-          .populate('student_id')
-          .sort({ timestamp: -1 })
-          .skip(skip)
-          .limit(limitNum);
+        const matchStage = Object.keys(filter).length ? [{ $match: filter }] : [];
+        const now = new Date();
+        const sortKey = typeof sort === 'string' ? sort.trim().toLowerCase() : 'recent';
 
-        const logs = await logsQuery.lean();
+        const logsPipeline = [
+          ...matchStage,
+          {
+            $lookup: {
+              from: 'students',
+              localField: 'student_id',
+              foreignField: '_id',
+              as: 'studentDoc',
+            },
+          },
+          {
+            $unwind: {
+              path: '$studentDoc',
+              preserveNullAndEmptyArrays: true,
+            },
+          },
+          {
+            $addFields: {
+              primaryTimestamp: { $ifNull: ['$timestamp', '$createdAt'] },
+              studyHasValue: {
+                $cond: [
+                  { $gt: [{ $strLenCP: { $ifNull: ['$studentDoc.study', ''] } }, 0] },
+                  1,
+                  0,
+                ],
+              },
+              studySortValue: {
+                $cond: [
+                  { $gt: [{ $strLenCP: { $ifNull: ['$studentDoc.study', ''] } }, 0] },
+                  { $toLower: '$studentDoc.study' },
+                  '',
+                ],
+              },
+              studentNameHasValue: {
+                $cond: [
+                  {
+                    $gt: [
+                      {
+                        $strLenCP: {
+                          $trim: {
+                            input: {
+                              $concat: [
+                                { $ifNull: ['$studentDoc.first_name', ''] },
+                                ' ',
+                                { $ifNull: ['$studentDoc.last_name', ''] },
+                              ],
+                            },
+                          },
+                        },
+                      },
+                      0,
+                    ],
+                  },
+                  1,
+                  0,
+                ],
+              },
+              studentNameSortValue: {
+                $let: {
+                  vars: {
+                    fullName: {
+                      $trim: {
+                        input: {
+                          $concat: [
+                            { $ifNull: ['$studentDoc.first_name', ''] },
+                            ' ',
+                            { $ifNull: ['$studentDoc.last_name', ''] },
+                          ],
+                        },
+                      },
+                    },
+                  },
+                  in: {
+                    $cond: [
+                      { $gt: [{ $strLenCP: '$$fullName' }, 0] },
+                      { $toLower: '$$fullName' },
+                      '',
+                    ],
+                  },
+                },
+              },
+            },
+          },
+        ];
 
-        // --- FORMAT LOGS FOR FRONTEND ---
-        const callLogs = logs.map(log => {
-          const studentInfo = log.student_id || null;
-          if (studentInfo && studentInfo._id) {
-            studentInfo._id = studentInfo._id.toString();
+        const sortSpec = (() => {
+          switch (sortKey) {
+            case 'oldest':
+              return { primaryTimestamp: 1, _id: 1 };
+            case 'study_asc':
+              return {
+                studyHasValue: -1,
+                studySortValue: 1,
+                primaryTimestamp: -1,
+                _id: -1,
+              };
+            case 'study_desc':
+              return {
+                studyHasValue: -1,
+                studySortValue: -1,
+                primaryTimestamp: -1,
+                _id: -1,
+              };
+            case 'name_asc':
+              return {
+                studentNameHasValue: -1,
+                studentNameSortValue: 1,
+                primaryTimestamp: -1,
+                _id: -1,
+              };
+            case 'name_desc':
+              return {
+                studentNameHasValue: -1,
+                studentNameSortValue: -1,
+                primaryTimestamp: -1,
+                _id: -1,
+              };
+            default:
+              return { primaryTimestamp: -1, _id: -1 };
           }
+        })();
+
+        logsPipeline.push({ $sort: sortSpec });
+        if (skip > 0) {
+          logsPipeline.push({ $skip: skip });
+        }
+        if (limitNum > 0) {
+          logsPipeline.push({ $limit: limitNum });
+        }
+
+        const studySummaryPipeline = [
+          ...matchStage,
+          {
+            $lookup: {
+              from: 'students',
+              localField: 'student_id',
+              foreignField: '_id',
+              as: 'studentDoc',
+            },
+          },
+          {
+            $unwind: {
+              path: '$studentDoc',
+              preserveNullAndEmptyArrays: true,
+            },
+          },
+          {
+            $group: {
+              _id: {
+                $let: {
+                  vars: {
+                    rawStudy: { $ifNull: ['$studentDoc.study', ''] },
+                  },
+                  in: {
+                    $cond: [
+                      { $gt: [{ $strLenCP: '$$rawStudy' }, 0] },
+                      '$$rawStudy',
+                      '__none__',
+                    ],
+                  },
+                },
+              },
+              count: { $sum: 1 },
+            },
+          },
+        ];
+
+        const [
+          total,
+          logs,
+          statusSummary,
+          reasonSummary,
+          studySummary,
+          followUpsTotal,
+          overdueFollowUps,
+          latestLog,
+        ] = await Promise.all([
+          CallLog.countDocuments(filter),
+          CallLog.aggregate(logsPipeline),
+          CallLog.aggregate([
+            ...matchStage,
+            {
+              $group: {
+                _id: { $ifNull: ['$status', 'Unknown'] },
+                count: { $sum: 1 },
+              },
+            },
+          ]),
+          CallLog.aggregate([
+            ...matchStage,
+            {
+              $group: {
+                _id: { $ifNull: ['$call_reason', 'General'] },
+                count: { $sum: 1 },
+              },
+            },
+          ]),
+          CallLog.aggregate(studySummaryPipeline),
+          CallLog.countDocuments({ ...filter, needs_follow_up: true }),
+          CallLog.countDocuments({
+            ...filter,
+            needs_follow_up: true,
+            follow_up_date: { $ne: null, $lt: now },
+          }),
+          CallLog.findOne(filter)
+            .sort({ timestamp: -1, createdAt: -1 })
+            .select('timestamp createdAt')
+            .lean(),
+        ]);
+
+        const callLogs = logs.map((log) => {
+          const studentDoc = log.studentDoc || null;
+          const student = studentDoc
+            ? {
+                ...studentDoc,
+                _id: studentDoc._id ? studentDoc._id.toString() : undefined,
+              }
+            : null;
+
+          const studentId =
+            studentDoc && studentDoc._id
+              ? studentDoc._id.toString()
+              : typeof log.student_id === 'string'
+              ? log.student_id
+              : log.student_id
+              ? log.student_id.toString()
+              : null;
+
+          const timestampSource =
+            log.primaryTimestamp || log.timestamp || log.createdAt || null;
+          const followUpSource = log.follow_up_date || null;
+
           return {
             _id: log._id.toString(),
-            student: studentInfo ? { ...studentInfo } : null,
+            student,
+            student_id: studentId,
             status: log.status,
             call_reason: log.call_reason || 'General',
             notes: log.notes,
-            needs_follow_up: log.needs_follow_up,
-            follow_up_date: log.follow_up_date ? new Date(log.follow_up_date).toISOString() : null,
-            date: log.timestamp ? new Date(log.timestamp).toISOString() : null,
-            timestamp: log.timestamp ? new Date(log.timestamp).toISOString() : null,
+            needs_follow_up: !!log.needs_follow_up,
+            follow_up_date: followUpSource
+              ? new Date(followUpSource).toISOString()
+              : null,
+            date: timestampSource ? new Date(timestampSource).toISOString() : null,
+            timestamp: timestampSource
+              ? new Date(timestampSource).toISOString()
+              : null,
           };
         });
 
-        res.status(200).json({ callLogs, total, currentPage: pageNum });
+        const statusCounts = statusSummary.reduce((acc, item) => {
+          const key = item._id || 'Unknown';
+          acc[key] = item.count;
+          return acc;
+        }, {});
+
+        const reasonCounts = reasonSummary.reduce((acc, item) => {
+          const key = item._id || 'General';
+          acc[key] = item.count;
+          return acc;
+        }, {});
+
+        const studyCounts = studySummary.reduce((acc, item) => {
+          const key = item._id || '__none__';
+          acc[key] = item.count;
+          return acc;
+        }, {});
+
+        const summary = {
+          statusCounts,
+          reasonCounts,
+          studyCounts,
+          followUps: {
+            total: followUpsTotal,
+            overdue: overdueFollowUps,
+          },
+          lastActivity: latestLog
+            ? (() => {
+                const source = latestLog.timestamp || latestLog.createdAt || null;
+                return source ? new Date(source).toISOString() : null;
+              })()
+            : null,
+        };
+
+        res
+          .status(200)
+          .json({ callLogs, total, currentPage: pageNum, summary });
       } catch (err) {
         console.error('Error fetching call logs:', err);
         res.status(500).json({ error: 'Failed to fetch call logs' });
       }
       break;
     }
-
     case 'POST': {
       try {
         const data = req.body;

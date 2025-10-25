@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'; // <--- Added useMemo here
+﻿import { useState, useEffect, useCallback, useMemo } from 'react'; // <--- Added useMemo here
 // Import necessary components from react-bootstrap
 import { Modal, Button, Form, Badge, Toast, Row, Col, InputGroup, Spinner, DropdownButton, Dropdown, Container, Card } from 'react-bootstrap';
 import dynamic from 'next/dynamic';
@@ -32,6 +32,98 @@ const stringToColor = (str) => {
 };
 
 // --- Custom Styles for DataTable (Optional: Fine-tune appearance) ---
+
+const INSTITUTION_OPTIONS = [
+  { value: 'uwindsor', label: 'University of Windsor' },
+  { value: 'st_clair', label: 'St. Clair College' },
+  { value: 'other', label: 'Other' },
+];
+
+const PROGRAM_LIBRARY = {
+  uwindsor: [
+    { value: 'masters_applied_computing', label: 'Masters of Applied Computing', level: 'masters' },
+    { value: 'meng', label: 'Master of Engineering (MEng)', level: 'meng', specializations: ['Civil', 'ECE', 'Mechanical', 'Automobile'] },
+    { value: 'mba', label: 'MBA', level: 'mba' },
+    { value: 'msc', label: 'MSc', level: 'msc' },
+    { value: 'uwindsor_other', label: 'Other Windsor Program', level: 'other' },
+  ],
+  st_clair: [
+    { value: 'pg_business', label: 'Business', level: 'pg_diploma' },
+    { value: 'pg_international_business_management', label: 'International Business Management', level: 'pg_diploma' },
+    { value: 'pg_data_analytics', label: 'Data Analytics', level: 'pg_diploma' },
+    { value: 'pg_predictive_data_analytics', label: 'Predictive Data Analytics', level: 'pg_diploma' },
+    { value: 'pg_cybersecurity', label: 'Cybersecurity & IT Security', level: 'pg_diploma' },
+    { value: 'pg_supply_chain', label: 'Supply Chain Management & Logistics', level: 'pg_diploma' },
+    { value: 'pg_construction_project_management', label: 'Construction Project Management', level: 'pg_diploma' },
+    { value: 'pg_health_care', label: 'Health Care Programs', level: 'pg_diploma', specializations: ['Nursing', 'Medical Laboratory', 'Fitness & Health Promotion', 'Occupational Therapist Assistant'] },
+    { value: 'pg_engineering_technology', label: 'Engineering Technology', level: 'pg_diploma', specializations: ['Civil', 'Mechanical', 'Electrical', 'Biomedical'] },
+    { value: 'pg_skilled_trades', label: 'Skilled Trades', level: 'pg_diploma', specializations: ['Carpentry', 'Welding', 'Plumbing', 'Refrigeration', 'Greenhouse Technician', 'Landscape Horticulture'] },
+    { value: 'st_clair_other', label: 'Other St. Clair Program', level: 'pg_diploma' },
+  ],
+  other: [
+    { value: 'other_program', label: 'Other Program', level: 'other' },
+  ],
+};
+
+const POST_GRAD_OPTIONS = [
+  { value: 'working', label: 'Working' },
+  { value: 'job_search', label: 'Job Searching' },
+  { value: 'higher_studies', label: 'Higher Studies' },
+  { value: 'entrepreneur', label: 'Entrepreneurship' },
+  { value: 'other', label: 'Other' },
+];
+
+const getProgramDefinition = (institution, programValue) => {
+  const list = PROGRAM_LIBRARY[institution] || [];
+  return list.find((program) => program.value === programValue) || null;
+};
+
+const INSTITUTION_LABEL_MAP = INSTITUTION_OPTIONS.reduce(
+  (acc, option) => ({ ...acc, [option.value]: option.label }),
+  {}
+);
+
+const POST_GRAD_LABEL_MAP = POST_GRAD_OPTIONS.reduce(
+  (acc, option) => ({ ...acc, [option.value]: option.label }),
+  {}
+);
+
+const EDUCATION_LEVEL_LABELS = {
+  masters: 'Masters',
+  meng: 'Master of Engineering (MEng)',
+  mba: 'MBA',
+  msc: 'MSc',
+  pg_diploma: 'PG Diploma',
+  other: 'Other',
+};
+
+const formatEducationLevel = (level) => {
+  if (!level) return 'N/A';
+  return (
+    EDUCATION_LEVEL_LABELS[level] ||
+    level.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase())
+  );
+};
+
+const formatInstitution = (value) =>
+  INSTITUTION_LABEL_MAP[value] ||
+  (value ? value.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase()) : 'N/A');
+
+const formatPostGradPlan = (value) =>
+  POST_GRAD_LABEL_MAP[value] ||
+  (value ? value.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase()) : '');
+
+const formatGender = (value) =>
+  value ? value.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase()) : 'N/A';
+
+const formatYearList = (value) => {
+  if (!value) return '-';
+  if (Array.isArray(value)) {
+    return value.length ? value.join(', ') : '-';
+  }
+  return value;
+};
+
 const customTableStyles = {
   headCells: {
     style: {
@@ -99,7 +191,6 @@ const customTableStyles = {
   },
 };
 
-// Add these helper functions near the top of the file after imports
 const formatDateForInput = (dateString) => {
   if (!dateString) return '';
   
@@ -159,7 +250,13 @@ export default function StudentsTable() {
         ...(search && { search: search.trim() })
       }).toString();
 
-      const response = await fetch(`/api/students?${query}`);
+      const response = await fetch(`/api/students?${query}`, {
+        method: 'GET',
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache'
+        }
+      });
       const data = await response.json();
       if (!response.ok) {
         throw new Error(data.error || `Failed to fetch students (Status: ${response.status})`);
@@ -231,7 +328,13 @@ export default function StudentsTable() {
       phone: student.phone || '',
       address: student.address || '',
       date_of_birth: student.date_of_birth ? formatDateForInput(student.date_of_birth) : '',
+      gender: student.gender || '',
       education: student.education || '',
+      study_level: student.study_level || '',
+      study_institution: student.study_institution || '',
+      study_program: student.study_program || '',
+      study_specialization: student.study_specialization || '',
+      study: student.study || '',
       emergency_contact: student.emergency_contact || '',
       notes: student.notes || '',
       box_cricket: student.box_cricket || false,
@@ -248,7 +351,13 @@ export default function StudentsTable() {
       moved_out_date: student.moved_out_date ? formatDateForInput(student.moved_out_date) : '',
       moved_out_job: student.moved_out_job || '',
       moved_out_address: student.moved_out_address || '',
-      moved_out_notes: student.moved_out_notes || ''
+      moved_out_notes: student.moved_out_notes || '',
+      graduation_completed: !!student.graduation_completed,
+      graduation_date: student.graduation_date ? formatDateForInput(student.graduation_date) : '',
+      post_graduation_plan: student.post_graduation_plan || student.employment_status || '',
+      employment_status: student.employment_status || student.post_graduation_plan || '',
+      employment_company: student.employment_company || '',
+      employment_role: student.employment_role || ''
     });
     setShowEditModal(true);
   }, []);
@@ -259,14 +368,117 @@ export default function StudentsTable() {
     setShowViewModal(true);
   }, []);
 
+  const editAvailablePrograms = useMemo(
+    () => PROGRAM_LIBRARY[editForm.study_institution] || [],
+    [editForm.study_institution]
+  );
+
+  const editSelectedProgramDefinition = useMemo(
+    () => getProgramDefinition(editForm.study_institution, editForm.study_program),
+    [editForm.study_institution, editForm.study_program]
+  );
+
+  const editAvailableSpecializations = useMemo(
+    () => editSelectedProgramDefinition?.specializations || [],
+    [editSelectedProgramDefinition]
+  );
+
+  const editStudySummary = useMemo(() => {
+    const parts = [];
+    if (editSelectedProgramDefinition) parts.push(editSelectedProgramDefinition.label);
+    if (editAvailableSpecializations.length > 0) {
+      if (editForm.study_specialization) parts.push(editForm.study_specialization);
+    } else if (editForm.study_specialization) {
+      parts.push(editForm.study_specialization);
+    }
+    return parts.join(' - ');
+  }, [editSelectedProgramDefinition, editAvailableSpecializations, editForm.study_specialization]);
+
+  const editShowEmploymentFields = editForm.post_graduation_plan === 'working';
+
+  const handleEditInstitutionChange = useCallback((value) => {
+    setEditForm((prev) => ({
+      ...prev,
+      study_institution: value,
+      study_program: '',
+      study_specialization: '',
+      study_level: '',
+      education: '',
+      study: ''
+    }));
+  }, []);
+
+  const handleEditProgramChange = useCallback((value) => {
+    setEditForm((prev) => {
+      const definition = getProgramDefinition(prev.study_institution, value);
+      return {
+        ...prev,
+        study_program: value,
+        study_level: definition?.level || '',
+        education: definition?.level || '',
+        study_specialization: '',
+        study: definition?.label || ''
+      };
+    });
+  }, []);
+
+  const handleEditGraduationToggle = useCallback((checked) => {
+    setEditForm((prev) => ({
+      ...prev,
+      graduation_completed: checked,
+      graduation_date: checked ? prev.graduation_date : '',
+    }));
+  }, []);
+
+  const handleEditPostGradPlanChange = useCallback((value) => {
+    setEditForm((prev) => ({
+      ...prev,
+      post_graduation_plan: value,
+      employment_status: value,
+      ...(value !== 'working' ? { employment_company: '', employment_role: '' } : {}),
+    }));
+  }, []);
+
   const saveEditChanges = useCallback(async () => {
     if (!selectedStudent?._id) return;
     setIsSavingEdit(true);
     try {
+      const definition = getProgramDefinition(editForm.study_institution, editForm.study_program);
+      const derivedLevel = definition?.level || editForm.study_level || editForm.education || '';
+      const trim = (value) => (typeof value === 'string' ? value.trim() : value);
+      const payload = {
+        ...editForm,
+        education: derivedLevel,
+        study_level: derivedLevel,
+        study_institution: editForm.study_institution || '',
+        study_program: editForm.study_program || '',
+        study_specialization: trim(editForm.study_specialization),
+        study: (editStudySummary || editForm.study || '').trim(),
+        graduation_completed: !!editForm.graduation_completed,
+        graduation_date: editForm.graduation_completed && editForm.graduation_date ? editForm.graduation_date : '',
+        post_graduation_plan: trim(editForm.post_graduation_plan) || '',
+        employment_status: trim(editForm.post_graduation_plan) || '',
+        employment_company: trim(editForm.post_graduation_plan === 'working' ? editForm.employment_company : ''),
+        employment_role: trim(editForm.post_graduation_plan === 'working' ? editForm.employment_role : ''),
+      };
+
+      if (!payload.study_program && !payload.study) {
+        delete payload.study_institution;
+        delete payload.study_program;
+        delete payload.study_specialization;
+        delete payload.study_level;
+        delete payload.study;
+      }
+
+      if (payload.post_graduation_plan !== 'working') {
+        delete payload.employment_company;
+        delete payload.employment_role;
+      }
+
       const response = await fetch(`/api/students?id=${selectedStudent._id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editForm),
+        body: JSON.stringify(payload),
       });
       const data = await response.json();
       if (!response.ok) {
@@ -281,7 +493,7 @@ export default function StudentsTable() {
     } finally {
       setIsSavingEdit(false);
     }
-  }, [selectedStudent, editForm, showToastMessage, fetchStudents, currentPage, perPage, searchTerm]);
+  }, [selectedStudent, editForm, editStudySummary, showToastMessage, fetchStudents, currentPage, perPage, searchTerm]);
 
   const handleDelete = useCallback(async (studentId, studentName) => {
     if (!window.confirm(`Are you sure you want to delete ${studentName}? This action cannot be undone.`)) {
@@ -372,7 +584,22 @@ export default function StudentsTable() {
               {initial}
             </div>
             <div className="flex-grow-1" style={{ lineHeight: '1.4' }}>
-              <div className="fw-bold text-truncate">{name}</div>
+              <div className="fw-bold text-truncate d-flex align-items-center gap-2">
+                <button
+                  type="button"
+                  className="btn btn-link p-0 text-decoration-none text-start"
+                  onClick={() => handleView(row)}
+                  style={{ fontSize: '1rem', color: '#0d6efd' }}
+                  aria-label={`View profile for ${name || 'this yuvak'}`}
+                >
+                  {name}
+                </button>
+                {row.moved_out && (
+                  <span className="badge bg-danger-subtle text-danger-emphasis fw-semibold" style={{ fontSize: '0.7rem', letterSpacing: '0.05em' }}>
+                    Moved Out
+                  </span>
+                )}
+              </div>
               <div className="text-muted small mt-1" style={{ wordBreak: 'break-all' }}>
                 {row.mail_id ? (
                   <a href={`mailto:${row.mail_id}`} className="text-decoration-none text-muted d-inline-flex align-items-center">
@@ -389,6 +616,37 @@ export default function StudentsTable() {
           </div>
         );
       },
+    },
+    {
+      name: 'Study Program',
+      selector: row => row.study || row.study_program || '',
+      sortable: true,
+      minWidth: '180px',
+      grow: 2,
+      cell: row => (
+        <div className="d-flex flex-column">
+          <span className="fw-semibold">{formatEducationLevel(row.study_level || row.education)}</span>
+          <span className="text-muted small">{row.study || 'Not set'}</span>
+          {row.study_institution && (
+            <span className="text-muted small">{formatInstitution(row.study_institution)}</span>
+          )}
+        </div>
+      ),
+    },
+    {
+      name: 'Status',
+      selector: row => (row.moved_out ? 'Moved Out' : 'Active'),
+      sortable: true,
+      minWidth: '120px',
+      grow: 1,
+      cell: row => (
+        <span
+          className={`badge ${row.moved_out ? 'bg-danger text-white' : 'bg-success text-white'} fw-semibold`}
+          style={{ letterSpacing: '0.04em' }}
+        >
+          {row.moved_out ? 'Moved Out' : 'Active'}
+        </span>
+      ),
     },
     {
       name: 'Phone',
@@ -455,9 +713,9 @@ export default function StudentsTable() {
         <DropdownButton
           title={<i className="fas fa-ellipsis-v"></i>}
           size="sm"
-          variant="outline-secondary"
+          variant="secondary"
           drop="start"
-          className="py-0"
+          className="py-0 action-dropdown"
         >
           <Dropdown.Item onClick={() => handleView(row)}>
             <i className="fas fa-eye text-info me-2 fa-fw"></i>View Details
@@ -522,7 +780,7 @@ export default function StudentsTable() {
                     style={{ borderRadius: '0.5rem' }}
                   />
                   {searchTerm && (
-                    <Button variant="outline-secondary" onClick={clearSearch} title="Clear Search" size="sm" style={{ borderRadius: '0.5rem' }}>
+                    <Button variant="secondary" onClick={clearSearch} title="Clear Search" size="sm" style={{ borderRadius: '0.5rem' }}>
                       <i className="fas fa-times"></i>
                     </Button>
                   )}
@@ -535,7 +793,7 @@ export default function StudentsTable() {
               <div className="table-container" style={{ overflowX: 'auto' }}>
                 <DataTable
                   columns={columns}
-                  data={students.filter(s => !s.moved_out)}
+                  data={students}
                   progressPending={loading}
                   progressComponent={
                     <div className="text-center py-5">
@@ -553,6 +811,14 @@ export default function StudentsTable() {
                   highlightOnHover
                   responsive
                   dense
+                  conditionalRowStyles={[
+                    {
+                      when: (row) => !!row.moved_out,
+                      style: {
+                        backgroundColor: 'rgba(220, 53, 69, 0.06)',
+                      },
+                    },
+                  ]}
                   customStyles={{
                     ...customTableStyles,
                     rows: {
@@ -607,7 +873,14 @@ export default function StudentsTable() {
       </Container>
 
       {/* --- Edit Student Modal --- */}
-      <Modal show={showEditModal} onHide={() => setShowEditModal(false)} centered backdrop="static" scrollable>
+      <Modal
+        show={showEditModal}
+        onHide={() => setShowEditModal(false)}
+        centered
+        backdrop="static"
+        scrollable
+        contentClassName="solid-modal"
+      >
         <Modal.Header closeButton>
           <Modal.Title className="h6">
             <i className="fas fa-user-edit me-2"></i>
@@ -642,19 +915,149 @@ export default function StudentsTable() {
                 <Form.Control size="sm" type="text" placeholder="123 Main St..." value={editForm.address} onChange={(e) => setEditForm({ ...editForm, address: e.target.value })} />
               </Form.Group>
               <Row className="mb-3">
-                <Form.Group as={Col} xs={12} md={6} controlId="editDob">
+                <Form.Group as={Col} xs={12} md={3} controlId="editDob">
                   <Form.Label className="small mb-1">Date of Birth</Form.Label>
-                  <Form.Control size="sm" type="date" value={editForm.date_of_birth} onChange={(e) => setEditForm({ ...editForm, date_of_birth: e.target.value })} />
+                  <Form.Control
+                    size="sm"
+                    type="date"
+                    value={editForm.date_of_birth}
+                    onChange={(e) => setEditForm({ ...editForm, date_of_birth: e.target.value })}
+                  />
                 </Form.Group>
-                <Form.Group as={Col} xs={12} md={6} controlId="editEducation" className="mt-2 mt-md-0">
-                  <Form.Label className="small mb-1">Education</Form.Label>
-                  <Form.Select size="sm" value={editForm.education} onChange={(e) => setEditForm({ ...editForm, education: e.target.value })}>
-                    <option value="">Select Education</option>
-                    <option value="masters">Masters</option>
-                    <option value="pg_diploma">PG Diploma</option>
+                <Form.Group as={Col} xs={12} md={3} controlId="editGender" className="mt-2 mt-md-0">
+                  <Form.Label className="small mb-1">Gender</Form.Label>
+                  <Form.Select
+                    size="sm"
+                    value={editForm.gender || ''}
+                    onChange={(e) => setEditForm({ ...editForm, gender: e.target.value })}
+                  >
+                    <option value="">Select Gender</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="other">Other</option>
+                  </Form.Select>
+                </Form.Group>
+                <Form.Group as={Col} xs={12} md={3} controlId="editInstitution" className="mt-2 mt-md-0">
+                  <Form.Label className="small mb-1">Institution</Form.Label>
+                  <Form.Select
+                    size="sm"
+                    value={editForm.study_institution}
+                    onChange={(e) => handleEditInstitutionChange(e.target.value)}
+                  >
+                    <option value="">Select Institution</option>
+                    {INSTITUTION_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                  </Form.Select>
+                </Form.Group>
+                <Form.Group as={Col} xs={12} md={3} controlId="editProgram" className="mt-2 mt-md-0">
+                  <Form.Label className="small mb-1">Program</Form.Label>
+                  <Form.Select
+                    size="sm"
+                    value={editForm.study_program}
+                    onChange={(e) => handleEditProgramChange(e.target.value)}
+                    disabled={!editForm.study_institution}
+                  >
+                    <option value="">Select Program</option>
+                    {editAvailablePrograms.map((program) => (
+                      <option key={program.value} value={program.value}>{program.label}</option>
+                    ))}
                   </Form.Select>
                 </Form.Group>
               </Row>
+              <Row className="mb-3">
+                <Form.Group as={Col} xs={12} md={editAvailableSpecializations.length ? 6 : 12} controlId="editSpecialization">
+                  <Form.Label className="small mb-1">Specialization / Focus</Form.Label>
+                  {editAvailableSpecializations.length ? (
+                    <Form.Select
+                      size="sm"
+                      value={editForm.study_specialization}
+                      onChange={(e) => setEditForm({ ...editForm, study_specialization: e.target.value })}
+                    >
+                      <option value="">Select Specialization</option>
+                      {editAvailableSpecializations.map((spec) => (
+                        <option key={spec} value={spec}>{spec}</option>
+                      ))}
+                    </Form.Select>
+                  ) : (
+                    <Form.Control
+                      size="sm"
+                      type="text"
+                      value={editForm.study_specialization}
+                      onChange={(e) => setEditForm({ ...editForm, study_specialization: e.target.value })}
+                      placeholder="Enter specialization or focus area"
+                      disabled={!editForm.study_program}
+                    />
+                  )}
+                </Form.Group>
+                <Form.Group as={Col} xs={12} md={editAvailableSpecializations.length ? 6 : 12} controlId="editProgramSummary" className="mt-2 mt-md-0">
+                  <Form.Label className="small mb-1">Program Summary</Form.Label>
+                  <Form.Control
+                    size="sm"
+                    type="text"
+                    value={editStudySummary || editForm.study || ''}
+                    readOnly
+                    placeholder="Summary shown after selecting program"
+                  />
+                </Form.Group>
+              </Row>
+              <Row className="mb-3">
+                <Form.Group as={Col} xs={12} md={4} controlId="editGraduationCompleted">
+                  <Form.Check
+                    type="checkbox"
+                    label="Graduation completed?"
+                    checked={!!editForm.graduation_completed}
+                    onChange={(e) => handleEditGraduationToggle(e.target.checked)}
+                  />
+                </Form.Group>
+                <Form.Group as={Col} xs={12} md={4} controlId="editGraduationDate" className="mt-2 mt-md-0">
+                  <Form.Label className="small mb-1">Graduation Date</Form.Label>
+                  <Form.Control
+                    size="sm"
+                    type="date"
+                    value={editForm.graduation_date || ''}
+                    onChange={(e) => setEditForm({ ...editForm, graduation_date: e.target.value })}
+                    disabled={!editForm.graduation_completed}
+                  />
+                </Form.Group>
+                <Form.Group as={Col} xs={12} md={4} controlId="editPostGradPlan" className="mt-2 mt-md-0">
+                  <Form.Label className="small mb-1">Post-Graduation Plan</Form.Label>
+                  <Form.Select
+                    size="sm"
+                    value={editForm.post_graduation_plan || ''}
+                    onChange={(e) => handleEditPostGradPlanChange(e.target.value)}
+                  >
+                    <option value="">Select plan</option>
+                    {POST_GRAD_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                  </Form.Select>
+                </Form.Group>
+              </Row>
+              {editShowEmploymentFields && (
+                <Row className="mb-3">
+                  <Form.Group as={Col} xs={12} md={6} controlId="editEmploymentCompany">
+                    <Form.Label className="small mb-1">Company / Organization</Form.Label>
+                    <Form.Control
+                      size="sm"
+                      type="text"
+                      value={editForm.employment_company}
+                      onChange={(e) => setEditForm({ ...editForm, employment_company: e.target.value })}
+                      placeholder="Where are they working?"
+                    />
+                  </Form.Group>
+                  <Form.Group as={Col} xs={12} md={6} controlId="editEmploymentRole" className="mt-2 mt-md-0">
+                    <Form.Label className="small mb-1">Role / Title</Form.Label>
+                    <Form.Control
+                      size="sm"
+                      type="text"
+                      value={editForm.employment_role}
+                      onChange={(e) => setEditForm({ ...editForm, employment_role: e.target.value })}
+                      placeholder="Job role or designation"
+                    />
+                  </Form.Group>
+                </Row>
+              )}
               <Form.Group className="mb-3" controlId="editEmergencyContact">
                 <Form.Label className="small mb-1">Emergency Contact</Form.Label>
                 <Form.Control size="sm" type="text" placeholder="Name - Phone (e.g., Jane Doe - 555-987-6543)" value={editForm.emergency_contact} onChange={(e) => setEditForm({ ...editForm, emergency_contact: e.target.value })} />
@@ -791,7 +1194,7 @@ export default function StudentsTable() {
           )}
         </Modal.Body>
         <Modal.Footer className="px-3 py-2">
-          <Button variant="outline-secondary" size="sm" onClick={() => setShowEditModal(false)} disabled={isSavingEdit}>
+          <Button variant="secondary" size="sm" onClick={() => setShowEditModal(false)} disabled={isSavingEdit}>
             Cancel
           </Button>
           <Button variant="primary" size="sm" type="submit" form="editStudentForm" disabled={isSavingEdit || !selectedStudent}>
@@ -809,7 +1212,14 @@ export default function StudentsTable() {
       </Modal>
 
       {/* --- Add Call Log Modal --- */}
-      <Modal show={showCallLogModal} onHide={() => setShowCallLogModal(false)} centered backdrop="static" scrollable>
+      <Modal
+        show={showCallLogModal}
+        onHide={() => setShowCallLogModal(false)}
+        centered
+        backdrop="static"
+        scrollable
+        contentClassName="solid-modal"
+      >
         <Modal.Header closeButton>
           <Modal.Title className="h6"><i className="fas fa-phone-alt me-2"></i>Add Call Log</Modal.Title>
         </Modal.Header>
@@ -897,7 +1307,7 @@ export default function StudentsTable() {
           )}
         </Modal.Body>
         <Modal.Footer className="px-3 py-2">
-          <Button variant="outline-secondary" size="sm" onClick={() => setShowCallLogModal(false)} disabled={isSavingCallLog}>
+          <Button variant="secondary" size="sm" onClick={() => setShowCallLogModal(false)} disabled={isSavingCallLog}>
             Cancel
           </Button>
           <Button variant="primary" size="sm" type="submit" form="callLogForm" disabled={isSavingCallLog || !selectedStudent}>
@@ -915,7 +1325,14 @@ export default function StudentsTable() {
       </Modal>
 
       {/* --- View Student Details Modal --- */}
-      <Modal show={showViewModal} onHide={() => setShowViewModal(false)} centered size="lg" scrollable>
+      <Modal
+        show={showViewModal}
+        onHide={() => setShowViewModal(false)}
+        centered
+        size="lg"
+        scrollable
+        contentClassName="solid-modal"
+      >
         <Modal.Header closeButton>
           <Modal.Title className="h6">
             Student Details: {selectedStudent?.first_name} {selectedStudent?.last_name}
@@ -968,6 +1385,10 @@ export default function StudentsTable() {
                 <Col xs={8}>{selectedStudent.phone || 'N/A'}</Col>
               </Row>
               <Row className="mb-2">
+                <Col xs={4}><strong>Gender:</strong></Col>
+                <Col xs={8}>{formatGender(selectedStudent.gender)}</Col>
+              </Row>
+              <Row className="mb-2">
                 <Col xs={4}><strong>Address:</strong></Col>
                 <Col xs={8}>{selectedStudent.address || 'N/A'}</Col>
               </Row>
@@ -976,35 +1397,63 @@ export default function StudentsTable() {
                 <Col xs={8}>{selectedStudent.date_of_birth ? formatDateForDisplay(selectedStudent.date_of_birth) : 'N/A'}</Col>
               </Row>
               <Row className="mb-2">
-                <Col xs={4}><strong>Education:</strong></Col>
+                <Col xs={4}><strong>Education Level:</strong></Col>
+                <Col xs={8}>{formatEducationLevel(selectedStudent.study_level || selectedStudent.education)}</Col>
+              </Row>
+              <Row className="mb-2">
+                <Col xs={4}><strong>Program:</strong></Col>
+                <Col xs={8}>{selectedStudent.study || 'N/A'}</Col>
+              </Row>
+              <Row className="mb-2">
+                <Col xs={4}><strong>Institution:</strong></Col>
+                <Col xs={8}>{formatInstitution(selectedStudent.study_institution)}</Col>
+              </Row>
+              <Row className="mb-2">
+                <Col xs={4}><strong>Graduation:</strong></Col>
                 <Col xs={8}>
-                  {selectedStudent.education 
-                    ? (selectedStudent.education === 'masters' ? 'Masters' : selectedStudent.education === 'pg_diploma' ? 'PG Diploma' : selectedStudent.education)
-                    : 'N/A'}
+                  {selectedStudent.graduation_completed
+                    ? `Completed${selectedStudent.graduation_date ? ` on ${selectedStudent.graduation_date}` : ''}`
+                    : 'Not yet completed'}
                 </Col>
               </Row>
               <Row className="mb-2">
+                <Col xs={4}><strong>Post-Grad Plan:</strong></Col>
+                <Col xs={8}>{formatPostGradPlan(selectedStudent.post_graduation_plan) || 'N/A'}</Col>
+              </Row>
+              {selectedStudent.post_graduation_plan === 'working' && (
+                <>
+                  <Row className="mb-2">
+                    <Col xs={4}><strong>Employer:</strong></Col>
+                    <Col xs={8}>{selectedStudent.employment_company || 'N/A'}</Col>
+                  </Row>
+                  <Row className="mb-2">
+                    <Col xs={4}><strong>Role:</strong></Col>
+                    <Col xs={8}>{selectedStudent.employment_role || 'N/A'}</Col>
+                  </Row>
+                </>
+              )}
+              <Row className="mb-2">
                 <Col xs={4}><strong>Box Cricket:</strong></Col>
                 <Col xs={8}>
-                  {selectedStudent.box_cricket ? `Yes (${selectedStudent.box_cricket_years || '-'} years)` : 'No'}
+                  {selectedStudent.box_cricket ? `Yes (${formatYearList(selectedStudent.box_cricket_years)} years)` : 'No'}
                 </Col>
               </Row>
               <Row className="mb-2">
                 <Col xs={4}><strong>Atmiya Cricket Tournament:</strong></Col>
                 <Col xs={8}>
-                  {selectedStudent.atmiya_cricket_tournament ? `Yes (${selectedStudent.atmiya_cricket_years || '-'} years)` : 'No'}
+                  {selectedStudent.atmiya_cricket_tournament ? `Yes (${formatYearList(selectedStudent.atmiya_cricket_years)} years)` : 'No'}
                 </Col>
               </Row>
               <Row className="mb-2">
                 <Col xs={4}><strong>Atmiya Youth Shibir:</strong></Col>
                 <Col xs={8}>
-                  {selectedStudent.atmiya_youth_shibir ? `Yes (${selectedStudent.atmiya_youth_years || '-'} years)` : 'No'}
+                  {selectedStudent.atmiya_youth_shibir ? `Yes (${formatYearList(selectedStudent.atmiya_youth_years)} years)` : 'No'}
                 </Col>
               </Row>
               <Row className="mb-2">
                 <Col xs={4}><strong>Yuva Mahotsav:</strong></Col>
                 <Col xs={8}>
-                  {selectedStudent.yuva_mahotsav ? `Yes (${selectedStudent.yuva_mahotsav_years || '-'} years)` : 'No'}
+                  {selectedStudent.yuva_mahotsav ? `Yes (${formatYearList(selectedStudent.yuva_mahotsav_years)} years)` : 'No'}
                 </Col>
               </Row>
               <Row className="mb-2">
@@ -1075,12 +1524,20 @@ export default function StudentsTable() {
           z-index: 2;
         }
         .rdt_TableCell .dropdown-toggle {
-          padding: 0.25rem 0.5rem;
-          border-radius: 0.5rem;
-          transition: background 0.18s;
+          padding: 0.35rem 0.6rem;
+          border-radius: 0.6rem;
         }
-        .rdt_TableCell .dropdown-toggle:hover {
-          background: #e0e7ef;
+        .action-dropdown > .btn.dropdown-toggle {
+          background-color: #495057 !important;
+          border-color: #495057 !important;
+          color: #fff !important;
+          box-shadow: none !important;
+        }
+        .action-dropdown > .btn.dropdown-toggle:hover,
+        .action-dropdown > .btn.dropdown-toggle:focus {
+          background-color: #343a40 !important;
+          border-color: #343a40 !important;
+          color: #fff !important;
         }
         .badge.bg-light {
           background: linear-gradient(90deg, #e0e7ef 0%, #f8fafc 100%) !important;
@@ -1114,3 +1571,15 @@ export default function StudentsTable() {
     </>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+

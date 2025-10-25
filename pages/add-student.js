@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState, useMemo } from 'react';
 import { Form, Button, Toast, Alert, Card, Badge, Row, Col, InputGroup } from 'react-bootstrap';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
@@ -23,6 +23,11 @@ export default function AddStudent() {
     date_of_birth: '',
     gender: '',
     education: '',
+    study_level: '',
+    study_institution: '',
+    study_program: '',
+    study_specialization: '',
+    study: '',
     emergency_contact: '',
     notes: '',
     events: [], // Array to store multiple events
@@ -31,9 +36,59 @@ export default function AddStudent() {
     moved_out_date: '',
     moved_out_job: '',
     moved_out_address: '',
-    moved_out_notes: ''
+    moved_out_notes: '',
+    graduation_completed: false,
+    graduation_date: '',
+    post_graduation_plan: '',
+    employment_status: '',
+    employment_company: '',
+    employment_role: ''
   });
 
+const INSTITUTION_OPTIONS = [
+  { value: 'uwindsor', label: 'University of Windsor' },
+  { value: 'st_clair', label: 'St. Clair College' },
+  { value: 'other', label: 'Other' },
+];
+
+const PROGRAM_LIBRARY = {
+  uwindsor: [
+    { value: 'masters_applied_computing', label: 'Masters of Applied Computing', level: 'masters' },
+    { value: 'meng', label: 'Master of Engineering (MEng)', level: 'meng', specializations: ['Civil', 'ECE', 'Mechanical', 'Automobile'] },
+    { value: 'mba', label: 'MBA', level: 'mba' },
+    { value: 'msc', label: 'MSc', level: 'msc' },
+    { value: 'uwindsor_other', label: 'Other Windsor Program', level: 'other' },
+  ],
+  st_clair: [
+    { value: 'pg_business', label: 'Business', level: 'pg_diploma' },
+    { value: 'pg_international_business_management', label: 'International Business Management', level: 'pg_diploma' },
+    { value: 'pg_data_analytics', label: 'Data Analytics', level: 'pg_diploma' },
+    { value: 'pg_predictive_data_analytics', label: 'Predictive Data Analytics', level: 'pg_diploma' },
+    { value: 'pg_cybersecurity', label: 'Cybersecurity & IT Security', level: 'pg_diploma' },
+    { value: 'pg_supply_chain', label: 'Supply Chain Management & Logistics', level: 'pg_diploma' },
+    { value: 'pg_construction_project_management', label: 'Construction Project Management', level: 'pg_diploma' },
+    { value: 'pg_health_care', label: 'Health Care Programs', level: 'pg_diploma', specializations: ['Nursing', 'Medical Laboratory', 'Fitness & Health Promotion', 'Occupational Therapist Assistant'] },
+    { value: 'pg_engineering_technology', label: 'Engineering Technology', level: 'pg_diploma', specializations: ['Civil', 'Mechanical', 'Electrical', 'Biomedical'] },
+    { value: 'pg_skilled_trades', label: 'Skilled Trades', level: 'pg_diploma', specializations: ['Carpentry', 'Welding', 'Plumbing', 'Refrigeration', 'Greenhouse Technician', 'Landscape Horticulture'] },
+    { value: 'st_clair_other', label: 'Other St. Clair Program', level: 'pg_diploma' },
+  ],
+  other: [
+    { value: 'other_program', label: 'Other Program', level: 'other' },
+  ],
+};
+
+const POST_GRAD_OPTIONS = [
+  { value: 'working', label: 'Working' },
+  { value: 'job_search', label: 'Job Searching' },
+  { value: 'higher_studies', label: 'Higher Studies' },
+  { value: 'entrepreneur', label: 'Entrepreneurship' },
+  { value: 'other', label: 'Other' },
+];
+
+const getProgramDefinition = (institution, programValue) => {
+  const list = PROGRAM_LIBRARY[institution] || [];
+  return list.find((program) => program.value === programValue) || null;
+};
   // Event types for dropdown
   const eventTypes = [
     'Yuva Mahotsav',
@@ -73,6 +128,71 @@ export default function AddStudent() {
     }));
   };
 
+  const availablePrograms = useMemo(() => PROGRAM_LIBRARY[formData.study_institution] || [], [formData.study_institution]);
+
+  const selectedProgramDefinition = useMemo(
+    () => getProgramDefinition(formData.study_institution, formData.study_program),
+    [formData.study_institution, formData.study_program]
+  );
+
+  const availableSpecializations = useMemo(
+    () => selectedProgramDefinition?.specializations || [],
+    [selectedProgramDefinition]
+  );
+
+  const studySummaryDisplay = useMemo(() => {
+    const parts = [];
+    if (selectedProgramDefinition) parts.push(selectedProgramDefinition.label);
+    if (availableSpecializations.length > 0) {
+      if (formData.study_specialization) parts.push(formData.study_specialization);
+    } else if (formData.study_specialization) {
+      parts.push(formData.study_specialization);
+    }
+    return parts.join(' - ');
+  }, [selectedProgramDefinition, availableSpecializations, formData.study_specialization]);
+
+  const showEmploymentFields = formData.post_graduation_plan === 'working';
+
+  const handleInstitutionChange = (value) => {
+    setFormData((prev) => ({
+      ...prev,
+      study_institution: value,
+      study_program: '',
+      study_specialization: '',
+      study_level: '',
+      education: '',
+      study: ''
+    }));
+  };
+
+  const handleProgramChange = (value) => {
+    const definition = getProgramDefinition(formData.study_institution, value);
+    setFormData((prev) => ({
+      ...prev,
+      study_program: value,
+      study_level: definition?.level || '',
+      education: definition?.level || '',
+      study_specialization: '',
+      study: definition?.label || '',
+    }));
+  };
+
+  const handleGraduationToggle = (checked) => {
+    setFormData((prev) => ({
+      ...prev,
+      graduation_completed: checked,
+      graduation_date: checked ? prev.graduation_date : '',
+    }));
+  };
+
+  const handlePostGradPlanChange = (value) => {
+    setFormData((prev) => ({
+      ...prev,
+      post_graduation_plan: value,
+      employment_status: value,
+      ...(value !== 'working' ? { employment_company: '', employment_role: '' } : {}),
+    }));
+  };
   // Utility to display toast messages
   const showToastMessage = (message, variant = 'success') => {
     setToastMessage(message);
@@ -97,7 +217,24 @@ export default function AddStudent() {
     setError('');
     setShowToast(false);
 
-    // Clean up and normalize form data
+    const selectedProgram = getProgramDefinition(formData.study_institution, formData.study_program);
+    const derivedLevel = selectedProgram?.level || formData.study_level || formData.education || '';
+    const specializationLabel = selectedProgram?.specializations?.length
+      ? (formData.study_specialization || '').trim()
+      : '';
+    const studyLabelParts = [];
+    if (selectedProgram) studyLabelParts.push(selectedProgram.label);
+    if (specializationLabel) studyLabelParts.push(specializationLabel);
+    const studyDisplay = studyLabelParts.join(' - ') || formData.study?.trim() || '';
+
+    if (!studyDisplay) {
+      const errorMsg = 'Please select a study institution and program for the student.';
+      setError(errorMsg);
+      showToastMessage(errorMsg, 'danger');
+      setLoading(false);
+      return;
+    }
+
     const cleanedFormData = {
       ...formData,
       first_name: formData.first_name.trim(),
@@ -107,7 +244,18 @@ export default function AddStudent() {
       address: formData.address?.trim() || '',
       date_of_birth: formData.date_of_birth || null,
       gender: formData.gender || '',
-      education: formData.education || '',
+      education: derivedLevel,
+      study_level: derivedLevel,
+      study_institution: formData.study_institution || '',
+      study_program: formData.study_program || '',
+      study_specialization: specializationLabel,
+      study: studyDisplay,
+      graduation_completed: !!formData.graduation_completed,
+      graduation_date: formData.graduation_completed && formData.graduation_date ? formData.graduation_date : '',
+      post_graduation_plan: formData.post_graduation_plan || '',
+      employment_status: formData.employment_status || '',
+      employment_company: formData.employment_company?.trim() || '',
+      employment_role: formData.employment_role?.trim() || '',
       emergency_contact: formData.emergency_contact?.trim() || '',
       notes: formData.notes?.trim() || '',
       events: formData.events.map(event => ({
@@ -166,6 +314,11 @@ export default function AddStudent() {
         date_of_birth: '',
         gender: '',
         education: '',
+        study_level: '',
+        study_institution: '',
+        study_program: '',
+        study_specialization: '',
+        study: '',
         emergency_contact: '',
         notes: '',
         events: [],
@@ -173,7 +326,13 @@ export default function AddStudent() {
         moved_out_date: '',
         moved_out_job: '',
         moved_out_address: '',
-        moved_out_notes: ''
+        moved_out_notes: '',
+        graduation_completed: false,
+        graduation_date: '',
+        post_graduation_plan: '',
+        employment_status: '',
+        employment_company: '',
+        employment_role: ''
       });
       
       // Redirect to Students table after a short delay
@@ -201,6 +360,11 @@ export default function AddStudent() {
       date_of_birth: '',
       gender: '',
       education: '',
+      study_level: '',
+      study_institution: '',
+      study_program: '',
+      study_specialization: '',
+      study: '',
       emergency_contact: '',
       notes: '',
       events: [],
@@ -208,7 +372,13 @@ export default function AddStudent() {
       moved_out_date: '',
       moved_out_job: '',
       moved_out_address: '',
-      moved_out_notes: ''
+      moved_out_notes: '',
+      graduation_completed: false,
+      graduation_date: '',
+      post_graduation_plan: '',
+      employment_status: '',
+      employment_company: '',
+      employment_role: ''
     });
     setError('');
   };
@@ -313,7 +483,7 @@ export default function AddStudent() {
                       </Form.Group>
 
                       <Row>
-                        <Col md={4}>
+                        <Col md={3}>
                           <Form.Group className="mb-3">
                             <Form.Label>Date of Birth</Form.Label>
                             <Form.Control
@@ -323,7 +493,7 @@ export default function AddStudent() {
                             />
                           </Form.Group>
                         </Col>
-                        <Col md={4}>
+                        <Col md={3}>
                           <Form.Group className="mb-3">
                             <Form.Label>Gender</Form.Label>
                             <Form.Select
@@ -337,23 +507,137 @@ export default function AddStudent() {
                             </Form.Select>
                           </Form.Group>
                         </Col>
-                        <Col md={4}>
+                        <Col md={3}>
                           <Form.Group className="mb-3">
-                            <Form.Label>Education</Form.Label>
+                            <Form.Label>Institution</Form.Label>
                             <Form.Select
-                              value={formData.education}
-                              onChange={(e) => setFormData({ ...formData, education: e.target.value })}
+                              value={formData.study_institution}
+                              onChange={(e) => handleInstitutionChange(e.target.value)}
                             >
-                              <option value="">Select Education</option>
-                              <option value="high_school">High School</option>
-                              <option value="undergraduate">Undergraduate</option>
-                              <option value="graduate">Graduate</option>
-                              <option value="post_graduate">Post Graduate</option>
-                              <option value="other">Other</option>
+                              <option value="">Select Institution</option>
+                              {INSTITUTION_OPTIONS.map((option) => (
+                                <option key={option.value} value={option.value}>{option.label}</option>
+                              ))}
+                            </Form.Select>
+                          </Form.Group>
+                        </Col>
+                        <Col md={3}>
+                          <Form.Group className="mb-3">
+                            <Form.Label>Program</Form.Label>
+                            <Form.Select
+                              value={formData.study_program}
+                              onChange={(e) => handleProgramChange(e.target.value)}
+                              disabled={!formData.study_institution}
+                            >
+                              <option value="">Select Program</option>
+                              {availablePrograms.map((program) => (
+                                <option key={program.value} value={program.value}>{program.label}</option>
+                              ))}
                             </Form.Select>
                           </Form.Group>
                         </Col>
                       </Row>
+                      <Row>
+                        <Col md={availableSpecializations.length ? 6 : 12}>
+                          <Form.Group className="mb-3">
+                            <Form.Label>Specialization / Focus</Form.Label>
+                            {availableSpecializations.length ? (
+                              <Form.Select
+                                value={formData.study_specialization}
+                                onChange={(e) => setFormData({ ...formData, study_specialization: e.target.value })}
+                              >
+                                <option value="">Select Specialization</option>
+                                {availableSpecializations.map((spec) => (
+                                  <option key={spec} value={spec}>{spec}</option>
+                                ))}
+                              </Form.Select>
+                            ) : (
+                              <Form.Control
+                                type="text"
+                                value={formData.study_specialization}
+                                onChange={(e) => setFormData({ ...formData, study_specialization: e.target.value })}
+                                placeholder="Enter specialization or focus area"
+                                disabled={!formData.study_program}
+                              />
+                            )}
+                          </Form.Group>
+                        </Col>
+                        <Col md={availableSpecializations.length ? 6 : 12}>
+                          <Form.Group className="mb-3">
+                            <Form.Label>Program Summary</Form.Label>
+                            <Form.Control
+                              type="text"
+                              value={studySummaryDisplay}
+                              readOnly
+                              placeholder="Summary appears after selecting program"
+                            />
+                          </Form.Group>
+                        </Col>
+                      </Row>
+                      <Row className="gy-3">
+                        <Col md={4}>
+                          <Form.Group className="mb-3">
+                            <Form.Check
+                              type="checkbox"
+                              id="graduationCompleted"
+                              label="Graduation completed?"
+                              checked={formData.graduation_completed}
+                              onChange={(e) => handleGraduationToggle(e.target.checked)}
+                            />
+                          </Form.Group>
+                        </Col>
+                        <Col md={4}>
+                          <Form.Group className="mb-3">
+                            <Form.Label>Graduation Date</Form.Label>
+                            <Form.Control
+                              type="date"
+                              value={formData.graduation_date}
+                              onChange={(e) => setFormData({ ...formData, graduation_date: e.target.value })}
+                              disabled={!formData.graduation_completed}
+                            />
+                          </Form.Group>
+                        </Col>
+                        <Col md={4}>
+                          <Form.Group className="mb-3">
+                            <Form.Label>Post-Graduation Plan</Form.Label>
+                            <Form.Select
+                              value={formData.post_graduation_plan}
+                              onChange={(e) => handlePostGradPlanChange(e.target.value)}
+                            >
+                              <option value="">Select plan</option>
+                              {POST_GRAD_OPTIONS.map((option) => (
+                                <option key={option.value} value={option.value}>{option.label}</option>
+                              ))}
+                            </Form.Select>
+                          </Form.Group>
+                        </Col>
+                      </Row>
+                      {showEmploymentFields && (
+                        <Row className="gy-3">
+                          <Col md={6}>
+                            <Form.Group className="mb-3">
+                              <Form.Label>Company / Organization</Form.Label>
+                              <Form.Control
+                                type="text"
+                                value={formData.employment_company}
+                                onChange={(e) => setFormData({ ...formData, employment_company: e.target.value })}
+                                placeholder="Where are they working?"
+                              />
+                            </Form.Group>
+                          </Col>
+                          <Col md={6}>
+                            <Form.Group className="mb-3">
+                              <Form.Label>Role / Title</Form.Label>
+                              <Form.Control
+                                type="text"
+                                value={formData.employment_role}
+                                onChange={(e) => setFormData({ ...formData, employment_role: e.target.value })}
+                                placeholder="Job role or designation"
+                              />
+                            </Form.Group>
+                          </Col>
+                        </Row>
+                      )}
 
                       <Row>
                         <Col md={6}>
@@ -582,3 +866,14 @@ export default function AddStudent() {
     </>
   );
 }
+
+
+
+
+
+
+
+
+
+
+

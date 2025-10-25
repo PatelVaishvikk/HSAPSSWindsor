@@ -1,4 +1,4 @@
-// import mongoose from 'mongoose';
+﻿// import mongoose from 'mongoose';
 
 // const StudentSchema = new mongoose.Schema({
 //   first_name: { 
@@ -117,10 +117,63 @@ const StudentSchema = new mongoose.Schema({
     type: Date, 
     default: null 
   },
-  education: { 
-    type: String, 
-    enum: ['masters', 'pg_diploma', ''], 
-    default: '' 
+  education: {
+    type: String,
+    trim: true,
+    default: ''
+  },
+  study: {
+    type: String,
+    trim: true,
+    default: ''
+  },
+  study_level: {
+    type: String,
+    trim: true,
+    default: ''
+  },
+  study_institution: {
+    type: String,
+    trim: true,
+    default: ''
+  },
+  study_program: {
+    type: String,
+    trim: true,
+    default: ''
+  },
+  study_specialization: {
+    type: String,
+    trim: true,
+    default: ''
+  },
+  graduation_completed: {
+    type: Boolean,
+    default: false
+  },
+  graduation_date: {
+    type: Date,
+    default: null
+  },
+  post_graduation_plan: {
+    type: String,
+    trim: true,
+    default: ''
+  },
+  employment_status: {
+    type: String,
+    trim: true,
+    default: ''
+  },
+  employment_company: {
+    type: String,
+    trim: true,
+    default: ''
+  },
+  employment_role: {
+    type: String,
+    trim: true,
+    default: ''
   },
   box_cricket: { 
     type: Boolean, 
@@ -209,3 +262,5 @@ StudentSchema.pre('save', function(next) {
 });
 
 export default mongoose.models.Student || mongoose.model('Student', StudentSchema);
+
+

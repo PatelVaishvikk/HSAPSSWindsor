@@ -597,11 +597,13 @@ export default function GroceryPage() {
           color: #e9ecf7;
         }
         .glass-card, .glass-table, .glass-thead, .glass-table-responsive, .glass-offcanvas, .glass-offcanvas-body {
-          background: rgba(255,255,255,0.75) !important;
-          backdrop-filter: blur(7px);
+          background: #ffffff !important;
+          backdrop-filter: none !important;
+          -webkit-backdrop-filter: none !important;
+          border: 1px solid rgba(15,23,42,0.08) !important;
         }
         .dark-bg .glass-card, .dark-bg .glass-table, .dark-bg .glass-thead, .dark-bg .glass-table-responsive, .dark-bg .glass-offcanvas, .dark-bg .glass-offcanvas-body {
-          background: rgba(34,34,59,0.80) !important;
+          background: #22263b !important;
           color: #f7fafc;
         }
         .glass-card { border-radius: 18px !important; box-shadow: 0 4px 24px rgba(0,0,0,0.13) !important; }
@@ -625,10 +627,10 @@ export default function GroceryPage() {
         .sabha-timeline { border-left: 4px solid #bcdffb; margin-left: 10px; padding-left: 30px; }
         .sabha-timeline-item { position: relative; margin-bottom: 2.5rem; }
         .sabha-dot { position: absolute; left: -33px; top: 7px; width: 18px; height: 18px; background: #51cf66; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 0 4px #bcdffb; }
-        .sabha-content { background: rgba(255,255,255,0.89); border-radius: 10px; box-shadow: 0 2px 10px rgba(100,180,220,0.06); padding: 0.8rem 1.2rem; }
-        .dark-bg .sabha-content { background: rgba(34,34,59,0.90); }
-        .glass-offcanvas { background: rgba(255,255,255,0.96) !important; }
-        .dark-bg .glass-offcanvas { background: rgba(40,44,69,0.97) !important; }
+        .sabha-content { background: #ffffff; border-radius: 10px; box-shadow: 0 2px 10px rgba(100,180,220,0.06); padding: 0.8rem 1.2rem; }
+        .dark-bg .sabha-content { background: #2a2f45; }
+        .glass-offcanvas { background: #ffffff !important; }
+        .dark-bg .glass-offcanvas { background: #2a2f45 !important; }
         .glass-offcanvas-header, .glass-offcanvas-body { border: none !important; }
         @media (max-width: 600px) {
           .glass-table-responsive { padding: 0.5rem 0.05rem 3rem 0.05rem; border-radius: 0; }
