@@ -51,49 +51,84 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [recentCalls, setRecentCalls] = useState([]);
+  const [activePanel, setActivePanel] = useState('calls');
   
   // State to toggle chatbot visibility
   const [showChat, setShowChat] = useState(false);
   const chartRef = useRef(null);
+  const chartInstanceRef = useRef(null);
 
   useEffect(() => {
     fetchDashboardStats();
     fetchRecentCalls();
-    if (typeof window !== 'undefined' && window.Chart && chartRef.current) {
-      if (window.callTrendsChart && typeof window.callTrendsChart.destroy === 'function') {
-        window.callTrendsChart.destroy();
+  }, []);
+
+  useEffect(() => {
+    if (activePanel !== 'calls') {
+      if (chartInstanceRef.current) {
+        chartInstanceRef.current.destroy();
+        chartInstanceRef.current = null;
       }
-      window.callTrendsChart = new window.Chart(chartRef.current, {
-        type: 'line',
-        data: {
-          labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-          datasets: [{
-            label: 'Calls',
-            data: [12, 19, 8, 15, 22, 17, 10], // Placeholder data
-            fill: true,
-            backgroundColor: 'rgba(72,198,239,0.12)',
-            borderColor: '#17a2b8',
-            tension: 0.4,
-            pointRadius: 4
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: { legend: { display: false } },
-          scales: { y: { beginAtZero: true } }
-        }
-      });
+      return;
     }
+
+    if (typeof window === 'undefined' || !window.Chart || !chartRef.current) {
+      return;
+    }
+
+    if (chartInstanceRef.current) {
+      chartInstanceRef.current.destroy();
+    }
+
+    chartInstanceRef.current = new window.Chart(chartRef.current, {
+      type: 'bar',
+      data: {
+        labels: ['Today', 'This Week', 'This Month'],
+        datasets: [
+          {
+            label: 'Call Volume',
+            data: [
+              Number(stats.todaysCalls || 0),
+              Number(stats.weeksCalls || 0),
+              Number(stats.monthsCalls || 0)
+            ],
+            backgroundColor: [
+              'rgba(79, 70, 229, 0.85)',
+              'rgba(13, 148, 136, 0.85)',
+              'rgba(14, 116, 144, 0.85)'
+            ],
+            borderRadius: 12
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: { font: { size: 13 } }
+          },
+          y: {
+            beginAtZero: true,
+            ticks: {
+              precision: 0,
+              font: { size: 13 }
+            }
+          }
+        }
+      }
+    });
+
     return () => {
-      if (
-        window.callTrendsChart &&
-        typeof window.callTrendsChart.destroy === 'function'
-      ) {
-        window.callTrendsChart.destroy();
-        window.callTrendsChart = null;
+      if (chartInstanceRef.current) {
+        chartInstanceRef.current.destroy();
+        chartInstanceRef.current = null;
       }
     };
-  }, []);
+  }, [activePanel, stats.todaysCalls, stats.weeksCalls, stats.monthsCalls]);
 
   const fetchDashboardStats = async () => {
     try {
@@ -168,6 +203,13 @@ export default function Dashboard() {
   };
 
   const insights = stats.studyInsights || createDefaultStudyInsights();
+  const callSummaryItems = [
+    { label: 'Total calls logged', value: stats.totalCalls ?? 0 },
+    { label: 'Completed calls', value: stats.completedCalls ?? 0 },
+    { label: 'Pending / follow-ups', value: stats.pendingCalls ?? 0 },
+    { label: 'Calls this week', value: stats.weeksCalls ?? 0 },
+    { label: 'Calls today', value: stats.todaysCalls ?? 0 }
+  ];
 
   return (
     <>
@@ -356,128 +398,186 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
-        {/* Friday Call Status Section */}
-        <div className="row mb-4">
-          <div className="col-12">
-            <div className="card shadow-lg p-4" style={{ borderRadius: '1.25rem', background: 'white', boxShadow: '0 4px 24px rgba(34,34,59,0.08)' }}>
-              <h4 className="fw-bold mb-3" style={{ letterSpacing: '0.5px', fontSize: '1.5rem', color: '#22223b' }}>
-                Friday Call Status
-              </h4>
-              <div className="d-flex flex-wrap gap-3">
-                <div className="d-flex align-items-center gap-2">
-                  <span className="badge bg-success" style={{ fontSize: '1rem', padding: '0.5em 1em', borderRadius: '0.75rem' }}>Coming</span>
-                  <span className="fw-bold" style={{ fontSize: '1.2rem' }}>{stats.fridayReasons?.Coming ?? 0}</span>
-                </div>
-                <div className="d-flex align-items-center gap-2">
-                  <span className="badge bg-info" style={{ fontSize: '1rem', padding: '0.5em 1em', borderRadius: '0.75rem' }}>Job</span>
-                  <span className="fw-bold" style={{ fontSize: '1.2rem' }}>{stats.fridayReasons?.Job ?? 0}</span>
-                </div>
-                <div className="d-flex align-items-center gap-2">
-                  <span className="badge bg-warning text-dark" style={{ fontSize: '1rem', padding: '0.5em 1em', borderRadius: '0.75rem' }}>Lecture</span>
-                  <span className="fw-bold" style={{ fontSize: '1.2rem' }}>{stats.fridayReasons?.Lecture ?? 0}</span>
-                </div>
-                <div className="d-flex align-items-center gap-2">
-                  <span className="badge bg-secondary" style={{ fontSize: '1rem', padding: '0.5em 1em', borderRadius: '0.75rem' }}>Other</span>
-                  <span className="fw-bold" style={{ fontSize: '1.2rem' }}>{stats.fridayReasons?.Other ?? 0}</span>
-                </div>
-              </div>
+        <div className="card shadow-sm border-0 mb-4" style={{ borderRadius: '1.25rem', background: 'white' }}>
+          <div className="card-body d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <h4 className="mb-0 text-uppercase small fw-semibold text-muted">Insights Overview</h4>
+            <div className="btn-group insights-toggle">
+              <Button
+                variant={activePanel === 'calls' ? 'primary' : 'outline-primary'}
+                className="px-4"
+                onClick={() => setActivePanel('calls')}
+              >
+                Call Analytics
+              </Button>
+              <Button
+                variant={activePanel === 'students' ? 'primary' : 'outline-primary'}
+                className="px-4"
+                onClick={() => setActivePanel('students')}
+              >
+                Yuvak Analytics
+              </Button>
             </div>
           </div>
         </div>
-        {/* Student Insights */}
-        <div className="row g-4 mb-4">
-          <div className="col-xl-4 col-md-6">
-            <div className="card shadow-lg p-4 analytics-card h-100" style={{ borderRadius: '1.25rem', background: 'white', boxShadow: '0 4px 24px rgba(34,34,59,0.08)' }}>
-              <h4 className="fw-bold mb-3" style={{ letterSpacing: '0.5px', fontSize: '1.4rem', color: '#22223b' }}>
-                Study Institutions
-              </h4>
-              {renderStatList(insights.byInstitution, 'No institution data available')}
-            </div>
-          </div>
-          <div className="col-xl-4 col-md-6">
-            <div className="card shadow-lg p-4 analytics-card h-100" style={{ borderRadius: '1.25rem', background: 'white', boxShadow: '0 4px 24px rgba(34,34,59,0.08)' }}>
-              <h4 className="fw-bold mb-3" style={{ letterSpacing: '0.5px', fontSize: '1.4rem', color: '#22223b' }}>
-                Top Study Programs
-              </h4>
-              {renderStatList(insights.topPrograms, 'No program data available')}
-            </div>
-          </div>
-          <div className="col-xl-4 col-md-12">
-            <div className="card shadow-lg p-4 analytics-card h-100" style={{ borderRadius: '1.25rem', background: 'white', boxShadow: '0 4px 24px rgba(34,34,59,0.08)' }}>
-              <h4 className="fw-bold mb-3" style={{ letterSpacing: '0.5px', fontSize: '1.4rem', color: '#22223b' }}>
-                Career & Residency
-              </h4>
-              <div className="row">
-                <div className="col-12 col-md-6">
-                  <h6 className="text-uppercase text-muted small fw-semibold mb-2">Post-graduation Plans</h6>
-                  {renderStatList(insights.postGradPlans, 'No post-graduation data')}
-                </div>
-                <div className="col-12 col-md-6 mt-3 mt-md-0">
-                  <h6 className="text-uppercase text-muted small fw-semibold mb-2">Employment Status</h6>
-                  {renderStatList(insights.employmentStatus, 'No employment data')}
+
+        {activePanel === 'calls' && (
+          <>
+            <div className="row g-4 mb-4">
+              <div className="col-xl-6 col-lg-6">
+                <div className="card shadow-lg p-4 analytics-card h-100" style={{ borderRadius: '1.25rem', background: 'white', boxShadow: '0 4px 24px rgba(34,34,59,0.08)' }}>
+                  <h4 className="fw-bold mb-2" style={{ letterSpacing: '0.5px', fontSize: '1.4rem', color: '#22223b' }}>
+                    Call Volume Snapshot
+                  </h4>
+                  <p className="text-muted small mb-3">Activity captured for today, this week, and this month.</p>
+                  <div className="chart-wrapper">
+                    <canvas ref={chartRef} height="220" />
+                  </div>
                 </div>
               </div>
-              <div className="mt-4">
-                <h6 className="text-uppercase text-muted small fw-semibold mb-3">Residency</h6>
-                <div className="d-flex flex-wrap gap-2">
-                  <span className="badge bg-success-subtle text-success-emphasis px-3 py-2 rounded-pill">
-                    Active in Windsor: <strong>{insights.residency?.active ?? 0}</strong>
-                  </span>
-                  <span className="badge bg-danger-subtle text-danger-emphasis px-3 py-2 rounded-pill">
-                    Moved Out: <strong>{insights.residency?.movedOut ?? 0}</strong>
-                  </span>
+              <div className="col-xl-6 col-lg-6">
+                <div className="card shadow-lg p-4 analytics-card h-100" style={{ borderRadius: '1.25rem', background: 'white', boxShadow: '0 4px 24px rgba(34,34,59,0.08)' }}>
+                  <h4 className="fw-bold mb-3" style={{ letterSpacing: '0.5px', fontSize: '1.4rem', color: '#22223b' }}>
+                    Follow-up Summary
+                  </h4>
+                  <ul className="list-group list-group-flush analytics-list">
+                    {callSummaryItems.map((item) => (
+                      <li key={item.label} className="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span className="fw-medium">{item.label}</span>
+                        <span className="badge bg-primary-subtle text-primary-emphasis rounded-pill px-3">
+                          {item.value ?? 0}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-        {/* Recent Calls Section */}
-        <div className="row mt-4">
-          <div className="col-12">
-            <div className="card shadow-lg p-4" style={{ borderRadius: '1.25rem', background: 'white', boxShadow: '0 4px 24px rgba(34,34,59,0.08)' }}>
-              <div className="d-flex justify-content-between align-items-center mb-3">
-                <h4 className="fw-bold mb-0" style={{ letterSpacing: '0.5px', fontSize: '1.5rem', color: '#22223b' }}>Recent Call Logs</h4>
-                <Link href="/call-logs" className="btn btn-primary btn-sm" style={{ fontWeight: 600, borderRadius: '0.75rem' }}>
-                  View All
-                </Link>
+
+            <div className="row mb-4">
+              <div className="col-12">
+                <div className="card shadow-lg p-4" style={{ borderRadius: '1.25rem', background: 'white', boxShadow: '0 4px 24px rgba(34,34,59,0.08)' }}>
+                  <h4 className="fw-bold mb-3" style={{ letterSpacing: '0.5px', fontSize: '1.5rem', color: '#22223b' }}>
+                    Friday Call Status
+                  </h4>
+                  <div className="d-flex flex-wrap gap-3">
+                    <div className="d-flex align-items-center gap-2">
+                      <span className="badge bg-success" style={{ fontSize: '1rem', padding: '0.5em 1em', borderRadius: '0.75rem' }}>Coming</span>
+                      <span className="fw-bold" style={{ fontSize: '1.2rem' }}>{stats.fridayReasons?.Coming ?? 0}</span>
+                    </div>
+                    <div className="d-flex align-items-center gap-2">
+                      <span className="badge bg-info" style={{ fontSize: '1rem', padding: '0.5em 1em', borderRadius: '0.75rem' }}>Job</span>
+                      <span className="fw-bold" style={{ fontSize: '1.2rem' }}>{stats.fridayReasons?.Job ?? 0}</span>
+                    </div>
+                    <div className="d-flex align-items-center gap-2">
+                      <span className="badge bg-warning text-dark" style={{ fontSize: '1rem', padding: '0.5em 1em', borderRadius: '0.75rem' }}>Lecture</span>
+                      <span className="fw-bold" style={{ fontSize: '1.2rem' }}>{stats.fridayReasons?.Lecture ?? 0}</span>
+                    </div>
+                    <div className="d-flex align-items-center gap-2">
+                      <span className="badge bg-secondary" style={{ fontSize: '1rem', padding: '0.5em 1em', borderRadius: '0.75rem' }}>Other</span>
+                      <span className="fw-bold" style={{ fontSize: '1.2rem' }}>{stats.fridayReasons?.Other ?? 0}</span>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="table-responsive">
-                <Table hover responsive className="mb-0" style={{ fontFamily: 'Inter, sans-serif', fontSize: '1.05rem' }}>
-                  <thead style={{ background: 'linear-gradient(90deg, #e0e7ef 0%, #f8fafc 100%)', fontWeight: 700, fontSize: '1rem', color: '#22223b' }}>
-                    <tr>
-                      <th>Student</th>
-                      <th>Status</th>
-                      <th>Notes</th>
-                      <th>Date</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {recentCalls.length > 0 ? (
-                      recentCalls.map((call, index) => (
-                        <tr key={index} style={{ transition: 'background 0.18s' }}>
-                          <td className="fw-semibold">{call.student}</td>
-                          <td>
-                            <span className={`badge bg-${call.status === 'Completed' ? 'success' : 'warning'}`} style={{ fontSize: '1rem', padding: '0.5em 1em', borderRadius: '0.75rem' }}>
-                              {call.status}
-                            </span>
-                          </td>
-                          <td style={{ maxWidth: 220, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{call.notes}</td>
-                          <td className="text-muted">{call.date}</td>
+            </div>
+
+            <div className="row mt-4">
+              <div className="col-12">
+                <div className="card shadow-lg p-4" style={{ borderRadius: '1.25rem', background: 'white', boxShadow: '0 4px 24px rgba(34,34,59,0.08)' }}>
+                  <div className="d-flex justify-content-between align-items-center mb-3">
+                    <h4 className="fw-bold mb-0" style={{ letterSpacing: '0.5px', fontSize: '1.5rem', color: '#22223b' }}>Recent Call Logs</h4>
+                    <Link href="/call-logs" className="btn btn-primary btn-sm" style={{ fontWeight: 600, borderRadius: '0.75rem' }}>
+                      View All
+                    </Link>
+                  </div>
+                  <div className="table-responsive">
+                    <Table hover responsive className="mb-0" style={{ fontFamily: 'Inter, sans-serif', fontSize: '1.05rem' }}>
+                      <thead style={{ background: 'linear-gradient(90deg, #e0e7ef 0%, #f8fafc 100%)', fontWeight: 700, fontSize: '1rem', color: '#22223b' }}>
+                        <tr>
+                          <th>Student</th>
+                          <th>Status</th>
+                          <th>Notes</th>
+                          <th>Date</th>
                         </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan="4" className="text-center py-4">
-                          No recent calls found
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </Table>
+                      </thead>
+                      <tbody>
+                        {recentCalls.length > 0 ? (
+                          recentCalls.map((call, index) => (
+                            <tr key={index} style={{ transition: 'background 0.18s' }}>
+                              <td className="fw-semibold">{call.student}</td>
+                              <td>
+                                <span className={`badge bg-${call.status === 'Completed' ? 'success' : 'warning'}`} style={{ fontSize: '1rem', padding: '0.5em 1em', borderRadius: '0.75rem' }}>
+                                  {call.status}
+                                </span>
+                              </td>
+                              <td style={{ maxWidth: 220, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{call.notes}</td>
+                              <td className="text-muted">{call.date}</td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan="4" className="text-center py-4">
+                              No recent calls found
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </Table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {activePanel === 'students' && (
+          <div className="row g-4 mb-4">
+            <div className="col-xl-4 col-md-6">
+              <div className="card shadow-lg p-4 analytics-card h-100" style={{ borderRadius: '1.25rem', background: 'white', boxShadow: '0 4px 24px rgba(34,34,59,0.08)' }}>
+                <h4 className="fw-bold mb-3" style={{ letterSpacing: '0.5px', fontSize: '1.4rem', color: '#22223b' }}>
+                  Study Institutions
+                </h4>
+                {renderStatList(insights.byInstitution, 'No institution data available')}
+              </div>
+            </div>
+            <div className="col-xl-4 col-md-6">
+              <div className="card shadow-lg p-4 analytics-card h-100" style={{ borderRadius: '1.25rem', background: 'white', boxShadow: '0 4px 24px rgba(34,34,59,0.08)' }}>
+                <h4 className="fw-bold mb-3" style={{ letterSpacing: '0.5px', fontSize: '1.4rem', color: '#22223b' }}>
+                  Top Study Programs
+                </h4>
+                {renderStatList(insights.topPrograms, 'No program data available')}
+              </div>
+            </div>
+            <div className="col-xl-4 col-md-12">
+              <div className="card shadow-lg p-4 analytics-card h-100" style={{ borderRadius: '1.25rem', background: 'white', boxShadow: '0 4px 24px rgba(34,34,59,0.08)' }}>
+                <h4 className="fw-bold mb-3" style={{ letterSpacing: '0.5px', fontSize: '1.4rem', color: '#22223b' }}>
+                  Career & Residency
+                </h4>
+                <div className="row">
+                  <div className="col-12 col-md-6">
+                    <h6 className="text-uppercase text-muted small fw-semibold mb-2">Post-graduation Plans</h6>
+                    {renderStatList(insights.postGradPlans, 'No post-graduation data')}
+                  </div>
+                  <div className="col-12 col-md-6 mt-3 mt-md-0">
+                    <h6 className="text-uppercase text-muted small fw-semibold mb-2">Employment Status</h6>
+                    {renderStatList(insights.employmentStatus, 'No employment data')}
+                  </div>
+                </div>
+                <div className="mt-4">
+                  <h6 className="text-uppercase text-muted small fw-semibold mb-3">Residency</h6>
+                  <div className="d-flex flex-wrap gap-2">
+                    <span className="badge bg-success-subtle text-success-emphasis px-3 py-2 rounded-pill">
+                      Active in Windsor: <strong>{insights.residency?.active ?? 0}</strong>
+                    </span>
+                    <span className="badge bg-danger-subtle text-danger-emphasis px-3 py-2 rounded-pill">
+                      Moved Out: <strong>{insights.residency?.movedOut ?? 0}</strong>
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
         {/* Chatbot Display */}
         {showChat && (
           <div className="mt-4">
@@ -505,6 +605,18 @@ export default function Dashboard() {
         }
         .analytics-card .badge {
           font-size: 0.85rem;
+        }
+        .insights-toggle .btn {
+          border-radius: 999px;
+          min-width: 160px;
+          font-weight: 600;
+        }
+        .insights-toggle .btn + .btn {
+          margin-left: 0.75rem;
+        }
+        .chart-wrapper {
+          position: relative;
+          min-height: 220px;
         }
       `}</style>
     </>
