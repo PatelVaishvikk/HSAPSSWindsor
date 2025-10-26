@@ -6,6 +6,36 @@ import Head from 'next/head';
 import Link from 'next/link';
 import ChatBot from '../components/ChatBot'; // Import your ChatBot component
 
+const DEFAULT_FRIDAY_REASONS = {
+  Coming: 0,
+  Job: 0,
+  Lecture: 0,
+  Other: 0
+};
+
+const createDefaultStudyInsights = () => ({
+  byInstitution: [],
+  topPrograms: [],
+  postGradPlans: [],
+  employmentStatus: [],
+  residency: { active: 0, movedOut: 0 }
+});
+
+const normalizeStudyInsights = (insights) => {
+  const defaults = createDefaultStudyInsights();
+  if (!insights) {
+    return defaults;
+  }
+  return {
+    ...defaults,
+    ...insights,
+    residency: {
+      ...defaults.residency,
+      ...(insights.residency || {})
+    }
+  };
+};
+
 export default function Dashboard() {
   const [stats, setStats] = useState({
     totalStudents: 0,
@@ -14,7 +44,9 @@ export default function Dashboard() {
     pendingCalls: 0,
     todaysCalls: 0,
     weeksCalls: 0,
-    monthsCalls: 0
+    monthsCalls: 0,
+    fridayReasons: { ...DEFAULT_FRIDAY_REASONS },
+    studyInsights: createDefaultStudyInsights()
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -70,7 +102,18 @@ export default function Dashboard() {
       if (!response.ok) {
         throw new Error(data.error || 'Failed to fetch dashboard statistics');
       }
-      setStats(data.stats);
+      const incoming = data.stats || {};
+      setStats({
+        totalStudents: incoming.totalStudents ?? 0,
+        totalCalls: incoming.totalCalls ?? 0,
+        completedCalls: incoming.completedCalls ?? 0,
+        pendingCalls: incoming.pendingCalls ?? 0,
+        todaysCalls: incoming.todaysCalls ?? 0,
+        weeksCalls: incoming.weeksCalls ?? 0,
+        monthsCalls: incoming.monthsCalls ?? 0,
+        fridayReasons: { ...DEFAULT_FRIDAY_REASONS, ...(incoming.fridayReasons || {}) },
+        studyInsights: normalizeStudyInsights(incoming.studyInsights)
+      });
     } catch (error) {
       console.error('Error fetching dashboard stats:', error);
       setError(error.message);
@@ -99,6 +142,32 @@ export default function Dashboard() {
       console.error('Error fetching recent calls:', error);
     }
   };
+
+  const renderStatList = (items = [], emptyLabel = 'No data available') => {
+    if (!items.length) {
+      return <p className="text-muted small mb-0">{emptyLabel}</p>;
+    }
+    return (
+      <ul className="list-group list-group-flush analytics-list">
+        {items.map((item, index) => {
+          const labelText = item.rank ? `${item.rank}. ${item.label}` : item.label;
+          return (
+            <li
+              key={`${item.label}-${index}`}
+              className="list-group-item d-flex justify-content-between align-items-center px-0"
+            >
+              <span className="fw-medium">{labelText}</span>
+              <span className="badge bg-primary-subtle text-primary-emphasis rounded-pill px-3">
+                {item.count}
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+    );
+  };
+
+  const insights = stats.studyInsights || createDefaultStudyInsights();
 
   return (
     <>
@@ -315,6 +384,53 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
+        {/* Student Insights */}
+        <div className="row g-4 mb-4">
+          <div className="col-xl-4 col-md-6">
+            <div className="card shadow-lg p-4 analytics-card h-100" style={{ borderRadius: '1.25rem', background: 'white', boxShadow: '0 4px 24px rgba(34,34,59,0.08)' }}>
+              <h4 className="fw-bold mb-3" style={{ letterSpacing: '0.5px', fontSize: '1.4rem', color: '#22223b' }}>
+                Study Institutions
+              </h4>
+              {renderStatList(insights.byInstitution, 'No institution data available')}
+            </div>
+          </div>
+          <div className="col-xl-4 col-md-6">
+            <div className="card shadow-lg p-4 analytics-card h-100" style={{ borderRadius: '1.25rem', background: 'white', boxShadow: '0 4px 24px rgba(34,34,59,0.08)' }}>
+              <h4 className="fw-bold mb-3" style={{ letterSpacing: '0.5px', fontSize: '1.4rem', color: '#22223b' }}>
+                Top Study Programs
+              </h4>
+              {renderStatList(insights.topPrograms, 'No program data available')}
+            </div>
+          </div>
+          <div className="col-xl-4 col-md-12">
+            <div className="card shadow-lg p-4 analytics-card h-100" style={{ borderRadius: '1.25rem', background: 'white', boxShadow: '0 4px 24px rgba(34,34,59,0.08)' }}>
+              <h4 className="fw-bold mb-3" style={{ letterSpacing: '0.5px', fontSize: '1.4rem', color: '#22223b' }}>
+                Career & Residency
+              </h4>
+              <div className="row">
+                <div className="col-12 col-md-6">
+                  <h6 className="text-uppercase text-muted small fw-semibold mb-2">Post-graduation Plans</h6>
+                  {renderStatList(insights.postGradPlans, 'No post-graduation data')}
+                </div>
+                <div className="col-12 col-md-6 mt-3 mt-md-0">
+                  <h6 className="text-uppercase text-muted small fw-semibold mb-2">Employment Status</h6>
+                  {renderStatList(insights.employmentStatus, 'No employment data')}
+                </div>
+              </div>
+              <div className="mt-4">
+                <h6 className="text-uppercase text-muted small fw-semibold mb-3">Residency</h6>
+                <div className="d-flex flex-wrap gap-2">
+                  <span className="badge bg-success-subtle text-success-emphasis px-3 py-2 rounded-pill">
+                    Active in Windsor: <strong>{insights.residency?.active ?? 0}</strong>
+                  </span>
+                  <span className="badge bg-danger-subtle text-danger-emphasis px-3 py-2 rounded-pill">
+                    Moved Out: <strong>{insights.residency?.movedOut ?? 0}</strong>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
         {/* Recent Calls Section */}
         <div className="row mt-4">
           <div className="col-12">
@@ -377,6 +493,18 @@ export default function Dashboard() {
         .card .table-hover tbody tr:hover {
           background: #e0e7ef !important;
           transition: background 0.18s;
+        }
+        .analytics-card .analytics-list .list-group-item {
+          background: transparent;
+          border: none;
+          padding-left: 0;
+          padding-right: 0;
+        }
+        .analytics-card .analytics-list .list-group-item + .list-group-item {
+          border-top: 1px solid rgba(34,34,59,0.08);
+        }
+        .analytics-card .badge {
+          font-size: 0.85rem;
         }
       `}</style>
     </>

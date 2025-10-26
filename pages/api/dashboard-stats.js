@@ -2,6 +2,47 @@ import connectDb from '../../lib/db';
 import Student from '../../models/Student';
 import CallLog from '../../models/CallLog';
 
+const INSTITUTION_LABELS = {
+    uwindsor: 'University of Windsor',
+    st_clair: 'St. Clair College',
+    other: 'Other'
+};
+
+const POST_GRAD_PLAN_LABELS = {
+    working: 'Working',
+    job_search: 'Job Searching',
+    higher_studies: 'Higher Studies',
+    entrepreneur: 'Entrepreneurship',
+    other: 'Other'
+};
+
+const EMPLOYMENT_STATUS_LABELS = {
+    working: 'Working',
+    job_search: 'Job Searching',
+    higher_studies: 'Higher Studies',
+    entrepreneur: 'Entrepreneurship',
+    other: 'Other'
+};
+
+const DEFAULT_LABEL = 'Not specified';
+
+const titleCase = (value = '') =>
+    value
+        .toString()
+        .replace(/[_-]+/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .replace(/\b\w/g, (char) => char.toUpperCase());
+
+const mapAggregatesToList = (records = [], labelMap = {}) =>
+    records.map(({ _id, count }) => {
+        const key = typeof _id === 'string' ? _id.trim() : _id;
+        const mapped =
+            (key && labelMap[key]) ||
+            (key ? titleCase(key) : DEFAULT_LABEL);
+        return { label: mapped, count };
+    });
+
 export default async function handler(req, res) {
     if (req.method !== 'GET') {
         return res.status(405).json({ error: 'Method not allowed' });
@@ -70,6 +111,41 @@ export default async function handler(req, res) {
             else if (log._id && log._id.trim()) fridayReasons.Other += log.count;
         });
 
+        // --- Student analytics ---
+        const institutionAgg = await Student.aggregate([
+            { $group: { _id: { $ifNull: ['$study_institution', ''] }, count: { $sum: 1 } } },
+            { $sort: { count: -1 } }
+        ]);
+        const programAgg = await Student.aggregate([
+            { $group: { _id: { $ifNull: ['$study', ''] }, count: { $sum: 1 } } },
+            { $sort: { count: -1 } },
+            { $limit: 6 }
+        ]);
+        const postGradAgg = await Student.aggregate([
+            { $group: { _id: { $ifNull: ['$post_graduation_plan', ''] }, count: { $sum: 1 } } },
+            { $sort: { count: -1 } }
+        ]);
+        const employmentAgg = await Student.aggregate([
+            { $group: { _id: { $ifNull: ['$employment_status', ''] }, count: { $sum: 1 } } },
+            { $sort: { count: -1 } }
+        ]);
+
+        const studyInsights = {
+            byInstitution: mapAggregatesToList(institutionAgg, INSTITUTION_LABELS),
+            topPrograms: mapAggregatesToList(programAgg).map((entry, index) => ({
+                ...entry,
+                rank: index + 1
+            })),
+            postGradPlans: mapAggregatesToList(postGradAgg, POST_GRAD_PLAN_LABELS),
+            employmentStatus: mapAggregatesToList(employmentAgg, EMPLOYMENT_STATUS_LABELS)
+        };
+
+        const movedOutCount = await Student.countDocuments({ moved_out: true });
+        studyInsights.residency = {
+            active: Math.max(totalStudents - movedOutCount, 0),
+            movedOut: movedOutCount
+        };
+
         res.status(200).json({
             success: true,
             stats: {
@@ -80,7 +156,8 @@ export default async function handler(req, res) {
                 todaysCalls,
                 weeksCalls,
                 monthsCalls,
-                fridayReasons
+                fridayReasons,
+                studyInsights
             }
         });
     } catch (error) {
