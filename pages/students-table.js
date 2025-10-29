@@ -191,31 +191,48 @@ const customTableStyles = {
   },
 };
 
-const FORMAT_DATE_REGEX = /^(\d{4})-(\d{2})-(\d{2})$/;
+const DATE_ONLY_REGEX = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+const toUtcMidday = (year, monthIndex, day) => new Date(Date.UTC(year, monthIndex, day, 12, 0, 0, 0));
+
+const parseDateToUtc = (value) => {
+  if (!value) return null;
+
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+
+    const directMatch = DATE_ONLY_REGEX.exec(trimmed);
+    if (directMatch) {
+      const [, yearStr, monthStr, dayStr] = directMatch;
+      const year = Number(yearStr);
+      const monthIndex = Number(monthStr) - 1;
+      const day = Number(dayStr);
+      if (!Number.isNaN(year) && !Number.isNaN(monthIndex) && !Number.isNaN(day)) {
+        return toUtcMidday(year, monthIndex, day);
+      }
+    }
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+
+  return toUtcMidday(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
+};
 
 const formatDateForInput = (dateValue) => {
-  if (!dateValue) return '';
-
-  if (typeof dateValue === 'string' && FORMAT_DATE_REGEX.test(dateValue.trim())) {
-    return dateValue.trim();
-  }
-
-  const date = new Date(dateValue);
-  if (Number.isNaN(date.getTime())) {
-    return '';
-  }
-
-  return date.toISOString().split('T')[0];
+  const parsed = parseDateToUtc(dateValue);
+  if (!parsed) return '';
+  return parsed.toISOString().split('T')[0];
 };
 const formatDateForDisplay = (dateString) => {
-  if (!dateString) return '';
-  
-  // Create date object from the string
-  const date = new Date(dateString);
-  
-  // Format in EDT (Eastern Daylight Time)
-  return date.toLocaleDateString('en-US', {
-    timeZone: 'America/New_York', // EDT timezone
+  const parsed = parseDateToUtc(dateString);
+  if (!parsed) return '';
+
+  return parsed.toLocaleDateString('en-US', {
+    timeZone: 'UTC',
     year: 'numeric',
     month: 'long',
     day: 'numeric'
