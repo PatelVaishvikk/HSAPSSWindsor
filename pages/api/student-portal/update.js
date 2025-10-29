@@ -46,12 +46,18 @@ export default async function handler(req, res) {
     }
 
     const filteredUpdates = pickAllowedUpdates(updates);
-    applyPortalUpdates(student, filteredUpdates);
+    const { changedFields } = applyPortalUpdates(student, filteredUpdates);
 
     await student.save();
 
     const payload = buildPortalStudentPayload(student);
-    return res.status(200).json({ student: payload });
+    return res.status(200).json({
+      student: payload,
+      changedFields,
+      last_portal_update_at: student.last_portal_update_at
+        ? student.last_portal_update_at.toISOString()
+        : null
+    });
   } catch (error) {
     console.error('Student portal update error:', error);
     if (error.name === 'ValidationError') {

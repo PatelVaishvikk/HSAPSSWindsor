@@ -94,6 +94,7 @@ export default function StudentPortalPage() {
   const [updateLoading, setUpdateLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [showThankYou, setShowThankYou] = useState(false);
 
   const graduationComplete = formData.graduation_completed || false;
   const workingPlan = formData.post_graduation_plan === 'working';
@@ -400,7 +401,8 @@ export default function StudentPortalPage() {
 
       setFormData(normalizedForm);
       setStudent(data.student);
-      setSuccessMessage('Your details were updated successfully.');
+      setSuccessMessage('');
+      setShowThankYou(true);
     } catch (error) {
       console.error('Student portal update failed:', error);
       setErrorMessage(error.message || 'Update failed');
@@ -416,6 +418,7 @@ export default function StudentPortalPage() {
     setLoginPassword(DEFAULT_PASSWORD);
     setErrorMessage('');
     setSuccessMessage('');
+    setShowThankYou(false);
   };
 
   const renderFormControl = (field) => {
@@ -709,6 +712,28 @@ export default function StudentPortalPage() {
                     </Button>
                   </div>
                 </Form>
+              ) : showThankYou ? (
+                <div className="thank-you-state text-center py-5 px-3">
+                  <div className="thank-you-icon mx-auto mb-4">
+                    <i className="fas fa-hands-helping"></i>
+                  </div>
+                  <h2 className="fw-bold mb-3">Thank you for updating your details!</h2>
+                  <p className="lead text-muted mb-4">
+                    We appreciate you keeping your profile current. You will soon receive access to
+                    our exclusive portal, where you can connect with our highly professional Yuvako
+                    community.
+                  </p>
+                  <div className="d-flex justify-content-center gap-3 flex-wrap">
+                    <Button variant="outline-primary" onClick={handleLogout}>
+                      <i className="fas fa-sign-out-alt me-2"></i>
+                      Log Out
+                    </Button>
+                    <Button variant="primary" onClick={() => setShowThankYou(false)}>
+                      <i className="fas fa-user-edit me-2"></i>
+                      Review My Details
+                    </Button>
+                  </div>
+                </div>
               ) : (
                 <Form onSubmit={handleUpdate} className="student-portal-form" noValidate>
                   <div className="portal-sections">
@@ -885,6 +910,25 @@ export default function StudentPortalPage() {
         .student-portal-form .form-check-label {
           font-weight: 600;
           color: #1f2937;
+        }
+        .thank-you-state {
+          max-width: 560px;
+          margin: 0 auto;
+        }
+        .thank-you-icon {
+          width: 96px;
+          height: 96px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(139, 92, 246, 0.1));
+          color: #2563eb;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 2rem;
+          box-shadow: inset 0 0 0 1px rgba(37, 99, 235, 0.2);
+        }
+        .thank-you-state .btn {
+          min-width: 200px;
         }
         @media (max-width: 767px) {
           .student-portal-card {

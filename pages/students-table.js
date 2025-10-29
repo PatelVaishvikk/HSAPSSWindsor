@@ -5,6 +5,8 @@ import dynamic from 'next/dynamic';
 import Navbar from '../components/Navbar'; // Verify path
 import Head from 'next/head';
 import { debounce } from 'lodash';
+import { formatDistanceToNowStrict } from 'date-fns';
+import { STUDENT_PORTAL_FIELD_DEFS } from '../config/studentPortalFields.js';
 
 // Dynamically import DataTable for client-side rendering
 const DataTable = dynamic(() => import('react-data-table-component').then(mod => mod.default), {
@@ -73,6 +75,11 @@ const POST_GRAD_OPTIONS = [
   { value: 'other', label: 'Other' },
 ];
 
+const PORTAL_FIELD_LABEL_MAP = STUDENT_PORTAL_FIELD_DEFS.reduce((acc, field) => {
+  acc[field.name] = field.label;
+  return acc;
+}, {});
+
 const getProgramDefinition = (institution, programValue) => {
   const list = PROGRAM_LIBRARY[institution] || [];
   return list.find((program) => program.value === programValue) || null;
@@ -122,6 +129,38 @@ const formatYearList = (value) => {
     return value.length ? value.join(', ') : '-';
   }
   return value;
+};
+
+const formatPortalUpdateTime = (timestamp) => {
+  if (!timestamp) return null;
+  const date = new Date(timestamp);
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+  return `${formatDistanceToNowStrict(date)} ago`;
+};
+
+const humanizePortalField = (fieldName) =>
+  PORTAL_FIELD_LABEL_MAP[fieldName] ||
+  fieldName
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+
+const summarizePortalFields = (fields = []) => {
+  if (!Array.isArray(fields) || fields.length === 0) return '';
+  const labels = fields.map(humanizePortalField);
+  if (labels.length <= 2) {
+    return labels.join(', ');
+  }
+  return `${labels.slice(0, 2).join(', ')} +${labels.length - 2} more`;
+};
+
+const isRecentPortalUpdate = (timestamp, days = 7) => {
+  if (!timestamp) return false;
+  const date = new Date(timestamp);
+  if (Number.isNaN(date.getTime())) return false;
+  const delta = Date.now() - date.getTime();
+  return delta >= 0 && delta <= days * 24 * 60 * 60 * 1000;
 };
 
 const customTableStyles = {
@@ -668,6 +707,45 @@ export default function StudentsTable() {
           {row.moved_out ? 'Moved Out' : 'Active'}
         </span>
       ),
+    },
+    {
+      name: 'Portal Update',
+      selector: row => row.last_portal_update_at || '',
+      sortable: true,
+      minWidth: '200px',
+      grow: 1.5,
+      sortFunction: (rowA, rowB) => {
+        const a = rowA.last_portal_update_at ? new Date(rowA.last_portal_update_at).getTime() : 0;
+        const b = rowB.last_portal_update_at ? new Date(rowB.last_portal_update_at).getTime() : 0;
+        return a - b;
+      },
+      cell: row => {
+        const relative = formatPortalUpdateTime(row.last_portal_update_at);
+        const recent = isRecentPortalUpdate(row.last_portal_update_at);
+        const fieldsSummary = summarizePortalFields(row.last_portal_update_fields);
+        return (
+          <div className="d-flex flex-column lh-sm">
+            <div className="d-flex align-items-center gap-2">
+              <span className="fw-semibold">
+                {relative || 'No updates yet'}
+              </span>
+              {recent && (
+                <span className="badge bg-primary-subtle text-primary-emphasis fw-semibold" style={{ fontSize: '0.65rem', letterSpacing: '0.08em' }}>
+                  New
+                </span>
+              )}
+            </div>
+            {row.last_portal_update_at && (
+              <span className="text-muted small">
+                {new Date(row.last_portal_update_at).toLocaleString()}
+              </span>
+            )}
+            {fieldsSummary && (
+              <span className="text-muted small">Updated: {fieldsSummary}</span>
+            )}
+          </div>
+        );
+      },
     },
     {
       name: 'Phone',
@@ -1392,6 +1470,28 @@ export default function StudentsTable() {
               <Row className="mb-2">
                 <Col xs={4}><strong>First Name:</strong></Col>
                 <Col xs={8}>{selectedStudent.first_name || 'N/A'}</Col>
+              </Row>
+              <Row className="mb-3">
+                <Col xs={4}><strong>Portal Update:</strong></Col>
+                <Col xs={8}>
+                  {selectedStudent.last_portal_update_at ? (
+                    <div className="d-flex flex-column">
+                      <span className="fw-semibold">
+                        {formatPortalUpdateTime(selectedStudent.last_portal_update_at) || 'Recently updated'}
+                      </span>
+                      <span className="text-muted small">
+                        {new Date(selectedStudent.last_portal_update_at).toLocaleString()}
+                      </span>
+                      {selectedStudent.last_portal_update_fields?.length > 0 && (
+                        <span className="text-muted small">
+                          Fields: {summarizePortalFields(selectedStudent.last_portal_update_fields)}
+                        </span>
+                      )}
+                    </div>
+                  ) : (
+                    <span className="text-muted">No student-portal updates yet.</span>
+                  )}
+                </Col>
               </Row>
               <Row className="mb-2">
                 <Col xs={4}><strong>Last Name:</strong></Col>

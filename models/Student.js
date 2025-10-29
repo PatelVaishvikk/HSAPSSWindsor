@@ -245,6 +245,14 @@ const StudentSchema = new mongoose.Schema({
     trim: true,
     default: ''
   },
+  last_portal_update_at: {
+    type: Date,
+    default: null
+  },
+  last_portal_update_fields: {
+    type: [String],
+    default: []
+  },
   created_at: { 
     type: Date, 
     default: Date.now 

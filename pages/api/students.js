@@ -91,6 +91,12 @@ export default async function handler(req, res) {
           ...(student.graduation_date
             ? { graduation_date: new Date(student.graduation_date).toISOString().split('T')[0] }
             : {}),
+          last_portal_update_fields: Array.isArray(student.last_portal_update_fields)
+            ? student.last_portal_update_fields
+            : [],
+          last_portal_update_at: student.last_portal_update_at
+            ? new Date(student.last_portal_update_at).toISOString()
+            : null
         }));
 
         res.status(200).json({ students, total, currentPage: pageNum });
