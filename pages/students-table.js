@@ -191,17 +191,21 @@ const customTableStyles = {
   },
 };
 
-const formatDateForInput = (dateString) => {
-  if (!dateString) return '';
-  
-  // Create date object from the string
-  const date = new Date(dateString);
-  
-  // Adjust for timezone offset to get the correct date in EDT
-  const timezoneOffset = date.getTimezoneOffset() * 60000;
-  const localDate = new Date(date.getTime() - timezoneOffset);
-  
-  return localDate.toISOString().split('T')[0];
+const FORMAT_DATE_REGEX = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+const formatDateForInput = (dateValue) => {
+  if (!dateValue) return '';
+
+  if (typeof dateValue === 'string' && FORMAT_DATE_REGEX.test(dateValue.trim())) {
+    return dateValue.trim();
+  }
+
+  const date = new Date(dateValue);
+  if (Number.isNaN(date.getTime())) {
+    return '';
+  }
+
+  return date.toISOString().split('T')[0];
 };
 const formatDateForDisplay = (dateString) => {
   if (!dateString) return '';

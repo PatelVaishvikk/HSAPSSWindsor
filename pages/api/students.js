@@ -2,10 +2,29 @@
 import Student from '../../models/Student';
 import CallLog from '../../models/CallLog';
 
-const formatDate = (date) => {
-  if (!date) return null;
-  const d = new Date(date);
-  return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+const DATE_ONLY_REGEX = /^(\d{4})-(\d{2})-(\d{2})$/;
+const formatDate = (value) => {
+  if (!value) return null;
+
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (DATE_ONLY_REGEX.test(trimmed)) {
+      const [, yearStr, monthStr, dayStr] = DATE_ONLY_REGEX.exec(trimmed);
+      const year = Number(yearStr);
+      const monthIndex = Number(monthStr) - 1;
+      const day = Number(dayStr);
+      if (!Number.isNaN(year) && !Number.isNaN(monthIndex) && !Number.isNaN(day)) {
+        return new Date(Date.UTC(year, monthIndex, day, 12, 0, 0, 0));
+      }
+    }
+  }
+
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return null;
+  }
+
+  return new Date(Date.UTC(parsed.getUTCFullYear(), parsed.getUTCMonth(), parsed.getUTCDate(), 12, 0, 0, 0));
 };
 
 const normalizeString = (value) => (typeof value === 'string' ? value.trim() : '');
