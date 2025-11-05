@@ -1,6 +1,7 @@
 import connectDb from '../../lib/db';
 import Student from '../../models/Student';
 import CallLog from '../../models/CallLog';
+import { requireAdmin } from '../../lib/adminRoute.js';
 
 const INSTITUTION_LABELS = {
     uwindsor: 'University of Windsor',
@@ -46,6 +47,10 @@ const mapAggregatesToList = (records = [], labelMap = {}) =>
 export default async function handler(req, res) {
     if (req.method !== 'GET') {
         return res.status(405).json({ error: 'Method not allowed' });
+    }
+
+    if (!requireAdmin(req, res)) {
+        return;
     }
 
     try {

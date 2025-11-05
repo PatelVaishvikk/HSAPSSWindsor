@@ -1,8 +1,12 @@
 // pages/api/attendance.js
 import connectDb from '../../lib/db';
 import Attendance from '../../models/Attendance';
+import { requireAdmin } from '../../lib/adminRoute.js';
 
 export default async function handler(req, res) {
+  if (!requireAdmin(req, res)) {
+    return;
+  }
   await connectDb();
   const { method } = req;
 

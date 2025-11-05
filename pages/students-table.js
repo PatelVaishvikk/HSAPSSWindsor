@@ -148,7 +148,9 @@ const humanizePortalField = (fieldName) =>
 
 const summarizePortalFields = (fields = []) => {
   if (!Array.isArray(fields) || fields.length === 0) return '';
-  const labels = fields.map(humanizePortalField);
+  const filtered = fields.filter((field) => field && field !== 'phone_normalized');
+  if (filtered.length === 0) return '';
+  const labels = filtered.map(humanizePortalField);
   if (labels.length <= 2) {
     return labels.join(', ');
   }
@@ -1691,6 +1693,11 @@ export default function StudentsTable() {
       `}</style>
     </>
   );
+}
+
+export async function getServerSideProps(ctx) {
+  const { requireAdminPage } = await import('../lib/adminPage.js');
+  return requireAdminPage(ctx);
 }
 
 

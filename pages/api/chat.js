@@ -1,8 +1,12 @@
 // pages/api/chat.js
 import connectDb from '../../lib/db';
 import Student from '../../models/Student';
+import { requireAdmin } from '../../lib/adminRoute.js';
 
 export default async function handler(req, res) {
+  if (!requireAdmin(req, res)) {
+    return;
+  }
   await connectDb();
 
   if (req.method !== 'POST') {

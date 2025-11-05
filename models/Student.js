@@ -108,6 +108,12 @@ const StudentSchema = new mongoose.Schema({
     required: [true, 'Phone number is required'], 
     trim: true 
   },
+  phone_normalized: {
+    type: String,
+    trim: true,
+    default: '',
+    index: true
+  },
   address: { 
     type: String, 
     trim: true, 
@@ -211,6 +217,56 @@ const StudentSchema = new mongoose.Schema({
     type: Boolean, 
     default: false 
   },
+  portal_password_hash: {
+    type: String,
+    default: ''
+  },
+  portal_password_set_at: {
+    type: Date,
+    default: null
+  },
+  community_visibility: {
+    type: String,
+    enum: ['hidden', 'members'],
+    default: 'members'
+  },
+  community_headline: {
+    type: String,
+    trim: true,
+    default: ''
+  },
+  community_bio: {
+    type: String,
+    trim: true,
+    default: ''
+  },
+  community_skills: {
+    type: [String],
+    default: []
+  },
+  community_interests: {
+    type: [String],
+    default: []
+  },
+  available_to_help: {
+    type: Boolean,
+    default: false
+  },
+  help_offering: {
+    type: String,
+    trim: true,
+    default: ''
+  },
+  linkedin_url: {
+    type: String,
+    trim: true,
+    default: ''
+  },
+  portfolio_url: {
+    type: String,
+    trim: true,
+    default: ''
+  },
   emergency_contact: { 
     type: String, 
     trim: true, 
@@ -252,6 +308,10 @@ const StudentSchema = new mongoose.Schema({
   last_portal_update_fields: {
     type: [String],
     default: []
+  },
+  last_portal_login_at: {
+    type: Date,
+    default: null
   },
   created_at: { 
     type: Date, 

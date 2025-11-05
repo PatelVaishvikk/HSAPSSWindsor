@@ -22,6 +22,11 @@ export const POST_GRAD_OPTIONS = [
   { value: 'other', label: 'Other' }
 ];
 
+export const COMMUNITY_VISIBILITY_OPTIONS = [
+  { value: 'members', label: 'Visible to HSAPSS students' },
+  { value: 'hidden', label: 'Hidden from community' }
+];
+
 export const STUDENT_PORTAL_FIELD_DEFS = [
   { name: 'first_name', label: 'First Name', type: 'text', required: true },
   { name: 'last_name', label: 'Last Name', type: 'text', required: true },
@@ -43,7 +48,16 @@ export const STUDENT_PORTAL_FIELD_DEFS = [
   { name: 'employment_status', label: 'Employment Status', type: 'select', options: POST_GRAD_OPTIONS },
   { name: 'employment_company', label: 'Employer / Company', type: 'text' },
   { name: 'employment_role', label: 'Job Role / Title', type: 'text' },
-  { name: 'notes', label: 'Additional Notes', type: 'textarea', rows: 3 }
+  { name: 'notes', label: 'Additional Notes', type: 'textarea', rows: 3 },
+  { name: 'community_visibility', label: 'Community Visibility', type: 'select', options: COMMUNITY_VISIBILITY_OPTIONS },
+  { name: 'community_headline', label: 'Professional Headline', type: 'text' },
+  { name: 'community_bio', label: 'About Me', type: 'textarea', rows: 4 },
+  { name: 'community_skills', label: 'Skills & Strengths', type: 'text' },
+  { name: 'community_interests', label: 'Interests', type: 'text' },
+  { name: 'available_to_help', label: 'Available to Help Others', type: 'checkbox' },
+  { name: 'help_offering', label: 'How I Can Help', type: 'text' },
+  { name: 'linkedin_url', label: 'LinkedIn URL', type: 'url' },
+  { name: 'portfolio_url', label: 'Portfolio / Website', type: 'url' }
 ];
 
 export const STUDENT_PORTAL_FIELD_NAMES = STUDENT_PORTAL_FIELD_DEFS.map((field) => field.name);

@@ -53,6 +53,21 @@ app.prepare().then(() => {
 
   io.on('connection', (socket) => {
     console.log('New client connected');
+
+    socket.on('student:join', ({ studentId }) => {
+      if (studentId) {
+        socket.join(`student:${studentId}`);
+      }
+    });
+
+    socket.on('help:join', () => {
+      socket.join('help-board');
+    });
+
+    socket.on('admin:join', () => {
+      socket.join('admin-suite');
+    });
+
     socket.on('disconnect', () => {
       console.log('Client disconnected');
     });

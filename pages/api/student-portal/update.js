@@ -1,11 +1,10 @@
 import connectDb from '../../../lib/db.js';
-import Student from '../../../models/Student.js';
 import {
   PORTAL_EDITABLE_FIELDS,
   applyPortalUpdates,
-  buildPortalStudentPayload,
-  getPortalPassword
+  buildPortalStudentPayload
 } from '../../../lib/studentPortalUtils.js';
+import { authenticateStudentFromRequest } from '../../../lib/studentPortalAuth.js';
 
 const pickAllowedUpdates = (updates) => {
   if (!updates || typeof updates !== 'object') {
@@ -33,17 +32,13 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Missing student id or password' });
   }
 
-  if (password !== getPortalPassword()) {
-    return res.status(401).json({ error: 'Invalid credentials' });
-  }
-
   try {
     await connectDb();
-    const student = await Student.findById(studentId);
-
-    if (!student) {
-      return res.status(404).json({ error: 'Student not found' });
+    const authResult = await authenticateStudentFromRequest(req);
+    if (authResult.error) {
+      return res.status(authResult.status || 401).json({ error: authResult.error });
     }
+    const { student } = authResult;
 
     const filteredUpdates = pickAllowedUpdates(updates);
     const { changedFields } = applyPortalUpdates(student, filteredUpdates);

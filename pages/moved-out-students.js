@@ -394,6 +394,11 @@ export default function MovedOutStudents() {
   );
 }
 
+export async function getServerSideProps(ctx) {
+  const { requireAdminPage } = await import('../lib/adminPage.js');
+  return requireAdminPage(ctx);
+}
+
 // Modern Stat Card
 function StatCard({ color = "primary", label, value }) {
   return (

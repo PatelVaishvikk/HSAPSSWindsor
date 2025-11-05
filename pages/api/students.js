@@ -1,6 +1,7 @@
 ﻿import connectDb from '../../lib/db';
 import Student from '../../models/Student';
 import CallLog from '../../models/CallLog';
+import { requireAdmin } from '../../lib/adminRoute.js';
 
 const DATE_ONLY_REGEX = /^(\d{4})-(\d{2})-(\d{2})$/;
 const formatDate = (value) => {
@@ -28,8 +29,14 @@ const formatDate = (value) => {
 };
 
 const normalizeString = (value) => (typeof value === 'string' ? value.trim() : '');
+const normalizePhoneDigits = (value) =>
+  typeof value === 'string' ? value.replace(/\D+/g, '') : '';
 
 export default async function handler(req, res) {
+  if (!requireAdmin(req, res)) {
+    return;
+  }
+
   await connectDb();
   const { method } = req;
 
@@ -115,6 +122,7 @@ export default async function handler(req, res) {
         const normalizedEmail = data.mail_id ? data.mail_id.trim().toLowerCase() : '';
         data.mail_id = normalizedEmail;
         data.phone = normalizeString(data.phone);
+        data.phone_normalized = normalizePhoneDigits(data.phone);
         data.address = normalizeString(data.address);
         data.gender = normalizeString(data.gender);
         data.education = normalizeString(data.education);
@@ -245,6 +253,10 @@ export default async function handler(req, res) {
           if (Object.prototype.hasOwnProperty.call(req.body, field)) {
             if (field === 'mail_id') {
               student.mail_id = req.body.mail_id ? req.body.mail_id.trim().toLowerCase() : '';
+            } else if (field === 'phone') {
+              const trimmedPhone = normalizeString(req.body.phone);
+              student.phone = trimmedPhone;
+              student.phone_normalized = normalizePhoneDigits(trimmedPhone);
             } else if (field === 'date_of_birth' || field === 'moved_out_date') {
               student[field] = req.body[field] ? formatDate(req.body[field]) : null;
             } else if (field === 'graduation_completed') {
@@ -291,6 +303,7 @@ export default async function handler(req, res) {
             student[field] = normalizeString(student[field]);
           }
         });
+        student.phone_normalized = normalizePhoneDigits(student.phone);
 
         if (!student.education && student.study_level) {
           student.education = student.study_level;

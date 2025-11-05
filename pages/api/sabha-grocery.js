@@ -1,7 +1,11 @@
 import connectDb from '../../lib/db';
 import SabhaGrocery from '../../models/SabhaGrocery';
+import { requireAdmin } from '../../lib/adminRoute.js';
 
 export default async function handler(req, res) {
+  if (!requireAdmin(req, res)) {
+    return;
+  }
   await connectDb();
   const { method } = req;
 

@@ -1,4 +1,5 @@
 import Twilio from 'twilio';
+import { requireAdmin } from '../../lib/adminRoute.js';
 
 const sanitizeDigits = (value = '') => value.replace(/[^0-9+]/g, '');
 
@@ -43,6 +44,10 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', ['POST']);
     return res.status(405).json({ error: `Method ${req.method} not allowed` });
+  }
+
+  if (!requireAdmin(req, res)) {
+    return;
   }
 
   const { message, recipients } = req.body || {};

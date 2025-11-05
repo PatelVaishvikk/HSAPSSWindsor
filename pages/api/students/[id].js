@@ -1,8 +1,12 @@
 import connectDb from '../../../config/db';
 import Student from '../../../models/Student';
+import { requireAdmin } from '../../../lib/adminRoute.js';
 
 export default async function handler(req, res) {
     const { id } = req.query;
+    if (!requireAdmin(req, res)) {
+        return;
+    }
     await connectDb();
 
     // Get Single Student

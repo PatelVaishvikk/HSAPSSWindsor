@@ -2,8 +2,12 @@ import connectDb from '../../lib/db';
 import CallLog from '../../models/CallLog';
 import Student from '../../models/Student';
 import mongoose from 'mongoose';
+import { requireAdmin } from '../../lib/adminRoute.js';
 
 export default async function handler(req, res) {
+  if (!requireAdmin(req, res)) {
+    return;
+  }
   await connectDb();
   const { method } = req;
 

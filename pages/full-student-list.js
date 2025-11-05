@@ -188,3 +188,8 @@ const FullStudentList = () => {
 };
 
 export default FullStudentList;
+
+export async function getServerSideProps(ctx) {
+  const { requireAdminPage } = await import('../lib/adminPage.js');
+  return requireAdminPage(ctx);
+}

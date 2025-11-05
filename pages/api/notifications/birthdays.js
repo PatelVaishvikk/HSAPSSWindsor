@@ -1,10 +1,15 @@
 import dbConnect from '../../../lib/dbConnect';
 import Student from '../../../models/Student';
 import { format } from 'date-fns';
+import { requireAdmin } from '../../../lib/adminRoute.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  if (!requireAdmin(req, res)) {
+    return;
   }
 
   try {
@@ -15,22 +20,27 @@ export default async function handler(req, res) {
     
     // Find students whose birthdays are today
     // Using $expr to compare month and day parts of the date
+    const [monthPart, dayPart] = today.split('-').map((part) => parseInt(part, 10));
+
     const students = await Student.find({
+      date_of_birth: { $ne: null },
       $expr: {
         $and: [
-          { $eq: [{ $month: '$dateOfBirth' }, parseInt(today.split('-')[0])] },
-          { $eq: [{ $dayOfMonth: '$dateOfBirth' }, parseInt(today.split('-')[1])] }
+          { $eq: [{ $month: '$date_of_birth' }, monthPart] },
+          { $eq: [{ $dayOfMonth: '$date_of_birth' }, dayPart] }
         ]
       }
-    }).select('first_name last_name dateOfBirth grade');
+    }).select('first_name last_name date_of_birth study');
 
     // Format the response
     const birthdays = students.map(student => ({
       id: student._id,
       name: `${student.first_name} ${student.last_name}`,
-      grade: student.grade,
-      dateOfBirth: student.dateOfBirth,
-      age: new Date().getFullYear() - new Date(student.dateOfBirth).getFullYear()
+      study: student.study || '',
+      date_of_birth: student.date_of_birth,
+      age: student.date_of_birth
+        ? new Date().getFullYear() - new Date(student.date_of_birth).getFullYear()
+        : null
     }));
 
     return res.status(200).json({ birthdays });
