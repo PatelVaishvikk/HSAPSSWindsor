@@ -12,10 +12,13 @@ import {
   OverlayTrigger,
   Tooltip,
   Toast,
-  ToastContainer
+  ToastContainer,
+  Dropdown
 } from 'react-bootstrap';
 import { io } from 'socket.io-client';
 import { STUDENT_PORTAL_FIELD_DEFS, STUDENT_PORTAL_FIELD_NAMES } from '../config/studentPortalFields.js';
+import AnalyticsDashboard from '../components/AnalyticsDashboard';
+import { useFeed } from '../hooks/useFeed';
 
 const DEFAULT_PASSWORD = 'dasnadas';
 
@@ -161,15 +164,27 @@ const formatPresenceText = (online, lastSeenIso) => {
   return `Last seen ${date.toLocaleDateString()}`;
 };
 
-export default function StudentPortalPage() {
+export default function StudentPortalPage({ initialStudent, initialPortalMeta }) {
   const [loginPhone, setLoginPhone] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [registerPhone, setRegisterPhone] = useState('');
   const [registerPassword, setRegisterPassword] = useState('');
   const [registerConfirm, setRegisterConfirm] = useState('');
   const [authMode, setAuthMode] = useState('login');
-  const [student, setStudent] = useState(null);
-  const [formData, setFormData] = useState(buildInitialFormState);
+  const [student, setStudent] = useState(initialStudent || null);
+  
+  const [formData, setFormData] = useState(() => {
+    const base = buildInitialFormState();
+    if (initialStudent) {
+      STUDENT_PORTAL_FIELD_NAMES.forEach((field) => {
+        if (Object.prototype.hasOwnProperty.call(initialStudent, field)) {
+          base[field] = initialStudent[field] ?? (field === 'graduation_completed' ? false : '');
+        }
+      });
+    }
+    return base;
+  });
+
   const [loginLoading, setLoginLoading] = useState(false);
   const [registerLoading, setRegisterLoading] = useState(false);
   const [updateLoading, setUpdateLoading] = useState(false);
@@ -177,13 +192,21 @@ export default function StudentPortalPage() {
   const [successMessage, setSuccessMessage] = useState('');
   const [showThankYou, setShowThankYou] = useState(false);
   const [sessionPassword, setSessionPassword] = useState('');
-  const [portalMeta, setPortalMeta] = useState({
+  const [portalMeta, setPortalMeta] = useState(initialPortalMeta || {
     has_custom_password: false,
-    used_default_password: false
+    used_default_password: false,
+    can_access_admin: false,
+    admin_shortcuts: []
   });
   const [activePane, setActivePane] = useState('profile');
   const [communityProfiles, setCommunityProfiles] = useState([]);
   const [communityLoading, setCommunityLoading] = useState(false);
+  const [toasts, setToasts] = useState([]);
+  const [conversationStarter, setConversationStarter] = useState('');
+
+  const removeToast = (id) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  };
   const [communityError, setCommunityError] = useState('');
   const [communitySearch, setCommunitySearch] = useState('');
   const [communityInitialized, setCommunityInitialized] = useState(false);
@@ -215,9 +238,21 @@ export default function StudentPortalPage() {
   const activeConversationRef = useRef(null);
   const inboxThreadsRef = useRef([]);
   const helpScopeRef = useRef('open');
+  const portalAuthHeadersRef = useRef(null);
   const [toastQueue, setToastQueue] = useState([]);
   const [profilePreview, setProfilePreview] = useState(null);
   const [showProfilePreview, setShowProfilePreview] = useState(false);
+  const [showMobileSidebar, setShowMobileSidebar] = useState(false);
+
+
+
+  // Feed state
+  const { posts: feedPosts, isLoading: feedLoading, error: feedError, mutate: mutateFeed } = useFeed();
+  const [postForm, setPostForm] = useState({ content: '' });
+  const [postSubmitting, setPostSubmitting] = useState(false);
+  const [postComments, setPostComments] = useState({}); // { postId: [comments] }
+  const [commentDrafts, setCommentDrafts] = useState({}); // { postId: text }
+  const [showComments, setShowComments] = useState({}); // { postId: boolean }
 
   const enqueueToast = useCallback(
     ({ variant = 'primary', title, message, actionLabel, onAction }) => {
@@ -403,21 +438,23 @@ export default function StudentPortalPage() {
   const communityCount = communityProfiles.length;
 
   const portalAuthHeaders = useMemo(() => {
-    if (!student?._id || !sessionPassword) {
+    if (!student?._id) {
+      portalAuthHeadersRef.current = null;
       return null;
     }
-    return {
-      'X-Student-Id': student._id,
-      'X-Portal-Secret': sessionPassword
+    const headers = {
+      'X-Student-Id': student._id
     };
+    if (sessionPassword) {
+      headers['X-Portal-Secret'] = sessionPassword;
+    }
+    portalAuthHeadersRef.current = headers;
+    return headers;
   }, [student?._id, sessionPassword]);
 
   const refreshCommunityProfiles = useCallback(
     async (searchValue = communitySearch) => {
-      if (!portalAuthHeaders) {
-        setCommunityError('Session expired. Please log in again.');
-        return;
-      }
+
 
       setCommunityLoading(true);
       setCommunityError('');
@@ -432,7 +469,7 @@ export default function StudentPortalPage() {
           `/api/student-portal/community${query ? `?${query}` : ''}`,
           {
             method: 'GET',
-            headers: portalAuthHeaders
+            headers: portalAuthHeaders || {}
           }
         );
         const data = await response.json();
@@ -453,9 +490,7 @@ export default function StudentPortalPage() {
 
   const refreshInboxThreads = useCallback(
     async () => {
-      if (!portalAuthHeaders) {
-        return;
-      }
+
 
       setInboxLoading(true);
       setInboxError('');
@@ -463,7 +498,7 @@ export default function StudentPortalPage() {
       try {
         const response = await fetch('/api/student-portal/messages?limit=12', {
           method: 'GET',
-          headers: portalAuthHeaders
+          headers: portalAuthHeaders || {}
         });
         const data = await response.json().catch(() => ({}));
         if (!response.ok) {
@@ -514,6 +549,13 @@ export default function StudentPortalPage() {
       }
 
       setConversationLoading(true);
+
+      // Sync ref immediately
+      activeConversationRef.current = {
+        id: targetId,
+        first_name: base.first_name || '',
+        last_name: base.last_name || ''
+      };
 
       try {
         const response = await fetch(`/api/student-portal/messages?with=${targetId}`, {
@@ -566,8 +608,10 @@ export default function StudentPortalPage() {
   }, [inboxThreads, openConversationWithStudent]);
 
   const refreshHelpRequests = useCallback(
-    async (scopeValue = helpScope) => {
-      if (!portalAuthHeaders) {
+    async (scopeValue) => {
+      const headers = portalAuthHeadersRef.current;
+      if (!headers) {
+        setHelpLoading(false);
         return;
       }
 
@@ -576,28 +620,30 @@ export default function StudentPortalPage() {
 
       try {
         const params = new URLSearchParams();
-        params.set('scope', scopeValue);
-        const response = await fetch(
-          `/api/student-portal/help-requests?${params.toString()}`,
-          {
-            method: 'GET',
-            headers: portalAuthHeaders
-          }
-        );
+        params.set('scope', scopeValue || helpScopeRef.current || 'open');
+        const url = `/api/student-portal/help-requests?${params.toString()}`;
+        
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: headers
+        });
+        
         const data = await response.json();
+        
         if (!response.ok) {
           throw new Error(data.error || 'Unable to load help board right now.');
         }
-        setHelpRequests(Array.isArray(data.requests) ? data.requests : []);
-        setHelpScope(scopeValue);
+        
+        const requests = Array.isArray(data.requests) ? data.requests : [];
+        setHelpRequests(requests);
       } catch (error) {
-        console.error('Student help board fetch failed:', error);
+        console.error('[HELP] Student help board fetch failed:', error);
         setHelpError(error.message || 'Unable to load help board right now.');
       } finally {
         setHelpLoading(false);
       }
     },
-    [helpScope, portalAuthHeaders]
+    [] // No dependencies - uses refs only
   );
 
   const handleIncomingMessage = useCallback(
@@ -682,36 +728,67 @@ export default function StudentPortalPage() {
     (payload = {}) => {
       const request = payload.request;
       const viewerId = student?._id ? student._id.toString() : '';
-      const scopeToRefresh = payload.scope || helpScopeRef.current || 'open';
-      refreshHelpRequests(scopeToRefresh);
-
+      
       if (!request) {
         return;
       }
 
       const ownerId = request.student?.id;
 
-      if (payload.type === 'request:new' && ownerId && ownerId !== viewerId) {
-        enqueueToast({
-          variant: 'info',
-          title: 'New help request',
-          message: request.title,
-          actionLabel: 'View board',
-          onAction: () => setActivePane('help')
-        });
-      }
-
-      if (payload.type === 'request:response' && ownerId && ownerId === viewerId) {
-        enqueueToast({
-          variant: 'success',
-          title: 'New response received',
-          message: `Someone replied to "${request.title}"`,
-          actionLabel: 'Open board',
-          onAction: () => setActivePane('help')
-        });
+      // Update local state based on the event type instead of full refresh
+      if (payload.type === 'request:new') {
+        // Add new request to the list if it matches current scope
+        if (helpScopeRef.current === 'open' && request.status === 'open') {
+          setHelpRequests((prev) => {
+            // Check if request already exists
+            if (prev.some(r => r.id === request.id)) {
+              return prev;
+            }
+            return [request, ...prev];
+          });
+        }
+        
+        // Show toast if it's from someone else
+        if (ownerId && ownerId !== viewerId) {
+          enqueueToast({
+            variant: 'info',
+            title: 'New help request',
+            message: request.title,
+            actionLabel: 'View board',
+            onAction: () => setActivePane('help')
+          });
+        }
+      } else if (payload.type === 'request:response') {
+        // Update the specific request with new response
+        setHelpRequests((prev) =>
+          prev.map((item) => (item.id === request.id ? request : item))
+        );
+        
+        // Show toast if it's your request
+        if (ownerId && ownerId === viewerId) {
+          enqueueToast({
+            variant: 'success',
+            title: 'New response received',
+            message: `Someone replied to "${request.title}"`,
+            actionLabel: 'Open board',
+            onAction: () => setActivePane('help')
+          });
+        }
+      } else if (payload.type === 'request:closed' || payload.type === 'request:resolved') {
+        // Remove from open requests or update status
+        if (helpScopeRef.current === 'open') {
+          setHelpRequests((prev) => prev.filter((item) => item.id !== request.id));
+        } else {
+          setHelpRequests((prev) =>
+            prev.map((item) => (item.id === request.id ? request : item))
+          );
+        }
+      } else if (payload.type === 'request:deleted') {
+        // Remove deleted request
+        setHelpRequests((prev) => prev.filter((item) => item.id !== request.id));
       }
     },
-    [enqueueToast, refreshHelpRequests, setActivePane, student?._id]
+    [enqueueToast, setActivePane, student?._id]
   );
 
   useEffect(() => {
@@ -723,29 +800,93 @@ export default function StudentPortalPage() {
       return;
     }
 
-    const socket = io();
+    // Initialize Socket.IO
+    const socket = io({
+      path: '/socket.io',
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+      transports: ['websocket', 'polling'] // Force websocket first
+    });
+
     socketRef.current = socket;
 
-    socket.emit('student:join', { studentId: student._id });
-    socket.emit('help:join', { studentId: student._id });
+    socket.on('connect', () => {
+      console.log('[CHAT] Socket connected:', socket.id);
+      socket.emit('student:join', { studentId: student._id });
+      socket.emit('help:join');
+      socket.emit('feed:join');
+      console.log('[CHAT] Emitted student:join for:', student._id);
+    });
 
-    socket.on('community:message', handleIncomingMessage);
+    socket.on('connect_error', (err) => {
+      console.error('[CHAT] Connection error:', err);
+    });
+
+    socket.on('disconnect', (reason) => {
+      console.warn('[CHAT] Socket disconnected:', reason);
+    });
+
+    socket.on('community:message', (data) => {
+      console.log('[CHAT] Received community:message:', data);
+      handleIncomingMessage(data);
+    });
     socket.on('community:message:sent', () => refreshInboxThreads());
     socket.on('community:conversation', handleConversationEvent);
     socket.on('help:update', handleRealtimeHelpUpdate);
+    socket.on('post:new', (data) => {
+      if (data?.post) {
+        mutateFeed((current) => ({
+          ...current,
+          posts: [data.post, ...(current?.posts || [])]
+        }), false);
+      }
+    });
+    socket.on('post:like', (data) => {
+      if (data?.postId) {
+        mutateFeed((current) => ({
+          ...current,
+          posts: (current?.posts || []).map((post) =>
+            post.id === data.postId ? { ...post, likes: data.likes } : post
+          )
+        }), false);
+      }
+    });
+    socket.on('post:comment', (data) => {
+      if (data?.comment) {
+        const postId = data.comment.post;
+        setPostComments((prev) => ({
+          ...prev,
+          [postId]: [...(prev[postId] || []), data.comment]
+        }));
+        mutateFeed((current) => ({
+          ...current,
+          posts: (current?.posts || []).map((post) =>
+            post.id === postId ? { ...post, comments: (post.comments || 0) + 1 } : post
+          )
+        }), false);
+      }
+    });
 
     refreshInboxThreads();
-    refreshHelpRequests(helpScopeRef.current || 'open');
+    refreshHelpRequests(); // Now safe to call - uses refs, won't cause infinite loop
 
     return () => {
       socket.off('community:message', handleIncomingMessage);
       socket.off('community:message:sent');
       socket.off('community:conversation', handleConversationEvent);
       socket.off('help:update', handleRealtimeHelpUpdate);
+      socket.off('post:new');
+      socket.off('post:like');
+      socket.off('post:comment');
       socket.disconnect();
       socketRef.current = null;
+      console.log('[CHAT] Socket disconnected on cleanup');
     };
-  }, [student?._id, handleIncomingMessage, handleConversationEvent, handleRealtimeHelpUpdate, refreshHelpRequests, refreshInboxThreads]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [student?._id, handleIncomingMessage, handleConversationEvent, handleRealtimeHelpUpdate, refreshInboxThreads]);
+
+
+  // Load feed when feed pane is active - Handled by useFeed hook
 
   const handleSendConversationMessage = async (event) => {
     event.preventDefault();
@@ -759,17 +900,14 @@ export default function StudentPortalPage() {
       return;
     }
 
-    if (!portalAuthHeaders) {
-      setConversationError('Session expired. Please log in again.');
-      return;
-    }
+
 
     try {
       const response = await fetch('/api/student-portal/messages', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...portalAuthHeaders
+          ...(portalAuthHeaders || {})
         },
         body: JSON.stringify({
           recipientId: activeConversation.id,
@@ -792,7 +930,7 @@ export default function StudentPortalPage() {
           id: activeConversation.id,
           name: `${activeConversation.first_name || ''} ${activeConversation.last_name || ''}`.trim()
         },
-        body: draft,
+        message: draft,
         created_at: data.message?.created_at || new Date().toISOString(),
         read: false
       };
@@ -824,15 +962,12 @@ export default function StudentPortalPage() {
     if (!activeConversation?.id) {
       return;
     }
-    if (!portalAuthHeaders) {
-      setConversationError('Session expired. Please log in again.');
-      return;
-    }
+
     setConversationError('');
     try {
       const response = await fetch(`/api/student-portal/messages?with=${activeConversation.id}`, {
         method: 'DELETE',
-        headers: portalAuthHeaders
+        headers: portalAuthHeaders || {}
       });
       if (!response.ok && response.status !== 204) {
         const data = await response.json().catch(() => ({}));
@@ -855,6 +990,7 @@ export default function StudentPortalPage() {
   const handleCloseConversation = () => {
     setShowConversationPanel(false);
     setActiveConversation(null);
+    activeConversationRef.current = null;
     setConversationMessages([]);
     setMessageDraft('');
     setConversationError('');
@@ -984,10 +1120,7 @@ export default function StudentPortalPage() {
 
   const handleHelpRequestSubmit = async (event) => {
     event.preventDefault();
-    if (!portalAuthHeaders) {
-      setHelpError('Session expired. Please log in again.');
-      return;
-    }
+
 
     const trimmedTitle = helpForm.title.trim();
     if (!trimmedTitle) {
@@ -1047,10 +1180,7 @@ export default function StudentPortalPage() {
   };
 
   const handleRespondToRequest = async (requestId) => {
-    if (!portalAuthHeaders) {
-      setHelpError('Session expired. Please log in again.');
-      return;
-    }
+
     const message = (responseDrafts[requestId] || '').trim();
     if (!message) {
       setHelpError('Please share a quick message before offering help.');
@@ -1097,10 +1227,7 @@ export default function StudentPortalPage() {
   };
 
   const handleCloseRequest = async (requestId) => {
-    if (!portalAuthHeaders) {
-      setHelpError('Session expired. Please log in again.');
-      return;
-    }
+
 
     setHelpError('');
     setHelpSuccess('');
@@ -1139,6 +1266,184 @@ export default function StudentPortalPage() {
       setRespondingRequestId('');
     }
   };
+
+  // Feed handlers
+
+  const handlePostSubmit = async (event) => {
+    event.preventDefault();
+    if (!postForm.content.trim()) {
+      return;
+    }
+    setPostSubmitting(true);
+    // setFeedError(''); // Handled by SWR error
+    try {
+      const response = await fetch('/api/student-portal/posts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(portalAuthHeaders || {})
+        },
+        body: JSON.stringify({ content: postForm.content })
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Unable to create post');
+      }
+      mutateFeed(); // Revalidate feed
+      setPostForm({ content: '' });
+    } catch (error) {
+      console.error('Post creation failed:', error);
+      // setFeedError(error.message || 'Unable to create post');
+      enqueueToast({ variant: 'danger', title: 'Error', message: error.message || 'Unable to create post' });
+    } finally {
+      setPostSubmitting(false);
+    }
+  };
+
+  const handleLikePost = async (postId) => {
+    // Optimistic update
+    mutateFeed((currentData) => {
+      if (!currentData?.posts) return currentData;
+      return {
+        ...currentData,
+        posts: currentData.posts.map((post) => {
+          if (post.id === postId) {
+            const newIsLiked = !post.is_liked;
+            return {
+              ...post,
+              is_liked: newIsLiked,
+              likes: newIsLiked ? (post.likes || 0) + 1 : Math.max(0, (post.likes || 0) - 1)
+            };
+          }
+          return post;
+        })
+      };
+    }, { revalidate: false });
+
+    try {
+      const response = await fetch('/api/student-portal/post-actions?action=like', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(portalAuthHeaders || {})
+        },
+        body: JSON.stringify({ postId })
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Unable to like post');
+      }
+      mutateFeed(); // Revalidate to ensure consistency
+    } catch (error) {
+      console.error('Like post failed:', error);
+      mutateFeed(); // Revert on error
+    }
+  };
+
+  const handleLoadComments = async (postId) => {
+    if (showComments[postId]) {
+      // Toggle off
+      setShowComments((prev) => ({ ...prev, [postId]: false }));
+      return;
+    }
+    try {
+      const response = await fetch(`/api/student-portal/post-actions?action=comment&postId=${postId}`, {
+        headers: {
+          ...(portalAuthHeaders || {})
+        }
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Unable to load comments');
+      }
+      setPostComments((prev) => ({ ...prev, [postId]: data.comments || [] }));
+      setShowComments((prev) => ({ ...prev, [postId]: true }));
+    } catch (error) {
+      console.error('Load comments failed:', error);
+    }
+  };
+
+  const handleCommentSubmit = async (postId) => {
+    const content = commentDrafts[postId]?.trim();
+    if (!content) {
+      return;
+    }
+    try {
+      const response = await fetch('/api/student-portal/post-actions?action=comment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(portalAuthHeaders || {})
+        },
+        body: JSON.stringify({ postId, content })
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Unable to add comment');
+      }
+      setPostComments((prev) => ({
+        ...prev,
+        [postId]: [...(prev[postId] || []), data.comment]
+      }));
+      setCommentDrafts((prev) => ({ ...prev, [postId]: '' }));
+      // Update comment count
+      mutateFeed();
+    } catch (error) {
+      console.error('Comment submission failed:', error);
+    }
+  };
+
+  const handleSharePost = async (postId) => {
+    try {
+      const response = await fetch('/api/student-portal/posts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(portalAuthHeaders || {})
+        },
+        body: JSON.stringify({ shared_from: postId, content: '' })
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Unable to share post');
+      }
+      mutateFeed();
+      enqueueToast({
+        variant: 'success',
+        title: 'Post Shared',
+        message: 'The post has been shared to your feed'
+      });
+    } catch (error) {
+      console.error('Share post failed:', error);
+      enqueueToast({
+        variant: 'danger',
+        title: 'Share Failed',
+        message: error.message || 'Unable to share post'
+      });
+    }
+  };
+
+  const handleDeletePost = async (postId) => {
+    if (!confirm('Are you sure you want to delete this post?')) {
+      return;
+    }
+    try {
+      const response = await fetch(`/api/student-portal/posts?postId=${postId}`, {
+        method: 'DELETE',
+        headers: {
+          ...(portalAuthHeaders || {})
+        }
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Unable to delete post');
+      }
+      mutateFeed();
+    } catch (error) {
+      console.error('Delete post failed:', error);
+    }
+  };
+
 
   const handlePasswordFieldChange = (field, value) => {
     setPasswordForm((prev) => ({
@@ -1226,12 +1531,22 @@ export default function StudentPortalPage() {
   };
 
   const handleLogin = async (event) => {
+    console.log('[CLIENT] handleLogin called');
     event.preventDefault();
+    console.log('[CLIENT] Form submission prevented, starting login...');
     setErrorMessage('');
     setSuccessMessage('');
     setLoginLoading(true);
 
+    // Safety timeout to ensure loading state resets even if fetch hangs
+    const safetyTimeout = setTimeout(() => {
+      console.log('[CLIENT] Safety timeout triggered - resetting loading state');
+      setLoginLoading(false);
+      setErrorMessage('Login request timed out. Please try again or refresh the page.');
+    }, 15000);
+
     try {
+      console.log('[CLIENT] About to fetch login API...');
       const response = await fetch('/api/student-portal/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1240,6 +1555,9 @@ export default function StudentPortalPage() {
           password: loginPassword
         })
       });
+      console.log('[CLIENT] Fetch completed, response status:', response.status);
+      
+      clearTimeout(safetyTimeout);
 
       const data = await response.json().catch(() => ({}));
       if (!response.ok) {
@@ -1247,32 +1565,36 @@ export default function StudentPortalPage() {
       }
 
       const normalizedForm = buildInitialFormState();
-      STUDENT_PORTAL_FIELD_NAMES.forEach((field) => {
-        if (Object.prototype.hasOwnProperty.call(data.student, field)) {
-          normalizedForm[field] =
-            data.student[field] ?? (field === 'graduation_completed' ? false : '');
+      const studentData = data.student || {};
+      const meta = data.meta || {};
+
+      // Pre-fill form with existing data
+      Object.keys(normalizedForm).forEach((key) => {
+        if (studentData[key] !== undefined && studentData[key] !== null) {
+          normalizedForm[key] = studentData[key];
         }
       });
 
-      setStudent(data.student);
+      setStudent(studentData);
       setFormData(normalizedForm);
-      setSessionPassword(loginPassword);
-      setPortalMeta({
-        has_custom_password: Boolean(data.meta?.has_custom_password),
-        used_default_password: Boolean(data.meta?.used_default_password)
-      });
+      setPortalMeta(meta);
+      
+      // Reset auth fields
+      setLoginPhone('');
+      setLoginPassword(meta.used_default_password ? '' : DEFAULT_PASSWORD);
+      setSessionPassword(loginPassword); // Store for session usage
+      
+      // Reset other states
+      setAuthMode('login');
       setActivePane('profile');
-      setCommunityProfiles([]);
       setCommunityInitialized(false);
-      setHelpRequests([]);
-      setHelpScope('open');
-      setHelpSuccess('');
-      setHelpError('');
-      setShowThankYou(false);
+      setInboxInitialized(false);
+      
       setSuccessMessage(
         'Welcome back! Update your details below and save your changes when you are done.'
       );
     } catch (error) {
+      clearTimeout(safetyTimeout);
       console.error('Student portal login failed:', error);
       const normalized = (error.message || '').trim();
       if (normalized === 'No student found with that phone number') {
@@ -1330,10 +1652,10 @@ export default function StudentPortalPage() {
       setErrorMessage('Missing student information. Please refresh and log in again.');
       return;
     }
-    if (!sessionPassword) {
-      setErrorMessage('Your session has expired. Please log in again.');
-      return;
-    }
+    // if (!sessionPassword) {
+    //   setErrorMessage('Your session has expired. Please log in again.');
+    //   return;
+    // }
 
     setErrorMessage('');
     setSuccessMessage('');
@@ -2092,6 +2414,224 @@ export default function StudentPortalPage() {
     </div>
   );
 
+  const renderFeedPane = () => (
+    <div className="feed-pane">
+      <div className="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
+        <div>
+          <h5 className="fw-semibold mb-1">Community Feed</h5>
+          <p className="text-muted small mb-0">
+            Share updates, thoughts, and connect with the community.
+          </p>
+        </div>
+      </div>
+
+      {feedError && (
+        <Alert variant="danger" className="mb-4">
+          {feedError}
+        </Alert>
+      )}
+
+      {/* Post Creation Form */}
+      <Card className="border-0 shadow-sm mb-4">
+        <Card.Body>
+          <h6 className="fw-semibold mb-3">
+            <i className="fas fa-edit me-2 text-primary"></i>
+            Create a Post
+          </h6>
+          <Form onSubmit={handlePostSubmit}>
+            <Form.Group className="mb-3">
+              <Form.Control
+                as="textarea"
+                rows={3}
+                placeholder="What's on your mind?"
+                value={postForm.content}
+                onChange={(e) => setPostForm({ content: e.target.value })}
+                required
+              />
+            </Form.Group>
+            <div className="d-flex justify-content-end">
+              <Button type="submit" variant="primary" disabled={postSubmitting || !postForm.content.trim()}>
+                {postSubmitting ? (
+                  <>
+                    <Spinner animation="border" size="sm" className="me-2" role="status" />
+                    Posting...
+                  </>
+                ) : (
+                  <>
+                    <i className="fas fa-paper-plane me-2"></i>
+                    Post
+                  </>
+                )}
+              </Button>
+            </div>
+          </Form>
+        </Card.Body>
+      </Card>
+
+      {/* Feed */}
+      {feedLoading && feedPosts.length === 0 ? (
+        <div className="text-center py-5">
+          <Spinner animation="border" role="status" className="text-primary" />
+          <p className="text-muted small mt-3 mb-0">Loading feed...</p>
+        </div>
+      ) : feedPosts.length === 0 ? (
+        <div className="text-center py-5">
+          <div className="empty-state-icon mb-3">
+            <i className="fas fa-rss"></i>
+          </div>
+          <h6 className="fw-semibold mb-2">No posts yet</h6>
+          <p className="text-muted small mb-0">
+            Be the first to share something with the community!
+          </p>
+        </div>
+      ) : (
+        <div className="d-flex flex-column gap-3">
+          {feedPosts.map((post) => (
+            <Card key={post.id} className="border-0 shadow-sm post-card">
+              <Card.Body>
+                {/* Post Header */}
+                <div className="d-flex justify-content-between align-items-start mb-3">
+                  <div className="d-flex gap-3 flex-grow-1">
+                    <div className="conversation-avatar conversation-avatar-sm flex-shrink-0">
+                      {buildInitials(post.author?.first_name, post.author?.last_name)}
+                    </div>
+                    <div className="flex-grow-1">
+                      <h6 className="fw-bold mb-0">
+                        {post.author?.first_name} {post.author?.last_name}
+                      </h6>
+                      {post.author?.study && (
+                        <p className="text-muted small mb-0">{post.author.study}</p>
+                      )}
+                      <p className="text-muted small mb-0">
+                        {formatConversationTimestamp(post.created_at)}
+                      </p>
+                    </div>
+                  </div>
+                  {post.is_owner && (
+                    <Dropdown align="end">
+                      <Dropdown.Toggle variant="link" className="text-muted border-0 p-0 no-arrow">
+                        <i className="fas fa-ellipsis-v"></i>
+                      </Dropdown.Toggle>
+                      <Dropdown.Menu>
+                        <Dropdown.Item onClick={() => handleDeletePost(post.id)} className="text-danger">
+                          <i className="fas fa-trash-alt me-2"></i>
+                          Delete Post
+                        </Dropdown.Item>
+                      </Dropdown.Menu>
+                    </Dropdown>
+                  )}
+                </div>
+
+                {/* Post Content */}
+                {post.shared_from && (
+                  <div className="mb-2">
+                    <Badge bg="info" text="dark" className="mb-2">
+                      <i className="fas fa-retweet me-1"></i>
+                      Shared
+                    </Badge>
+                  </div>
+                )}
+                <p className="mb-3">{post.content}</p>
+
+                {/* Shared Post */}
+                {post.shared_from && (
+                  <Card className="border mb-3 bg-light">
+                    <Card.Body className="p-3">
+                      <div className="small fw-semibold mb-1">
+                        {post.shared_from.author?.first_name} {post.shared_from.author?.last_name}
+                      </div>
+                      <p className="small mb-0">{post.shared_from.content}</p>
+                    </Card.Body>
+                  </Card>
+                )}
+
+                {/* Post Actions */}
+                <div className="border-top pt-2 mt-2">
+                  <div className="d-flex gap-3 mb-2">
+                    <Button
+                      variant="link"
+                      size="sm"
+                      className={`text-decoration-none d-flex align-items-center gap-1 ${post.is_liked ? 'text-danger' : 'text-muted'}`}
+                      onClick={() => handleLikePost(post.id)}
+                    >
+                      <i className={`${post.is_liked ? 'fas' : 'far'} fa-heart`}></i>
+                      <span>{post.likes || 0}</span>
+                    </Button>
+                    <Button
+                      variant="link"
+                      size="sm"
+                      className="text-decoration-none text-muted d-flex align-items-center gap-1"
+                      onClick={() => handleLoadComments(post.id)}
+                    >
+                      <i className="far fa-comment"></i>
+                      <span>{post.comments || 0}</span>
+                    </Button>
+                    <Button
+                      variant="link"
+                      size="sm"
+                      className="text-decoration-none text-muted d-flex align-items-center gap-1"
+                      onClick={() => handleSharePost(post.id)}
+                    >
+                      <i className="fas fa-retweet"></i>
+                      <span>Share</span>
+                    </Button>
+                  </div>
+
+                  {/* Comments Section */}
+                  {showComments[post.id] && (
+                    <div className="border-top pt-3 mt-2">
+                      {postComments[post.id]?.length > 0 && (
+                        <div className="mb-3">
+                          {postComments[post.id].map((comment) => (
+                            <div key={comment.id} className="d-flex gap-2 mb-2">
+                              <div className="conversation-avatar conversation-avatar-xs flex-shrink-0">
+                                {buildInitials(comment.author?.first_name, comment.author?.last_name)}
+                              </div>
+                              <div className="flex-grow-1 bg-light p-2 rounded">
+                                <div className="fw-semibold small">
+                                  {comment.author?.first_name} {comment.author?.last_name}
+                                </div>
+                                <div className="small">{comment.content}</div>
+                                <div className="text-muted" style={{ fontSize: '0.7rem' }}>
+                                  {formatConversationTimestamp(comment.created_at)}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      <Form
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          handleCommentSubmit(post.id);
+                        }}
+                      >
+                        <div className="d-flex gap-2">
+                          <Form.Control
+                            type="text"
+                            size="sm"
+                            placeholder="Write a comment..."
+                            value={commentDrafts[post.id] || ''}
+                            onChange={(e) =>
+                              setCommentDrafts((prev) => ({ ...prev, [post.id]: e.target.value }))
+                            }
+                          />
+                          <Button type="submit" variant="primary" size="sm">
+                            <i className="fas fa-paper-plane"></i>
+                          </Button>
+                        </div>
+                      </Form>
+                    </div>
+                  )}
+                </div>
+              </Card.Body>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
   const renderHelpPane = () => (
     <div className="help-pane">
       <div className="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
@@ -2260,6 +2800,14 @@ export default function StudentPortalPage() {
                     )}
                   </div>
                   <div className="text-md-end small text-muted">
+                    {request.responses?.length > 0 && (
+                      <div className="d-flex align-items-center gap-2 mb-2">
+                        <i className="fas fa-comment-dots text-success"></i>
+                        <span className="fw-semibold text-success">
+                          {request.responses.length} {request.responses.length === 1 ? 'response' : 'responses'}
+                        </span>
+                      </div>
+                    )}
                     {request.updated_at && (
                       <div>
                         Updated{' '}
@@ -2535,1286 +3083,651 @@ export default function StudentPortalPage() {
     </div>
   );
 
-  return (
+       return (
     <>
       <Head>
         <title>Student Portal | HSAPSS Windsor</title>
       </Head>
-      <main className="main-content py-5">
-        <div className="container">
-          <Card className="shadow border-0 student-portal-card">
-            <Card.Header className="bg-primary text-white py-4">
-              <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
-                <div>
-                  <h5 className="mb-1">
-                    <i className="fas fa-user-graduate me-2"></i>
-                    HSAPSS Windsor Youths Portal
-                  </h5>
-                  <p className="mb-0 small text-white-50">
-                    {student
-                      ? 'Update your profile, connect with peers, and ask for support from the community.'
-                      : 'Sign in with your phone number and password - or create an account to join the HSAPSS community.'}
-                  </p>
+
+      <div className="d-flex flex-column flex-lg-row min-vh-100">
+        {/* Mobile Header */}
+        <div className="d-lg-none bg-white border-bottom p-3 d-flex align-items-center justify-content-between sticky-top shadow-sm">
+          <div className="d-flex align-items-center gap-3">
+            <div className="portal-logo-sm rounded-circle overflow-hidden d-flex align-items-center justify-content-center" style={{ width: 40, height: 40 }}>
+              <img src="/windsor.jpg" alt="Logo" className="w-100 h-100 object-fit-cover" />
+            </div>
+            <span className="fw-bold text-dark">HSAPSS Portal</span>
+          </div>
+          {student && (
+            <Button variant="light" size="sm" onClick={handleLogout}>
+              <i className="fas fa-sign-out-alt text-danger"></i>
+            </Button>
+          )}
+        </div>
+
+
+        {/* Sidebar Navigation (Desktop Only) */}
+        <div className="d-none d-lg-block">
+          {student && (
+            <div className="d-flex flex-column sidebar-modern position-fixed h-100" style={{ width: 280, zIndex: 1000, top: 0, left: 0, overflow: 'hidden' }}>
+              {/* Header */}
+              <div className="p-4 pb-2 flex-shrink-0">
+                <div className="d-flex align-items-center gap-3">
+                  <div className="rounded-3 overflow-hidden shadow-sm" style={{ width: 48, height: 48 }}>
+                    <img src="/windsor.jpg" alt="HSAPSS Logo" className="w-100 h-100 object-fit-cover" />
+                  </div>
+                  <div>
+                    <h5 className="fw-bold mb-0 text-dark">HSAPSS</h5>
+                    <small className="text-muted">Student Portal</small>
+                  </div>
                 </div>
-                {student && (
-                  <Button variant="outline-light" size="sm" onClick={handleLogout}>
-                    <i className="fas fa-sign-out-alt me-2"></i>
-                    Log Out
-                  </Button>
-                )}
               </div>
-            </Card.Header>
-            <Card.Body className="p-4 p-md-5">
-              {errorMessage && (
-                <Alert variant="danger" className="mb-4">
-                  {errorMessage}
-                </Alert>
-              )}
-              {successMessage && (
-                <Alert variant="success" className="mb-4">
-                  {successMessage}
-                </Alert>
-              )}
-              {student && (
-                <div className="portal-action-ribbon mb-4">
-                  <button
-                    type="button"
-                    className={`ribbon-action ${activePane === 'profile' ? 'is-active' : ''}`}
-                    onClick={() => setActivePane('profile')}
-                    aria-pressed={activePane === 'profile'}
-                  >
-                    <span className="ribbon-icon bg-primary-subtle text-primary"><i className="fas fa-id-card"></i></span>
-                    <div>
-                      <span className="ribbon-label">My Profile</span>
-                      <span className="ribbon-subtitle">Keep your info current</span>
-                    </div>
-                  </button>
-                  <button
-                    type="button"
-                    className={`ribbon-action ${activePane === 'community' ? 'is-active' : ''}`}
-                    onClick={() => setActivePane('community')}
-                    aria-pressed={activePane === 'community'}
-                  >
-                    <span className="ribbon-icon bg-success-subtle text-success"><i className="fas fa-users"></i></span>
-                    <div>
-                      <span className="ribbon-label">Community</span>
-                      <span className="ribbon-subtitle">{communityCount} profiles</span>
-                    </div>
-                    {communityCount > 0 && <span className="ribbon-badge">Explore</span>}
-                  </button>
-                  <button
-                    type="button"
-                    className={`ribbon-action ${activePane === 'community' && showConversationPanel ? 'is-active' : ''}`}
-                    onClick={() => {
-                      setActivePane('community');
-                      openFirstConversation();
-                    }}
-                    aria-pressed={showConversationPanel}
-                  >
-                    <span className="ribbon-icon bg-info-subtle text-info"><i className="fas fa-comments"></i></span>
-                    <div>
-                      <span className="ribbon-label">Inbox</span>
-                      <span className="ribbon-subtitle">
-                        {totalUnreadMessages > 0
-                          ? `${totalUnreadMessages} unread messages`
-                          : 'Say hello to someone new'}
-                      </span>
-                    </div>
-                    {totalUnreadMessages > 0 && (
-                      <span className="ribbon-badge ribbon-badge-accent">{totalUnreadMessages}</span>
-                    )}
-                  </button>
-                  <button
-                    type="button"
-                    className={`ribbon-action ${activePane === 'help' ? 'is-active' : ''}`}
-                    onClick={() => setActivePane('help')}
-                    aria-pressed={activePane === 'help'}
-                  >
-                    <span className="ribbon-icon bg-warning-subtle text-warning"><i className="fas fa-life-ring"></i></span>
-                    <div>
-                      <span className="ribbon-label">Help Board</span>
-                      <span className="ribbon-subtitle">
-                        {openHelpCount > 0
-                          ? `${openHelpCount} open requests`
-                          : 'Share how you can help'}
-                      </span>
-                    </div>
-                  </button>
-                  <button
-                    type="button"
-                    className={`ribbon-action ${activePane === 'account' ? 'is-active' : ''}`}
-                    onClick={() => setActivePane('account')}
-                    aria-pressed={activePane === 'account'}
-                  >
-                    <span className="ribbon-icon bg-dark-subtle text-dark"><i className="fas fa-lock"></i></span>
-                    <div>
-                      <span className="ribbon-label">Account</span>
-                      <span className="ribbon-subtitle">Change password or sign out</span>
-                    </div>
-                  </button>
-                </div>
-              )}
-              {!student ? (
-                <div className="portal-auth-grid row align-items-center g-4">
-                  <div className="col-lg-5">
-                    <div className="portal-auth-hero">
-                      <span className="badge rounded-pill bg-primary-subtle text-primary-emphasis fw-semibold mb-3">
-                        <i className="fas fa-hand-holding-heart me-2"></i>
-                        Welcome to HSAPSS Windsor
-                      </span>
-                      <h2 className="fw-bold mb-3">A single space for every windsor yuvak journey.</h2>
-                      <p className="text-muted mb-4">
-                        Update your story, discover peers with shared goals, and create a ripple of support across the HSAPSS family.
-                      </p>
-                      <ul className="portal-auth-list">
-                        <li>
-                          <i className="fas fa-circle-check text-success me-2"></i>
-                          Update once, stay connected forever.
-                        </li>
-                        <li>
-                          <i className="fas fa-circle-check text-success me-2"></i>
-                          Get tailored help through the community bulletin.
-                        </li>
-                        <li>
-                          <i className="fas fa-circle-check text-success me-2"></i>
-                          Share how you can mentor or guide incoming yuvaks.
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-                  <div className="col-lg-7">
-                    <div className="portal-auth-card shadow-sm">
-                      <div className="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
-                        <div>
-                          <h3 className="fw-semibold mb-1">
-                            {authMode === 'login' ? 'Sign in to your portal' : 'Create your community account'}
-                          </h3>
-                          <p className="text-muted small mb-0">
-                            {authMode === 'login'
-                              ? 'Log in with the phone number you registered with HSAPSS.'
-                              : 'Create a password to start updating your information and connecting.'}
-                          </p>
-                        </div>
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant={authMode === 'login' ? 'outline-primary' : 'outline-secondary'}
-                          onClick={() => switchAuthMode(authMode === 'login' ? 'register' : 'login')}
-                          className="fw-semibold"
-                        >
-                          {authMode === 'login' ? (
-                            <>
-                              <i className="fas fa-user-plus me-2"></i>
-                              Need an account?
-                            </>
-                          ) : (
-                            <>
-                              <i className="fas fa-sign-in-alt me-2"></i>
-                              Back to login
-                            </>
-                          )}
-                        </Button>
-                      </div>
-                      {authMode === 'login' ? (
-                        <Form onSubmit={handleLogin} className="student-portal-form" autoComplete="off">
-                          <div className="row g-4">
-                            <div className="col-12 col-md-6">
-                              <Form.Group controlId="student-portal-login-phone">
-                                <Form.Label>Phone Number</Form.Label>
-                                <Form.Control
-                                  type="tel"
-                                  placeholder="Enter your phone number"
-                                  value={loginPhone}
-                                  onChange={(event) => setLoginPhone(event.target.value)}
-                                  required
-                                />
-                              </Form.Group>
-                            </div>
-                            <div className="col-12 col-md-6">
-                              <Form.Group controlId="student-portal-login-password">
-                                <Form.Label>Password</Form.Label>
-                                <Form.Control
-                                  type="password"
-                                  placeholder="Enter your password"
-                                  value={loginPassword}
-                                  onChange={(event) => setLoginPassword(event.target.value)}
-                                  required
-                                />
-                                <Form.Text className="text-muted small d-block mt-2">
-                                  {passwordHint}
-                                </Form.Text>
-                              </Form.Group>
-                            </div>
-                          </div>
-                          <div className="d-flex justify-content-end mt-4">
-                            <Button type="submit" className="portal-auth-submit" disabled={loginLoading}>
-                              {loginLoading ? (
-                                <>
-                                  <Spinner animation="border" size="sm" className="me-2" role="status" />
-                                  Logging in...
-                                </>
-                              ) : (
-                                <>
-                                  <i className="fas fa-arrow-right me-2"></i>
-                                  Continue
-                                </>
-                              )}
-                            </Button>
-                          </div>
-                        </Form>
-                      ) : (
-                        <Form onSubmit={handleRegister} className="student-portal-form" autoComplete="off">
-                          <div className="row g-4">
-                            <div className="col-12 col-md-6">
-                              <Form.Group controlId="student-portal-register-phone">
-                                <Form.Label>Phone Number</Form.Label>
-                                <Form.Control
-                                  type="tel"
-                                  placeholder="Enter your phone number"
-                                  value={registerPhone}
-                                  onChange={(event) => setRegisterPhone(event.target.value)}
-                                  required
-                                />
-                              </Form.Group>
-                            </div>
-                            <div className="col-12 col-md-6">
-                              <Form.Group controlId="student-portal-register-password">
-                                <Form.Label>Create Password</Form.Label>
-                                <Form.Control
-                                  type="password"
-                                  placeholder="Choose a password (8+ characters)"
-                                  value={registerPassword}
-                                  onChange={(event) => setRegisterPassword(event.target.value)}
-                                  required
-                                  minLength={8}
-                                />
-                              </Form.Group>
-                            </div>
-                            <div className="col-12 col-md-6">
-                              <Form.Group controlId="student-portal-register-confirm">
-                                <Form.Label>Confirm Password</Form.Label>
-                                <Form.Control
-                                  type="password"
-                                  placeholder="Re-enter your password"
-                                  value={registerConfirm}
-                                  onChange={(event) => setRegisterConfirm(event.target.value)}
-                                  required
-                                  minLength={8}
-                                />
-                                <Form.Text className="text-muted small d-block mt-2">
-                                  You&apos;ll use this password each time you log in.
-                                </Form.Text>
-                              </Form.Group>
-                            </div>
-                          </div>
-                          <div className="d-flex justify-content-end mt-4">
-                            <Button type="submit" className="portal-auth-submit" disabled={registerLoading}>
-                              {registerLoading ? (
-                                <>
-                                  <Spinner animation="border" size="sm" className="me-2" role="status" />
-                                  Creating account...
-                                </>
-                              ) : (
-                                <>
-                                  <i className="fas fa-arrow-right me-2"></i>
-                                  Join the community
-                                </>
-                              )}
-                            </Button>
-                          </div>
-                        </Form>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ) : showThankYou ? (
-                <div className="thank-you-state text-center py-5 px-3">
-                  <div className="thank-you-icon mx-auto mb-4">
-                    <i className="fas fa-hands-helping"></i>
-                  </div>
-                  <h2 className="fw-bold mb-3">Your profile is all set!</h2>
-                  <p className="lead text-muted mb-4">
-                    Thanks for keeping your details current. Jump into the community to connect with
-                    peers or open the help board to support someone else.
-                  </p>
-                  <div className="d-flex justify-content-center gap-3 flex-wrap">
+
+            {/* Scrollable Navigation */}
+            <div className="flex-grow-1 overflow-y-auto custom-scrollbar px-3 py-2" style={{ minHeight: 0 }}>
+              <div className="d-flex flex-column gap-2">
+                <Button
+                  variant="link"
+                  className={`text-start d-flex align-items-center gap-3 px-3 py-3 rounded-3 border-0 text-decoration-none nav-btn ${activePane === 'profile' ? 'active' : ''}`}
+                  onClick={() => setActivePane('profile')}
+                >
+                  <i className={`fas fa-user-circle ${activePane === 'profile' ? '' : 'text-muted'}`} style={{ width: 24 }}></i>
+                  <span>My Profile</span>
+                </Button>
+
+                <Button
+                  variant="link"
+                  className={`text-start d-flex align-items-center gap-3 px-3 py-3 rounded-3 border-0 text-decoration-none nav-btn ${activePane === 'community' ? 'active' : ''}`}
+                  onClick={() => setActivePane('community')}
+                >
+                  <i className={`fas fa-users ${activePane === 'community' ? '' : 'text-muted'}`} style={{ width: 24 }}></i>
+                  <span>Community Hub</span>
+                </Button>
+
+                <Button
+                  variant="link"
+                  className={`text-start d-flex align-items-center gap-3 px-3 py-3 rounded-3 border-0 text-decoration-none nav-btn ${activePane === 'help' ? 'active' : ''}`}
+                  onClick={() => setActivePane('help')}
+                >
+                  <i className={`fas fa-hands-helping ${activePane === 'help' ? '' : 'text-muted'}`} style={{ width: 24 }}></i>
+                  <span>Help Board</span>
+                </Button>
+
+                <Button
+                  variant="link"
+                  className={`text-start d-flex align-items-center gap-3 px-3 py-3 rounded-3 border-0 text-decoration-none nav-btn ${activePane === 'feed' ? 'active' : ''}`}
+                  onClick={() => setActivePane('feed')}
+                >
+                  <i className={`fas fa-rss ${activePane === 'feed' ? '' : 'text-muted'}`} style={{ width: 24 }}></i>
+                  <span>Feed</span>
+                </Button>
+
+                {portalMeta.can_access_admin && (
+                  <div className="mt-4">
                     <Button
-                      variant="primary"
-                      onClick={() => {
-                        setShowThankYou(false);
-                        setActivePane('community');
-                        refreshCommunityProfiles();
-                      }}
+                      variant="link"
+                      className={`text-start d-flex align-items-center gap-3 px-3 py-3 rounded-3 border-0 text-decoration-none nav-btn ${activePane === 'analytics' ? 'active' : ''}`}
+                      onClick={() => setActivePane('analytics')}
                     >
-                      <i className="fas fa-users me-2"></i>
-                      Explore Community
+                      <i className={`fas fa-chart-line ${activePane === 'analytics' ? '' : 'text-muted'}`} style={{ width: 24 }}></i>
+                      <span>Analytics</span>
                     </Button>
-                    <Button
-                      variant="outline-primary"
-                      onClick={() => {
-                        setShowThankYou(false);
-                        setActivePane('profile');
-                      }}
-                    >
-                      <i className="fas fa-user-edit me-2"></i>
-                      Review My Details
-                    </Button>
-                    <Button variant="outline-secondary" onClick={handleLogout}>
-                      <i className="fas fa-sign-out-alt me-2"></i>
-                      Log Out
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <div className="portal-view-toggle d-flex flex-wrap gap-2 mb-4">
-                    {portalViews.map((view) => (
+                    <div className="text-uppercase text-muted fw-bold small px-3 mb-2 mt-3" style={{ fontSize: '0.75rem', letterSpacing: '0.05em' }}>Admin Tools</div>
+                    {portalMeta.admin_shortcuts.map((shortcut, idx) => (
                       <Button
-                        key={view.key}
-                        type="button"
-                        variant={activePane === view.key ? 'primary' : 'outline-primary'}
-                        onClick={() => setActivePane(view.key)}
+                        key={idx}
+                        variant="light"
+                        href={shortcut.href}
+                        className="text-start d-flex align-items-center gap-3 px-3 py-2 rounded-3 border-0 bg-transparent w-100 text-dark mb-1 nav-btn"
                       >
-                        <i className={`${view.icon} me-2`}></i>
-                        {view.label}
+                        <i className={`${shortcut.icon} text-primary`} style={{ width: 24 }}></i>
+                        <span>{shortcut.label}</span>
                       </Button>
                     ))}
                   </div>
+                )}
+              </div>
+            </div>
 
-                  {activePane === 'profile' && (
-                    <Form onSubmit={handleUpdate} className="student-portal-form" noValidate>
-                      <div className="portal-sections">
-                        {portalSections.map((section) => (
-                          <section key={section.key} className="portal-section">
-                            <div className="portal-section-header">
-                              <span className="portal-section-icon">
-                                <i className={section.icon}></i>
-                              </span>
-                              <div>
-                                <h6 className="portal-section-title mb-1">{section.title}</h6>
-                                <p className="portal-section-subtitle mb-0 text-muted">
-                                  {section.subtitle}
-                                </p>
+            {/* Footer */}
+            <div className="p-4 pt-3 border-top flex-shrink-0 bg-white">
+              <div className="d-flex align-items-center gap-3 px-2 mb-3">
+                <div className="bg-light rounded-circle d-flex align-items-center justify-content-center text-primary fw-bold" style={{ width: 40, height: 40 }}>
+                  {buildInitials(student?.first_name, student?.last_name)}
+                </div>
+                <div className="overflow-hidden">
+                  <div className="fw-bold text-truncate text-dark">{student?.first_name}</div>
+                  <div className="small text-muted text-truncate">{student?.phone}</div>
+                </div>
+              </div>
+              <Button variant="light" className="w-100 border-0 text-danger bg-danger bg-opacity-10 hover-danger" onClick={handleLogout}>
+                <i className="fas fa-sign-out-alt me-2"></i>
+                Sign Out
+              </Button>
+            </div>
+            <div className="pb-5"></div>
+          </div>
+          )}
+        </div>
+
+
+        {/* Main Content Area */}
+        <div className={`flex-grow-1 ${student ? 'ms-lg-auto' : ''}`} style={{ marginLeft: 0, width: '100%' }}>
+          <div className="container-fluid p-0">
+            {student && (
+              <div className="d-lg-none p-2 d-flex gap-2 bg-white border-top position-fixed bottom-0 start-0 end-0 justify-content-around" style={{ zIndex: 900 }}>
+                {['profile', 'community', 'help', 'feed'].map(pane => (
+                  <Button
+                    key={pane}
+                    variant={activePane === pane ? 'primary' : 'light'}
+                    size="sm"
+                    className={`flex-grow-1 d-flex flex-column align-items-center gap-1 border-0 ${activePane === pane ? 'btn-primary' : 'btn-light'}`}
+                    onClick={() => setActivePane(pane)}
+                    style={{ minHeight: '56px' }}
+                  >
+                    <i className={`fas fa-${pane === 'profile' ? 'user' : pane === 'community' ? 'users' : pane === 'help' ? 'hands-helping' : 'rss'}`}></i>
+                    <span style={{ fontSize: '0.7rem' }}>{pane.charAt(0).toUpperCase() + pane.slice(1)}</span>
+                  </Button>
+                ))}
+              </div>
+            )}
+
+            <div className="p-3 p-lg-5" style={{ maxWidth: 1200, marginLeft: 'auto', marginRight: 'auto' }}>
+              {/* Content Render */}
+              <div className="fade-in-up">
+                {!student ? (
+                   <div className="row justify-content-center align-items-center min-vh-100" style={{ minHeight: '80vh' }}>
+                     <div className="col-lg-10">
+                       <div className="row align-items-center g-5">
+                         <div className="col-lg-5 order-lg-2">
+                            <div className="text-center text-lg-start mb-4 mb-lg-0">
+                              <div className="d-inline-flex align-items-center justify-content-center bg-white p-3 rounded-4 shadow-sm mb-4">
+                                <i className="fas fa-graduation-cap fa-3x text-primary"></i>
+                              </div>
+                              <h1 className="fw-bold display-5 mb-3 text-dark">HSAPSS Windsor</h1>
+                              <p className="lead text-muted mb-4">
+                                A single space for every Windsor yuvak's journey. Connect, grow, and support each other.
+                              </p>
+                              <div className="d-flex flex-column gap-3">
+                                <div className="d-flex align-items-center gap-3">
+                                  <div className="bg-success bg-opacity-10 text-success rounded-circle d-flex align-items-center justify-content-center" style={{ width: 32, height: 32 }}>
+                                    <i className="fas fa-check fa-sm"></i>
+                                  </div>
+                                  <span className="text-muted">Update once, stay connected forever</span>
+                                </div>
+                                <div className="d-flex align-items-center gap-3">
+                                  <div className="bg-success bg-opacity-10 text-success rounded-circle d-flex align-items-center justify-content-center" style={{ width: 32, height: 32 }}>
+                                    <i className="fas fa-check fa-sm"></i>
+                                  </div>
+                                  <span className="text-muted">Find tailored help and resources</span>
+                                </div>
+                                <div className="d-flex align-items-center gap-3">
+                                  <div className="bg-success bg-opacity-10 text-success rounded-circle d-flex align-items-center justify-content-center" style={{ width: 32, height: 32 }}>
+                                    <i className="fas fa-check fa-sm"></i>
+                                  </div>
+                                  <span className="text-muted">Mentor incoming students</span>
+                                </div>
                               </div>
                             </div>
-                            <div className="row g-4">
-                              {section.fields.map((fieldName) => {
-                                if (
-                                  !workingPlan &&
-                                  (fieldName === 'employment_company' ||
-                                    fieldName === 'employment_role')
-                                ) {
-                                  return null;
-                                }
-                                const fieldConfig = FIELD_CONFIG_MAP.get(fieldName);
-                                if (!fieldConfig) {
-                                  return null;
-                                }
-                                return (
-                                  <div key={fieldName} className={getFieldColumnClass(fieldConfig)}>
-                                    {renderFormControl(fieldConfig)}
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </section>
-                        ))}
-                      </div>
-                      <div className="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3 mt-4">
-                        <p className="text-muted small mb-0">
-                          Need help? Contact your HSAPSS coordinator to change anything you cannot
-                          update here.
-                        </p>
-                        <Button type="submit" variant="primary" disabled={updateLoading}>
-                          {updateLoading ? (
-                            <>
-                              <Spinner animation="border" size="sm" className="me-2" role="status" />
-                              Saving...
-                            </>
-                          ) : (
-                            <>
-                              <i className="fas fa-save me-2"></i>
-                              Save My Details
-                            </>
-                          )}
-                        </Button>
-                      </div>
-                    </Form>
-                  )}
+                         </div>
+                         <div className="col-lg-7 order-lg-1">
+                           <div className="card-modern p-4 p-lg-5">
+                             <div className="d-flex justify-content-between align-items-center mb-4">
+                               <h3 className="fw-bold mb-0">
+                                 {authMode === 'login' ? 'Welcome Back' : 'Create Account'}
+                               </h3>
+                               <Button
+                                variant="light"
+                                size="sm"
+                                className="text-primary fw-semibold"
+                                onClick={() => switchAuthMode(authMode === 'login' ? 'register' : 'login')}
+                               >
+                                 {authMode === 'login' ? 'Create Account' : 'Sign In'}
+                               </Button>
+                             </div>
+                             
+                             {errorMessage && (
+                               <Alert variant="danger" className="border-0 bg-danger bg-opacity-10 text-danger mb-4">
+                                 <i className="fas fa-exclamation-circle me-2"></i>
+                                 {errorMessage}
+                               </Alert>
+                             )}
 
-                  {activePane === 'community' && renderCommunityPane()}
-                  {activePane === 'help' && renderHelpPane()}
-                  {activePane === 'account' && renderAccountPane()}
-                </>
-              )}
-            </Card.Body>
-          </Card>
+                             {successMessage && (
+                               <Alert variant="success" className="border-0 bg-success bg-opacity-10 text-success mb-4">
+                                 <i className="fas fa-check-circle me-2"></i>
+                                 {successMessage}
+                               </Alert>
+                             )}
+
+                             {authMode === 'login' ? (
+                               <Form onSubmit={handleLogin}>
+                                 <Form.Group className="mb-3" controlId="login-phone">
+                                   <Form.Label className="fw-semibold small text-muted text-uppercase">Phone Number</Form.Label>
+                                   <Form.Control
+                                     type="tel"
+                                     size="lg"
+                                     placeholder="Enter your phone number"
+                                     value={loginPhone}
+                                     onChange={(e) => setLoginPhone(e.target.value)}
+                                     required
+                                     className="bg-light border-0"
+                                   />
+                                 </Form.Group>
+                                 <Form.Group className="mb-4" controlId="login-password">
+                                   <Form.Label className="fw-semibold small text-muted text-uppercase">Password</Form.Label>
+                                   <Form.Control
+                                     type="password"
+                                     size="lg"
+                                     placeholder="Enter your password"
+                                     value={loginPassword}
+                                     onChange={(e) => setLoginPassword(e.target.value)}
+                                     required
+                                     className="bg-light border-0"
+                                   />
+                                 </Form.Group>
+                                 <Button type="submit" variant="primary" size="lg" className="w-100 fw-bold" disabled={loginLoading}>
+                                   {loginLoading ? <Spinner size="sm" animation="border" /> : 'Sign In'}
+                                 </Button>
+                               </Form>
+                             ) : (
+                               <Form onSubmit={handleRegister}>
+                                 <Form.Group className="mb-3" controlId="register-phone">
+                                   <Form.Label className="fw-semibold small text-muted text-uppercase">Phone Number</Form.Label>
+                                   <Form.Control
+                                     type="tel"
+                                     size="lg"
+                                     placeholder="Enter your phone number"
+                                     value={registerPhone}
+                                     onChange={(e) => setRegisterPhone(e.target.value)}
+                                     required
+                                     className="bg-light border-0"
+                                   />
+                                 </Form.Group>
+                                 <div className="row g-3 mb-4">
+                                   <div className="col-md-6">
+                                      <Form.Group controlId="register-password">
+                                        <Form.Label className="fw-semibold small text-muted text-uppercase">Password</Form.Label>
+                                        <Form.Control
+                                          type="password"
+                                          size="lg"
+                                          placeholder="8+ chars"
+                                          value={registerPassword}
+                                          onChange={(e) => setRegisterPassword(e.target.value)}
+                                          required
+                                          minLength={8}
+                                          className="bg-light border-0"
+                                        />
+                                      </Form.Group>
+                                   </div>
+                                   <div className="col-md-6">
+                                      <Form.Group controlId="register-confirm">
+                                        <Form.Label className="fw-semibold small text-muted text-uppercase">Confirm</Form.Label>
+                                        <Form.Control
+                                          type="password"
+                                          size="lg"
+                                          placeholder="Repeat password"
+                                          value={registerConfirm}
+                                          onChange={(e) => setRegisterConfirm(e.target.value)}
+                                          required
+                                          minLength={8}
+                                          className="bg-light border-0"
+                                        />
+                                      </Form.Group>
+                                   </div>
+                                 </div>
+                                 <Button type="submit" variant="primary" size="lg" className="w-100 fw-bold" disabled={registerLoading}>
+                                   {registerLoading ? <Spinner size="sm" animation="border" /> : 'Create Account'}
+                                 </Button>
+                               </Form>
+                             )}
+                           </div>
+                         </div>
+                       </div>
+                     </div>
+                   </div>
+                ) : showThankYou ? (
+                  <div className="text-center py-5">
+                    <div className="mb-4">
+                      <div className="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center shadow-lg" style={{ width: 80, height: 80, fontSize: '2rem' }}>
+                        <i className="fas fa-check"></i>
+                      </div>
+                    </div>
+                    <h2 className="fw-bold mb-3">Profile Updated!</h2>
+                    <p className="lead text-muted mb-4" style={{ maxWidth: 500, margin: '0 auto' }}>
+                      Thanks for keeping your details current. Your profile is now up to date.
+                    </p>
+                    <div className="d-flex justify-content-center gap-3">
+                      <Button variant="primary" onClick={() => { setShowThankYou(false); setActivePane('community'); refreshCommunityProfiles(); }}>
+                        Explore Community
+                      </Button>
+                      <Button variant="outline-secondary" onClick={() => setShowThankYou(false)}>
+                        Back to Profile
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    {activePane === 'profile' && (
+                      <div className="row g-4">
+                        <div className="col-12">
+                          <div className="d-flex align-items-center justify-content-between mb-4">
+                            <div>
+                              <h2 className="fw-bold mb-1 text-dark">My Profile</h2>
+                              <p className="text-muted mb-0">Manage your personal information and preferences.</p>
+                            </div>
+                            {updateLoading && <Spinner animation="border" variant="primary" size="sm" />}
+                          </div>
+                        </div>
+                        
+                        <div className="col-lg-8">
+                          <Form onSubmit={handleUpdate} className="student-portal-form" noValidate>
+                            <div className="d-flex flex-column gap-4">
+                              {portalSections.map((section) => (
+                                <div key={section.key} className="card-modern p-4">
+                                  <div className="d-flex align-items-center gap-3 mb-4 border-bottom pb-3">
+                                    <div className="bg-primary bg-opacity-10 text-primary rounded-3 d-flex align-items-center justify-content-center" style={{ width: 40, height: 40 }}>
+                                      <i className={section.icon}></i>
+                                    </div>
+                                    <div>
+                                      <h5 className="fw-bold mb-0 text-dark">{section.title}</h5>
+                                      <small className="text-muted">{section.subtitle}</small>
+                                    </div>
+                                  </div>
+                                  <div className="row g-4">
+                                    {section.fields.map((fieldName) => {
+                                      if (!workingPlan && (fieldName === 'employment_company' || fieldName === 'employment_role')) return null;
+                                      const fieldConfig = FIELD_CONFIG_MAP.get(fieldName);
+                                      if (!fieldConfig) return null;
+                                      return (
+                                        <div key={fieldName} className={getFieldColumnClass(fieldConfig)}>
+                                          {renderFormControl(fieldConfig)}
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                            <div className="d-flex justify-content-end mt-4 pt-3 border-top">
+                              <Button type="submit" variant="primary" size="lg" disabled={updateLoading} className="px-5 shadow-sm">
+                                {updateLoading ? <Spinner animation="border" size="sm" /> : 'Save Changes'}
+                              </Button>
+                            </div>
+                          </Form>
+                        </div>
+                        <div className="col-lg-4">
+                          <div className="sticky-top" style={{ top: 20 }}>
+                            {renderAccountPane()}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {activePane === 'community' && (
+                      <div className="h-100">
+                        {renderCommunityPane()}
+                      </div>
+                    )}
+
+                    {activePane === 'help' && (
+                      <div className="h-100">
+                        {renderHelpPane()}
+                      </div>
+                    )}
+
+                    {activePane === 'feed' && (
+                      <div className="h-100">
+                        {renderFeedPane()}
+                      </div>
+                    )}
+
+                    {activePane === 'analytics' && (
+                      <div className="h-100">
+                        <AnalyticsDashboard currentUser={student} />
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
-      </main>
-      {student && (
-        <nav className="portal-mobile-nav d-lg-none">
-          <button
-            type="button"
-            className={activePane === 'profile' ? 'active' : ''}
-            onClick={() => setActivePane('profile')}
-          >
-            <span className="icon-wrapper">
-              <i className="fas fa-id-card"></i>
-            </span>
-            <span>Profile</span>
-          </button>
-          <button
-            type="button"
-            className={activePane === 'community' ? 'active' : ''}
-            onClick={() => setActivePane('community')}
-          >
-            <span className="icon-wrapper">
-              <i className="fas fa-users"></i>
-            </span>
-            <span>Community</span>
-          </button>
-          <button
-            type="button"
-            className={showConversationPanel ? 'active' : ''}
-            onClick={() => {
-              setActivePane('community');
-              openFirstConversation();
-            }}
-          >
-            <span className="icon-wrapper">
-              <i className="fas fa-comment-dots"></i>
-            </span>
-            <span>Inbox</span>
-            {totalUnreadMessages > 0 && (
-              <Badge bg="danger" pill className="ms-0 mt-1">
-                {totalUnreadMessages}
-              </Badge>
-            )}
-          </button>
-          <button
-            type="button"
-            className={activePane === 'help' ? 'active' : ''}
-            onClick={() => setActivePane('help')}
-          >
-            <span className="icon-wrapper">
-              <i className="fas fa-life-ring"></i>
-            </span>
-            <span>Help</span>
-          </button>
-        </nav>
-      )}
-      <ToastContainer position="bottom-end" className="p-3">
-        {toastQueue.map((toast) => (
+      </div>
+
+      {/* Toast Container */}
+      <ToastContainer position="bottom-end" className="p-3" style={{ zIndex: 2000 }}>
+        {toasts.map((toast) => (
           <Toast
             key={toast.id}
-            onClose={() => dismissToast(toast.id)}
-            delay={6000}
+            onClose={() => removeToast(toast.id)}
+            delay={5000}
             autohide
-            bg={toast.variant}
+            className="border-0 shadow-lg"
           >
-            <Toast.Header closeButton>
-              <strong className="me-auto">
-                {toast.title || 'Notification'}
-              </strong>
+            <Toast.Header className={`bg-${toast.variant} text-white border-0`}>
+              <strong className="me-auto">{toast.title}</strong>
+              <small>Just now</small>
             </Toast.Header>
-            <Toast.Body className="text-white">
-              <div>{toast.message}</div>
-              {toast.actionLabel && toast.onAction && (
-                <Button
-                  size="sm"
-                  variant="outline-light"
-                  className="mt-3"
-                  onClick={() => {
-                    toast.onAction();
-                    dismissToast(toast.id);
-                  }}
-                >
-                  {toast.actionLabel}
-                </Button>
-              )}
-            </Toast.Body>
+            <Toast.Body className="bg-white rounded-bottom">{toast.message}</Toast.Body>
           </Toast>
         ))}
       </ToastContainer>
-      <Offcanvas
-        show={showConversationPanel}
-        onHide={handleCloseConversation}
+
+      {/* Offcanvas Components */}
+      <Offcanvas 
+        show={showConversationPanel} 
+        onHide={handleCloseConversation} 
         placement="end"
-        className="conversation-offcanvas"
+        className="conversation-offcanvas border-0 shadow-lg"
+        backdrop={true}
       >
-        <Offcanvas.Header closeButton className="conversation-header align-items-start">
-          <div className="flex-grow-1 me-3">
-            <Offcanvas.Title as="div" className="conversation-title-block">
-              <div className="conversation-title">
-                {activeConversation
-                  ? `${activeConversation.first_name || ''} ${activeConversation.last_name || ''}`.trim() ||
-                    'Conversation'
-                  : 'Conversation'}
+        <Offcanvas.Header closeButton className="border-bottom py-3">
+          <Offcanvas.Title>
+            {activeConversation && (
+              <div className="d-flex align-items-center gap-3">
+                <div className="position-relative">
+                  <div className="conversation-avatar shadow-sm">
+                    {buildInitials(activeConversation.first_name, activeConversation.last_name)}
+                  </div>
+                  {activeConversation.is_online && (
+                    <span className="position-absolute bottom-0 end-0 p-1 bg-success border border-white rounded-circle"></span>
+                  )}
+                </div>
+                <div className="conversation-title-block">
+                  <div className="conversation-title">
+                    {activeConversation.first_name} {activeConversation.last_name}
+                  </div>
+                  <div className={`conversation-status ${activeConversation.is_online ? 'is-online' : ''}`}>
+                    {formatPresenceText(activeConversation.is_online, activeConversation.last_seen)}
+                  </div>
+                </div>
               </div>
-              <div
-                className={`conversation-status ${
-                  activeConversation?.online ? 'is-online' : ''
-                }`}
-              >
-                <span
-                  className={`presence-dot me-2 ${activeConversation?.online ? 'presence-dot-online' : ''}`}
-                  aria-hidden="true"
-                ></span>
-                {formatPresenceText(
-                  Boolean(activeConversation?.online),
-                  activeConversation?.last_seen || null
+            )}
+          </Offcanvas.Title>
+          <Dropdown align="end">
+            <Dropdown.Toggle variant="link" className="text-muted border-0 p-0 no-arrow">
+              <i className="fas fa-ellipsis-v"></i>
+            </Dropdown.Toggle>
+            <Dropdown.Menu>
+              <Dropdown.Item onClick={handleClearConversation} className="text-danger">
+                <i className="fas fa-trash-alt me-2"></i>
+                Clear Conversation
+              </Dropdown.Item>
+            </Dropdown.Menu>
+          </Dropdown>
+        </Offcanvas.Header>
+        <Offcanvas.Body className="d-flex flex-column p-0 bg-light">
+          {/* Messages Area */}
+          <div className="flex-grow-1 p-3 overflow-auto d-flex flex-column gap-3" style={{ scrollBehavior: 'smooth' }}>
+            {conversationMessages.length === 0 ? (
+              <div className="text-center my-auto text-muted">
+                <div className="mb-3">
+                  <i className="fas fa-comments fa-3x text-muted opacity-25"></i>
+                </div>
+                <p>No messages yet.</p>
+                <p className="small">Start the conversation by saying hello!</p>
+                {conversationStarter && (
+                  <Button 
+                    variant="outline-primary" 
+                    size="sm" 
+                    className="mt-2 rounded-pill"
+                    onClick={() => setMessageDraft(conversationStarter)}
+                  >
+                    Use AI Starter
+                  </Button>
                 )}
               </div>
-            </Offcanvas.Title>
-          </div>
-          <Button
-            variant="outline-secondary"
-            size="sm"
-            className="conversation-clear"
-            onClick={handleClearConversation}
-            disabled={!activeConversation?.id}
-          >
-            <i className="fas fa-broom me-2"></i>
-            Clear Chat
-          </Button>
-        </Offcanvas.Header>
-        <Offcanvas.Body className="d-flex flex-column">
-          {activeConversation?.community_headline && (
-            <p className="text-muted small mb-2">{activeConversation.community_headline}</p>
-          )}
-          {activeConversation?.help_offering && (
-            <div className="small bg-primary-subtle text-primary-emphasis rounded-3 p-3 mb-3">
-              <i className="fas fa-hands-helping me-2"></i>
-              {activeConversation.help_offering}
-            </div>
-          )}
-          {conversationError && (
-            <Alert variant="danger" className="py-2">
-              {conversationError}
-            </Alert>
-          )}
-          <div className="conversation-messages flex-grow-1 mb-3">
-            {conversationLoading && conversationMessages.length === 0 ? (
-              <div className="text-center py-4">
-                <Spinner animation="border" role="status" />
-              </div>
-            ) : conversationMessages.length === 0 ? (
-              <div className="text-center text-muted small py-4">
-                Start the conversation with a friendly hello.
-              </div>
             ) : (
-              conversationMessages.map((message) => {
-                const isOwn = message.sender?.id === (student?._id || '');
+              conversationMessages.map((msg, idx) => {
+                const senderId = typeof msg.sender === 'object' ? msg.sender?.id : msg.sender;
+                const isSelf = senderId === student._id;
                 return (
-                  <div
-                    key={message.id}
-                    className={`conversation-message ${isOwn ? 'conversation-message--self' : ''}`}
-                  >
-                    <div className="conversation-message-meta">
-                      <span className="conversation-message-author">
-                        {isOwn ? 'You' : message.sender?.name || activeConversation?.first_name || ''}
-                      </span>
-                      <span className="conversation-message-time">
-                        {formatConversationTimestamp(message.created_at)}
-                      </span>
+                  <div key={idx} className={`d-flex ${isSelf ? 'justify-content-end' : 'justify-content-start'}`}>
+                    <div className={`p-3 rounded-4 shadow-sm chat-bubble ${isSelf ? 'sent' : 'received'}`} style={{ maxWidth: '85%' }}>
+                      <div className="small mb-1 opacity-75 fw-bold">
+                        {isSelf ? 'You' : activeConversation.first_name}
+                      </div>
+                      <div>{msg.body || msg.message || msg.content}</div>
+                      <div className="d-flex justify-content-end mt-1">
+                        <small className="opacity-50" style={{ fontSize: '0.7rem' }}>
+                          {formatConversationTimestamp(msg.timestamp)}
+                        </small>
+                      </div>
                     </div>
-                    <div className="conversation-message-bubble">{message.body}</div>
                   </div>
                 );
               })
             )}
             <div ref={conversationEndRef} />
           </div>
-          <Form onSubmit={handleSendConversationMessage}>
-            <Form.Control
-              as="textarea"
-              rows={2}
-              placeholder={
-                activeConversation
-                  ? `Write a message to ${activeConversation.first_name || 'them'}...`
-                  : 'Select someone to start chatting...'
-              }
-              value={messageDraft}
-              onChange={(event) => setMessageDraft(event.target.value)}
-              className="mb-3"
-              maxLength={2000}
-              disabled={conversationLoading || !activeConversation}
-            />
-            <div className="d-flex justify-content-between align-items-center">
-              <small className="text-muted">
-                {messageDraft.trim().length}
-                /2000
-              </small>
-              <Button
-                type="submit"
-                variant="primary"
-                disabled={
-                  conversationLoading || !activeConversation || messageDraft.trim().length === 0
-                }
-              >
-                <i className="fas fa-paper-plane me-2"></i>
-                Send
-              </Button>
-            </div>
-          </Form>
+
+          {/* Input Area */}
+          <div className="p-3 bg-white border-top">
+            <Form onSubmit={handleSendConversationMessage}>
+              <div className="d-flex gap-2">
+                <Form.Control
+                  type="text"
+                  placeholder="Type a message..."
+                  value={messageDraft}
+                  onChange={(e) => setMessageDraft(e.target.value)}
+                  className="rounded-pill bg-light border-0 px-4 py-2"
+                  autoFocus
+                />
+                <Button 
+                  type="submit" 
+                  variant="primary" 
+                  className="rounded-circle d-flex align-items-center justify-content-center shadow-sm"
+                  style={{ width: 46, height: 46 }}
+                  disabled={!messageDraft.trim()}
+                >
+                  <i className="fas fa-paper-plane"></i>
+                </Button>
+              </div>
+            </Form>
+          </div>
         </Offcanvas.Body>
       </Offcanvas>
-      <Offcanvas
-        show={showProfilePreview}
-        onHide={closeProfilePreview}
-        placement="start"
-        className="profile-offcanvas"
-      >
-        <Offcanvas.Header closeButton>
-          <Offcanvas.Title>
-            {profilePreview
-              ? `${profilePreview.first_name || ''} ${profilePreview.last_name || ''}`.trim()
-              : 'Student Profile'}
-          </Offcanvas.Title>
-        </Offcanvas.Header>
-        <Offcanvas.Body>
-          {profilePreview ? (
-            <div className="profile-preview">
-              <div className="presence-line text-muted small mb-3">
-                <span
-                  className={`presence-dot ${profilePreview.online ? 'presence-dot-online' : ''}`}
-                  aria-hidden="true"
-                ></span>
-                {formatPresenceText(profilePreview.online, profilePreview.last_seen)}
-              </div>
-              {profilePreview.community_headline && (
-                <p className="text-muted small mb-3">{profilePreview.community_headline}</p>
-              )}
-              {profilePreview.community_bio && (
-                <p className="mb-4">{profilePreview.community_bio}</p>
-              )}
-              <div className="profile-preview-section">
-                <h6>Areas of Study</h6>
-                <p className="text-muted mb-0">{profilePreview.study || 'Not provided'}</p>
-              </div>
-              <div className="profile-preview-section">
-                <h6>Skills</h6>
-                {profilePreview.community_skills?.length ? (
-                  <div className="d-flex flex-wrap gap-2">
-                    {profilePreview.community_skills.map((skill) => (
-                      <span
-                        key={`${profilePreview.id}-skill-${skill}`}
-                        className="badge bg-primary-subtle text-primary-emphasis"
-                      >
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-muted small mb-0">No skills listed yet.</p>
-                )}
-              </div>
-              <div className="profile-preview-section">
-                <h6>Interests</h6>
-                {profilePreview.community_interests?.length ? (
-                  <div className="d-flex flex-wrap gap-2">
-                    {profilePreview.community_interests.map((interest) => (
-                      <span
-                        key={`${profilePreview.id}-interest-${interest}`}
-                        className="badge bg-secondary-subtle text-secondary-emphasis"
-                      >
-                        {interest}
-                      </span>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-muted small mb-0">No interests listed yet.</p>
-                )}
-              </div>
-              {(profilePreview.mail_id || profilePreview.phone) && (
-                <div className="profile-preview-section">
-                  <h6>Contact</h6>
-                  <div className="community-contact">
-                    {profilePreview.mail_id && (
-                      <span>
-                        <i className="fas fa-envelope me-2"></i>
-                        {profilePreview.mail_id}
-                      </span>
-                    )}
-                    {profilePreview.phone && (
-                      <span>
-                        <i className="fas fa-phone me-2"></i>
-                        {profilePreview.phone}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          ) : (
-            <p className="text-muted">Select a student to view their profile.</p>
-          )}
-        </Offcanvas.Body>
-      </Offcanvas>
+
       <style jsx>{`
-        .main-content {
-          min-height: calc(100vh - 72px);
-          background: radial-gradient(circle at top left, rgba(59, 130, 246, 0.08), transparent 45%),
-            radial-gradient(circle at bottom right, rgba(16, 185, 129, 0.08), transparent 45%),
-            linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
-        }
-        .student-portal-card {
-          border-radius: 1.5rem;
-          overflow: hidden;
-          box-shadow: 0 25px 60px rgba(15, 23, 42, 0.12);
-          border: none;
-        }
-        .student-portal-card .card-header {
-          position: relative;
-          background: linear-gradient(135deg, #2563eb 0%, #9333ea 100%);
-          border: none;
-        }
-        .student-portal-card .card-header::after {
-          content: '';
-          position: absolute;
-          inset: 0;
-          background: radial-gradient(circle at top right, rgba(255, 255, 255, 0.28), transparent 55%);
-          pointer-events: none;
-        }
-        .student-portal-card .card-body {
-          background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-        }
-        .portal-sections {
-          display: flex;
-          flex-direction: column;
-          gap: 1.75rem;
-        }
-        .portal-section {
-          background: #ffffff;
-          border-radius: 1.25rem;
-          border: 1px solid rgba(148, 163, 184, 0.16);
-          padding: 1.75rem;
-          box-shadow: 0 20px 45px rgba(15, 23, 42, 0.05);
-          transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-        .portal-section:hover {
-          transform: translateY(-4px);
-          box-shadow: 0 30px 60px rgba(15, 23, 42, 0.08);
-        }
-        .portal-section-header {
-          display: flex;
-          align-items: center;
-          gap: 1rem;
-          margin-bottom: 1.5rem;
-        }
-        .portal-section-icon {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          width: 48px;
-          height: 48px;
-          border-radius: 14px;
-          background: linear-gradient(135deg, #2563eb 0%, #38bdf8 100%);
-          color: #ffffff;
-          font-size: 1.25rem;
-          box-shadow: 0 14px 30px rgba(37, 99, 235, 0.25);
-        }
-        .portal-section-title {
-          font-size: 1.05rem;
-          font-weight: 700;
-          color: #0f172a;
-          letter-spacing: 0.01em;
-        }
-        .portal-section-subtitle {
-          font-size: 0.9rem;
-        }
-        .student-portal-form .form-label {
-          font-weight: 600;
-          color: #1f2937;
-        }
-        .student-portal-form .form-control,
-        .student-portal-form .form-select {
-          border-radius: 0.75rem;
-          padding: 0.75rem 1rem;
-          background-color: #f8fafc;
-          border: 1px solid rgba(148, 163, 184, 0.35);
-          transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
-        }
-        .student-portal-form .form-control[readonly] {
-          background-color: #f1f5f9;
-          border-style: dashed;
-          cursor: default;
-        }
-        .student-portal-form .form-control:focus,
-        .student-portal-form .form-select:focus {
-          box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.15);
-          border-color: #2563eb;
-          background-color: #ffffff;
-        }
-        .student-portal-form .form-select:disabled,
-        .student-portal-form .form-control:disabled {
-          background-color: #edf2f7;
-          cursor: not-allowed;
-        }
-        .student-portal-form .form-check-input {
-          width: 3rem;
-          height: 1.5rem;
-          border-radius: 1.5rem;
-          border: 1px solid rgba(37, 99, 235, 0.4);
-          background-color: rgba(148, 163, 184, 0.3);
-        }
-        .student-portal-form .form-check-input:checked {
-          background-color: #2563eb;
-        }
-        .student-portal-form .form-check-input:focus {
-          box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.2);
-        }
-        .student-portal-form .form-check-label {
-          font-weight: 600;
-          color: #1f2937;
-        }
-        .thank-you-state {
-          max-width: 560px;
-          margin: 0 auto;
-        }
-        .thank-you-icon {
-          width: 96px;
-          height: 96px;
-          border-radius: 50%;
-          background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(139, 92, 246, 0.1));
-          color: #2563eb;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 2rem;
-          box-shadow: inset 0 0 0 1px rgba(37, 99, 235, 0.2);
-        }
-        .thank-you-state .btn {
-          min-width: 200px;
-        }
-        .community-hero-card {
-          background: linear-gradient(135deg, #1d4ed8 0%, #9333ea 100%);
-          border-radius: 1.25rem;
-          position: relative;
-          overflow: hidden;
-          color: #fff;
-        }
-        .portal-auth-grid {
-          background: linear-gradient(135deg, rgba(37, 99, 235, 0.08), rgba(236, 72, 153, 0.05));
-          border-radius: 1.5rem;
-          padding: 1.5rem;
-        }
-        .portal-auth-hero {
-          background: #ffffff;
-          border-radius: 1.25rem;
-          padding: 2rem;
-          border: 1px solid rgba(148, 163, 184, 0.24);
-          box-shadow: 0 22px 44px rgba(15, 23, 42, 0.08);
-        }
-        .portal-auth-list {
-          list-style: none;
-          padding: 0;
-          margin: 0;
-          display: flex;
-          flex-direction: column;
-          gap: 0.75rem;
-          color: #1f2937;
-          font-weight: 500;
-        }
-        .portal-auth-card {
-          background: #ffffff;
-          border-radius: 1.25rem;
-          padding: 2rem 2.5rem;
-          border: 1px solid rgba(148, 163, 184, 0.18);
-          box-shadow: 0 24px 48px rgba(15, 23, 42, 0.08);
-        }
-        .portal-auth-submit {
-          border-radius: 0.9rem;
-          padding: 0.85rem 1.25rem;
-          background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
-          border: none;
-          font-weight: 600;
-        }
-        .portal-auth-submit:hover {
-          background: linear-gradient(135deg, #1e40af 0%, #6d28d9 100%);
-        }
-        .community-hero-card .card-body {
-          position: relative;
-          z-index: 1;
-        }
-        .community-hero-overlay {
-          position: absolute;
-          inset: 0;
-          background: radial-gradient(circle at top right, rgba(255, 255, 255, 0.35), transparent 60%);
-          opacity: 0.85;
-          z-index: 0;
-        }
-        .community-search-card,
-        .community-inbox-card {
-          border-radius: 1.25rem;
-        }
-        .conversation-thread-list .list-group-item {
-          border: none;
-          border-radius: 1rem;
-          margin-bottom: 0.5rem;
-          background: rgba(248, 250, 252, 0.9);
-          transition: transform 0.15s ease, box-shadow 0.15s ease;
-        }
-        .conversation-thread-list .list-group-item:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 14px 28px rgba(15, 23, 42, 0.08);
-        }
-        .conversation-thread-name {
-          cursor: pointer;
-          transition: color 0.2s ease;
-        }
-        .conversation-thread-name:hover {
-          color: #2563eb;
-        }
-        .conversation-avatar {
-          width: 52px;
-          height: 52px;
-          border-radius: 16px;
-          background: linear-gradient(135deg, rgba(37, 99, 235, 0.12), rgba(147, 51, 234, 0.12));
-          color: #1e3a8a;
-          font-weight: 700;
-          font-size: 1rem;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          text-transform: uppercase;
-        }
-        .conversation-avatar-sm {
-          width: 44px;
-          height: 44px;
-        }
-        .portal-action-ribbon {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-          gap: 1rem;
-          background: linear-gradient(135deg, rgba(37, 99, 235, 0.08), rgba(236, 72, 153, 0.06));
-          padding: 1.25rem;
-          border-radius: 1.2rem;
-          border: 1px solid rgba(148, 163, 184, 0.18);
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
-        }
-        .ribbon-action {
-          display: flex;
-          align-items: center;
-          gap: 0.85rem;
-          background: #ffffff;
-          border: none;
-          border-radius: 1rem;
-          padding: 0.9rem 1rem;
-          text-align: left;
-          box-shadow: 0 16px 32px rgba(15, 23, 42, 0.05);
-          transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
-          position: relative;
-        }
-        .ribbon-action:hover {
-          transform: translateY(-3px);
-          box-shadow: 0 24px 40px rgba(15, 23, 42, 0.08);
-        }
-        .ribbon-action.is-active {
-          border: 1px solid rgba(37, 99, 235, 0.35);
-          box-shadow: 0 20px 35px rgba(37, 99, 235, 0.12);
-        }
-        .ribbon-icon {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          width: 42px;
-          height: 42px;
-          border-radius: 14px;
-          font-size: 1rem;
-        }
-        .ribbon-label {
-          display: block;
-          font-weight: 600;
-          color: #0f172a;
-        }
-        .ribbon-subtitle {
-          display: block;
-          font-size: 0.82rem;
-          color: #64748b;
-        }
-        .ribbon-badge {
-          margin-left: auto;
-          font-size: 0.75rem;
-          font-weight: 600;
-          color: #2563eb;
-        }
-        .ribbon-badge-accent {
-          background: #2563eb;
-          color: #ffffff;
-          padding: 0.2rem 0.65rem;
-          border-radius: 999px;
-        }
-        .contact-chip {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.5rem;
-          border: none;
-          border-radius: 999px;
-          background: rgba(37, 99, 235, 0.08);
-          color: #1e3a8a;
-          padding: 0.35rem 0.9rem;
-          font-size: 0.8rem;
-          transition: background 0.2s ease, transform 0.2s ease;
-        }
-        .contact-chip:hover {
-          background: rgba(37, 99, 235, 0.12);
-          transform: translateY(-1px);
-        }
-        .help-request-card {
-          border-radius: 1.2rem;
-          border: 1px solid rgba(148, 163, 184, 0.16);
-          box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
-        }
-        .help-response {
-          background: rgba(248, 250, 252, 0.85);
-        }
-        .help-response-main {
-          align-items: flex-start;
-        }
-        .help-response-message {
-          line-height: 1.5;
-        }
-        .help-response-actions {
-          width: 100%;
-          align-items: flex-start;
-        }
-        .help-response-actions .thread-presence {
-          justify-content: flex-start;
-        }
-        .message-helper-btn {
-          border-radius: 0.75rem;
-        }
-        @media (min-width: 768px) {
-          .help-response-actions {
-            width: auto;
-            align-items: flex-end;
-          }
-        }
-        @media (max-width: 767px) {
-          .message-helper-btn {
-            width: 100%;
-          }
-        }
-        .conversation-offcanvas {
-          width: min(420px, 100%);
-        }
-        .conversation-title-block {
-          display: flex;
-          flex-direction: column;
-          gap: 0.35rem;
-        }
-        .conversation-title {
-          font-weight: 700;
-          font-size: 1.05rem;
-          color: #0f172a;
-        }
-        .conversation-status {
-          font-size: 0.82rem;
-          color: #64748b;
-          display: flex;
-          align-items: center;
-          gap: 0.35rem;
-        }
-        .conversation-status.is-online {
-          color: #16a34a;
-        }
-        .profile-offcanvas {
-          width: min(400px, 100%);
-          background: linear-gradient(180deg, #1f2937 0%, #0f172a 100%);
-          color: #e2e8f0;
-        }
-        .profile-offcanvas .offcanvas-body {
-          background: transparent;
-        }
-        .profile-offcanvas .offcanvas-header {
-          background: transparent;
-          color: #e2e8f0;
-        }
-        .profile-offcanvas .btn-close {
-          filter: invert(1);
-        }
-        .profile-preview h6 {
-          font-size: 0.9rem;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          color: #94a3b8;
-          margin-bottom: 0.6rem;
-        }
-        .profile-preview-section {
-          margin-bottom: 1.5rem;
-          padding-bottom: 0.9rem;
-          border-bottom: 1px solid rgba(148, 163, 184, 0.2);
-        }
-        .profile-preview-section:last-of-type {
-          border-bottom: none;
-        }
-        .presence-dot {
-          width: 0.55rem;
-          height: 0.55rem;
-          border-radius: 50%;
-          background: #cbd5f5;
-          display: inline-block;
-        }
-        .presence-dot-online,
-        .conversation-status.is-online .presence-dot {
-          background: #16a34a;
-          box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.15);
-        }
-        .presence-line,
-        .thread-presence {
-          display: flex;
-          align-items: center;
-          gap: 0.4rem;
-        }
-        .conversation-clear {
-          border-radius: 0.75rem;
-          border: 1px solid rgba(148, 163, 184, 0.4);
-          color: #1e293b;
-        }
-        .conversation-clear:hover {
-          background: rgba(148, 163, 184, 0.2);
-          color: #0f172a;
-        }
-        .conversation-messages {
-          background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
-          border-radius: 1rem;
-          padding: 1.25rem;
-          overflow-y: auto;
-          max-height: 55vh;
-        }
-        .conversation-message {
-          margin-bottom: 1rem;
-          max-width: 90%;
-        }
-        .conversation-message--self {
-          margin-left: auto;
-          text-align: right;
-        }
-        .conversation-message-meta {
-          display: flex;
-          justify-content: space-between;
-          align-items: baseline;
-          font-size: 0.75rem;
-          color: #64748b;
-          margin-bottom: 0.35rem;
-          gap: 0.75rem;
-        }
-        .conversation-message-author {
-          font-weight: 600;
-        }
-        .conversation-message-bubble {
-          display: inline-block;
-          padding: 0.65rem 0.95rem;
-          border-radius: 1rem;
-          background: #eff6ff;
-          color: #1e40af;
-          box-shadow: 0 12px 24px rgba(37, 99, 235, 0.12);
-        }
-        .conversation-message--self .conversation-message-bubble {
-          background: #2563eb;
-          color: #ffffff;
-          box-shadow: 0 12px 24px rgba(37, 99, 235, 0.22);
-        }
-        .community-name-link {
-          cursor: pointer;
-          transition: color 0.2s ease;
-        }
-        .community-name-link:hover {
-          color: #2563eb;
-        }
-        .community-card {
-          border-radius: 1.25rem;
-          transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-        .community-card:hover {
-          transform: translateY(-4px);
-          box-shadow: 0 26px 45px rgba(15, 23, 42, 0.08);
-        }
-        .community-contact {
-          display: flex;
-          flex-direction: column;
-          gap: 0.5rem;
-        }
-        .portal-mobile-nav {
-          position: fixed;
-          bottom: 0;
-          left: 0;
-          right: 0;
-          background: rgba(15, 23, 42, 0.9);
-          backdrop-filter: blur(12px);
-          padding: 0.65rem 1.25rem env(safe-area-inset-bottom, 1rem);
-          display: grid;
-          grid-template-columns: repeat(4, 1fr);
-          gap: 0.75rem;
-          z-index: 1050;
-        }
-        .portal-mobile-nav button {
-          border: none;
-          background: transparent;
-          color: #cbd5f5;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          font-size: 0.7rem;
-          gap: 0.25rem;
-          position: relative;
-        }
-        .portal-mobile-nav button .icon-wrapper {
-          width: 36px;
-          height: 36px;
-          border-radius: 12px;
-          background: rgba(99, 102, 241, 0.18);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: #fff;
-        }
-        .portal-mobile-nav button .badge {
-          position: absolute;
-          top: 2px;
-          right: 20px;
-          font-size: 0.65rem;
-        }
-        .portal-mobile-nav button.active .icon-wrapper {
-          background: linear-gradient(135deg, #6366f1, #8b5cf6);
-        }
-        .portal-mobile-nav button.active {
-          color: #fff;
-        }
-        @media (max-width: 767px) {
-          .student-portal-card {
-            border-radius: 1.25rem;
-          }
-          .portal-section {
-            padding: 1.3rem;
-          }
-          .portal-section-header {
-            align-items: flex-start;
-          }
-          .portal-action-ribbon {
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            padding: 1rem;
-          }
-          .ribbon-action {
-            padding: 0.75rem 0.85rem;
-          }
-          .portal-auth-grid {
-            padding: 1rem;
-          }
-          .portal-auth-card {
-            padding: 1.5rem;
-          }
-          .portal-auth-hero {
-            padding: 1.5rem;
-          }
+        .d-lg-flex {
+          display: flex !important;
         }
         @media (min-width: 992px) {
-          .portal-mobile-nav {
-            display: none;
+          .ms-lg-auto {
+            margin-left: 280px !important;
           }
+        }
+        .fade-in-up {
+          animation: fadeInUp 0.5s ease-out;
+        }
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background-color: rgba(0, 0, 0, 0.1);
+          border-radius: 20px;
+        }
+        .hover-danger:hover {
+          background-color: #dc3545 !important;
+          color: white !important;
         }
       `}</style>
     </>
   );
+}
+
+export async function getServerSideProps(context) {
+  const [{ default: connectDb }, authModule, utilsModule, adminModule] = await Promise.all([
+    import('../lib/db.js'),
+    import('../lib/studentPortalAuth.js'),
+    import('../lib/studentPortalUtils.js'),
+    import('../lib/portalAdmin.js')
+  ]);
+
+  await connectDb();
+  const session = await authModule.getPortalSessionFromRequest(context.req, context.res);
+  const resolvedPath = context.resolvedUrl || context.req?.url || '';
+  const isLoginRoute = resolvedPath.startsWith('/login');
+
+  const fs = require('fs');
+  const path = require('path');
+  const logFile = path.join(process.cwd(), 'ssr-debug.log');
+  const logSSR = (msg) => {
+    const timestamp = new Date().toISOString();
+    fs.appendFileSync(logFile, `[${timestamp}] ${msg}\n`);
+  };
+
+  logSSR(`getServerSideProps called for ${resolvedPath}`);
+
+  if (!session || !session.student) {
+    logSSR('No session found. Redirecting.');
+    console.log('[SSR] No session found in getServerSideProps. Redirecting to login.');
+    if (session) {
+      console.log('[SSR] Session object exists but no student:', session);
+    } else {
+      console.log('[SSR] Session object is null/undefined');
+    }
+    
+    if (isLoginRoute) {
+      return {
+        props: {}
+      };
+    }
+    return {
+      redirect: {
+        destination: `/login?next=${encodeURIComponent(resolvedPath || '/student-portal')}`,
+        permanent: false
+      }
+    };
+  }
+
+  logSSR(`Session found for student: ${session.student._id}`);
+  const payload = utilsModule.buildPortalStudentPayload(session.student);
+  const allowAdmin = adminModule.canAccessAdminTools(session.student);
+  const meta = {
+    has_custom_password: Boolean(session.student.portal_password_hash),
+    used_default_password: false,
+    can_access_admin: allowAdmin,
+    admin_shortcuts: allowAdmin ? adminModule.ADMIN_SHORTCUTS : []
+  };
+
+  console.log('[SSR] Returning props:', { initialStudent: payload ? 'FOUND' : 'NULL', meta });
+  logSSR(`Returning props with initialStudent: ${payload ? 'FOUND' : 'NULL'}`);
+  return {
+    props: { initialStudent: payload, initialPortalMeta: meta }
+  };
 }

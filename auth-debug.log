@@ -1,0 +1,980 @@
+[2025-11-23T02:29:39.752Z] getPortalSessionFromRequest called
+[2025-11-23T02:29:39.753Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:29:39.787Z] Access token verification: true 
+[2025-11-23T02:29:40.310Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:29:43.728Z] getPortalSessionFromRequest called
+[2025-11-23T02:29:43.729Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:29:43.744Z] Access token verification: true 
+[2025-11-23T02:29:43.999Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:29:45.081Z] getPortalSessionFromRequest called
+[2025-11-23T02:29:45.082Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:29:45.121Z] Access token verification: true 
+[2025-11-23T02:29:45.356Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:29:45.426Z] getPortalSessionFromRequest called
+[2025-11-23T02:29:45.426Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:29:45.458Z] Access token verification: true 
+[2025-11-23T02:29:45.694Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:29:47.887Z] getPortalSessionFromRequest called
+[2025-11-23T02:29:47.890Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:29:47.899Z] Access token verification: true 
+[2025-11-23T02:29:48.150Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:29:49.051Z] getPortalSessionFromRequest called
+[2025-11-23T02:29:49.054Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:29:49.057Z] getPortalSessionFromRequest called
+[2025-11-23T02:29:49.058Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:29:49.091Z] Access token verification: true 
+[2025-11-23T02:29:49.099Z] Access token verification: true 
+[2025-11-23T02:29:49.375Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:29:49.385Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:29:49.963Z] getPortalSessionFromRequest called
+[2025-11-23T02:29:49.964Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:29:49.989Z] Access token verification: true 
+[2025-11-23T02:29:50.049Z] getPortalSessionFromRequest called
+[2025-11-23T02:29:50.049Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:29:50.055Z] Access token verification: true 
+[2025-11-23T02:29:50.222Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:29:50.291Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:29:53.037Z] getPortalSessionFromRequest called
+[2025-11-23T02:29:53.038Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:29:53.047Z] Access token verification: true 
+[2025-11-23T02:29:53.282Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:29:59.476Z] getPortalSessionFromRequest called
+[2025-11-23T02:29:59.484Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:29:59.778Z] Access token verification: true 
+[2025-11-23T02:30:00.060Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:30:05.988Z] getPortalSessionFromRequest called
+[2025-11-23T02:30:05.989Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:30:05.999Z] Access token verification: true 
+[2025-11-23T02:30:06.235Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:30:12.036Z] getPortalSessionFromRequest called
+[2025-11-23T02:30:12.037Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:30:12.053Z] Access token verification: true 
+[2025-11-23T02:30:12.410Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:30:18.365Z] getPortalSessionFromRequest called
+[2025-11-23T02:30:18.366Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:30:18.378Z] Access token verification: true 
+[2025-11-23T02:30:18.658Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:30:24.400Z] getPortalSessionFromRequest called
+[2025-11-23T02:30:24.401Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:30:24.405Z] Access token verification: true 
+[2025-11-23T02:30:24.655Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:30:30.389Z] getPortalSessionFromRequest called
+[2025-11-23T02:30:30.389Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:30:30.394Z] Access token verification: true 
+[2025-11-23T02:30:30.629Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:30:36.353Z] getPortalSessionFromRequest called
+[2025-11-23T02:30:36.354Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:30:36.360Z] Access token verification: true 
+[2025-11-23T02:30:36.599Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:30:42.329Z] getPortalSessionFromRequest called
+[2025-11-23T02:30:42.330Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:30:42.334Z] Access token verification: true 
+[2025-11-23T02:30:42.584Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:30:48.313Z] getPortalSessionFromRequest called
+[2025-11-23T02:30:48.314Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:30:48.318Z] Access token verification: true 
+[2025-11-23T02:30:48.565Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:30:54.289Z] getPortalSessionFromRequest called
+[2025-11-23T02:30:54.289Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:30:54.293Z] Access token verification: true 
+[2025-11-23T02:30:54.544Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:31:00.288Z] getPortalSessionFromRequest called
+[2025-11-23T02:31:00.288Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:31:00.293Z] Access token verification: true 
+[2025-11-23T02:31:00.530Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:31:06.254Z] getPortalSessionFromRequest called
+[2025-11-23T02:31:06.254Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:31:06.258Z] Access token verification: true 
+[2025-11-23T02:31:06.491Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:31:12.214Z] getPortalSessionFromRequest called
+[2025-11-23T02:31:12.215Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:31:12.222Z] Access token verification: true 
+[2025-11-23T02:31:12.457Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:31:15.105Z] getPortalSessionFromRequest called
+[2025-11-23T02:31:15.105Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:31:15.109Z] Access token verification: true 
+[2025-11-23T02:31:15.345Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:31:18.189Z] getPortalSessionFromRequest called
+[2025-11-23T02:31:18.190Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:31:18.194Z] Access token verification: true 
+[2025-11-23T02:31:18.460Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:31:24.179Z] getPortalSessionFromRequest called
+[2025-11-23T02:31:24.180Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:31:24.183Z] Access token verification: true 
+[2025-11-23T02:31:24.418Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:31:24.772Z] getPortalSessionFromRequest called
+[2025-11-23T02:31:24.772Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:31:24.776Z] Access token verification: true 
+[2025-11-23T02:31:25.006Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:31:30.153Z] getPortalSessionFromRequest called
+[2025-11-23T02:31:30.154Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:31:30.158Z] Access token verification: true 
+[2025-11-23T02:31:30.396Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:31:36.126Z] getPortalSessionFromRequest called
+[2025-11-23T02:31:36.127Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:31:36.131Z] Access token verification: true 
+[2025-11-23T02:31:36.365Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:31:42.089Z] getPortalSessionFromRequest called
+[2025-11-23T02:31:42.089Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:31:42.091Z] Access token verification: true 
+[2025-11-23T02:31:42.322Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:31:48.044Z] getPortalSessionFromRequest called
+[2025-11-23T02:31:48.044Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:31:48.046Z] Access token verification: true 
+[2025-11-23T02:31:48.276Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:31:54.007Z] getPortalSessionFromRequest called
+[2025-11-23T02:31:54.007Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:31:54.010Z] Access token verification: true 
+[2025-11-23T02:31:54.245Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:31:59.956Z] getPortalSessionFromRequest called
+[2025-11-23T02:31:59.956Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:31:59.957Z] Access token verification: true 
+[2025-11-23T02:32:00.200Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:32:05.927Z] getPortalSessionFromRequest called
+[2025-11-23T02:32:05.927Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:32:05.928Z] Access token verification: true 
+[2025-11-23T02:32:06.160Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:32:11.894Z] getPortalSessionFromRequest called
+[2025-11-23T02:32:11.894Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:32:11.896Z] Access token verification: true 
+[2025-11-23T02:32:12.126Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:32:17.847Z] getPortalSessionFromRequest called
+[2025-11-23T02:32:17.847Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:32:17.849Z] Access token verification: true 
+[2025-11-23T02:32:18.081Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:32:23.807Z] getPortalSessionFromRequest called
+[2025-11-23T02:32:23.808Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:32:23.809Z] Access token verification: true 
+[2025-11-23T02:32:24.045Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:32:26.894Z] getPortalSessionFromRequest called
+[2025-11-23T02:32:26.894Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:32:26.898Z] Access token verification: true 
+[2025-11-23T02:32:27.134Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:32:29.719Z] getPortalSessionFromRequest called
+[2025-11-23T02:32:29.720Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:32:29.724Z] Access token verification: true 
+[2025-11-23T02:32:29.771Z] getPortalSessionFromRequest called
+[2025-11-23T02:32:29.771Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:32:29.774Z] Access token verification: true 
+[2025-11-23T02:32:29.958Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:32:30.003Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:32:34.731Z] getPortalSessionFromRequest called
+[2025-11-23T02:32:34.731Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:32:34.740Z] Access token verification: true 
+[2025-11-23T02:32:34.977Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:32:36.354Z] getPortalSessionFromRequest called
+[2025-11-23T02:32:36.355Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:32:36.371Z] Access token verification: true 
+[2025-11-23T02:32:36.602Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:32:37.179Z] getPortalSessionFromRequest called
+[2025-11-23T02:32:37.180Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:32:37.181Z] getPortalSessionFromRequest called
+[2025-11-23T02:32:37.182Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:32:37.192Z] Access token verification: true 
+[2025-11-23T02:32:37.198Z] Access token verification: true 
+[2025-11-23T02:32:37.419Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:32:37.432Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:32:41.256Z] getPortalSessionFromRequest called
+[2025-11-23T02:32:41.258Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:32:41.266Z] Access token verification: true 
+[2025-11-23T02:32:41.500Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:32:42.337Z] getPortalSessionFromRequest called
+[2025-11-23T02:32:42.338Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:32:42.343Z] Access token verification: true 
+[2025-11-23T02:32:42.578Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:32:48.307Z] getPortalSessionFromRequest called
+[2025-11-23T02:32:48.307Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:32:48.310Z] Access token verification: true 
+[2025-11-23T02:32:48.544Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:32:54.280Z] getPortalSessionFromRequest called
+[2025-11-23T02:32:54.281Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:32:54.285Z] Access token verification: true 
+[2025-11-23T02:32:54.524Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:33:00.255Z] getPortalSessionFromRequest called
+[2025-11-23T02:33:00.255Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:33:00.258Z] Access token verification: true 
+[2025-11-23T02:33:00.503Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:33:06.220Z] getPortalSessionFromRequest called
+[2025-11-23T02:33:06.220Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:33:06.225Z] Access token verification: true 
+[2025-11-23T02:33:06.458Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:33:12.173Z] getPortalSessionFromRequest called
+[2025-11-23T02:33:12.174Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:33:12.177Z] Access token verification: true 
+[2025-11-23T02:33:12.408Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:33:18.144Z] getPortalSessionFromRequest called
+[2025-11-23T02:33:18.145Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:33:18.149Z] Access token verification: true 
+[2025-11-23T02:33:18.398Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:33:24.154Z] getPortalSessionFromRequest called
+[2025-11-23T02:33:24.154Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:33:24.158Z] Access token verification: true 
+[2025-11-23T02:33:24.391Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:33:30.158Z] getPortalSessionFromRequest called
+[2025-11-23T02:33:30.159Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:33:30.170Z] Access token verification: true 
+[2025-11-23T02:33:30.416Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:33:36.175Z] getPortalSessionFromRequest called
+[2025-11-23T02:33:36.176Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:33:36.180Z] Access token verification: true 
+[2025-11-23T02:33:36.438Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:33:42.172Z] getPortalSessionFromRequest called
+[2025-11-23T02:33:42.173Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:33:42.175Z] Access token verification: true 
+[2025-11-23T02:33:42.427Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:33:48.264Z] getPortalSessionFromRequest called
+[2025-11-23T02:33:48.264Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:33:48.270Z] Access token verification: true 
+[2025-11-23T02:33:48.514Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:33:54.266Z] getPortalSessionFromRequest called
+[2025-11-23T02:33:54.267Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:33:54.273Z] Access token verification: true 
+[2025-11-23T02:33:54.508Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:34:00.255Z] getPortalSessionFromRequest called
+[2025-11-23T02:34:00.256Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:34:00.261Z] Access token verification: true 
+[2025-11-23T02:34:00.496Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:34:06.251Z] getPortalSessionFromRequest called
+[2025-11-23T02:34:06.251Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:34:06.259Z] Access token verification: true 
+[2025-11-23T02:34:06.495Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:34:12.238Z] getPortalSessionFromRequest called
+[2025-11-23T02:34:12.239Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:34:12.245Z] Access token verification: true 
+[2025-11-23T02:34:12.482Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:34:18.243Z] getPortalSessionFromRequest called
+[2025-11-23T02:34:18.244Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:34:18.254Z] Access token verification: true 
+[2025-11-23T02:34:18.496Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:34:24.237Z] getPortalSessionFromRequest called
+[2025-11-23T02:34:24.237Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:34:24.244Z] Access token verification: true 
+[2025-11-23T02:34:24.478Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:34:30.214Z] getPortalSessionFromRequest called
+[2025-11-23T02:34:30.215Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:34:30.220Z] Access token verification: true 
+[2025-11-23T02:34:30.456Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:34:36.192Z] getPortalSessionFromRequest called
+[2025-11-23T02:34:36.192Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:34:36.195Z] Access token verification: true 
+[2025-11-23T02:34:36.429Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:34:42.168Z] getPortalSessionFromRequest called
+[2025-11-23T02:34:42.169Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:34:42.176Z] Access token verification: true 
+[2025-11-23T02:34:42.410Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:34:48.138Z] getPortalSessionFromRequest called
+[2025-11-23T02:34:48.139Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:34:48.146Z] Access token verification: true 
+[2025-11-23T02:34:48.384Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:35:04.234Z] getPortalSessionFromRequest called
+[2025-11-23T02:35:04.235Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:35:04.256Z] Access token verification: true 
+[2025-11-23T02:35:04.787Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:35:07.409Z] getPortalSessionFromRequest called
+[2025-11-23T02:35:07.409Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:35:07.418Z] Access token verification: true 
+[2025-11-23T02:35:07.645Z] getPortalSessionFromRequest called
+[2025-11-23T02:35:07.646Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:35:07.673Z] Access token verification: true 
+[2025-11-23T02:35:07.682Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:35:07.902Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:35:09.804Z] getPortalSessionFromRequest called
+[2025-11-23T02:35:09.804Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:35:09.816Z] Access token verification: true 
+[2025-11-23T02:35:10.046Z] getPortalSessionFromRequest called
+[2025-11-23T02:35:10.047Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:35:10.048Z] getPortalSessionFromRequest called
+[2025-11-23T02:35:10.048Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:35:10.056Z] Access token verification: true 
+[2025-11-23T02:35:10.058Z] Access token verification: true 
+[2025-11-23T02:35:10.062Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:35:10.285Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:35:10.553Z] getPortalSessionFromRequest called
+[2025-11-23T02:35:10.555Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:35:10.562Z] Access token verification: true 
+[2025-11-23T02:35:10.808Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:35:11.485Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:35:11.980Z] getPortalSessionFromRequest called
+[2025-11-23T02:35:11.981Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:35:11.984Z] Access token verification: true 
+[2025-11-23T02:35:12.217Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:35:13.812Z] getPortalSessionFromRequest called
+[2025-11-23T02:35:13.813Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:35:13.818Z] Access token verification: true 
+[2025-11-23T02:35:14.048Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:35:14.885Z] getPortalSessionFromRequest called
+[2025-11-23T02:35:14.885Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:35:14.891Z] Access token verification: true 
+[2025-11-23T02:35:15.222Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:35:16.301Z] getPortalSessionFromRequest called
+[2025-11-23T02:35:16.301Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:35:16.304Z] Access token verification: true 
+[2025-11-23T02:35:16.539Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:35:20.936Z] getPortalSessionFromRequest called
+[2025-11-23T02:35:20.936Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:35:20.938Z] Access token verification: true 
+[2025-11-23T02:35:21.172Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:35:25.061Z] getPortalSessionFromRequest called
+[2025-11-23T02:35:25.062Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:35:25.065Z] Access token verification: true 
+[2025-11-23T02:35:25.303Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:35:26.947Z] getPortalSessionFromRequest called
+[2025-11-23T02:35:26.948Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:35:26.955Z] Access token verification: true 
+[2025-11-23T02:35:27.198Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:35:27.599Z] getPortalSessionFromRequest called
+[2025-11-23T02:35:27.600Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:35:27.603Z] Access token verification: true 
+[2025-11-23T02:35:27.833Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:35:32.933Z] getPortalSessionFromRequest called
+[2025-11-23T02:35:32.934Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:35:32.937Z] Access token verification: true 
+[2025-11-23T02:35:33.170Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:35:38.918Z] getPortalSessionFromRequest called
+[2025-11-23T02:35:38.919Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:35:38.923Z] Access token verification: true 
+[2025-11-23T02:35:39.166Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:35:44.900Z] getPortalSessionFromRequest called
+[2025-11-23T02:35:44.900Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:35:44.906Z] Access token verification: true 
+[2025-11-23T02:35:45.145Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:35:50.881Z] getPortalSessionFromRequest called
+[2025-11-23T02:35:50.882Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:35:50.885Z] Access token verification: true 
+[2025-11-23T02:35:51.127Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:35:56.854Z] getPortalSessionFromRequest called
+[2025-11-23T02:35:56.856Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:35:56.863Z] Access token verification: true 
+[2025-11-23T02:35:57.098Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:36:02.842Z] getPortalSessionFromRequest called
+[2025-11-23T02:36:02.844Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:36:02.857Z] Access token verification: true 
+[2025-11-23T02:36:03.093Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:36:08.834Z] getPortalSessionFromRequest called
+[2025-11-23T02:36:08.836Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:36:08.840Z] Access token verification: true 
+[2025-11-23T02:36:09.082Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:36:14.814Z] getPortalSessionFromRequest called
+[2025-11-23T02:36:14.814Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:36:14.819Z] Access token verification: true 
+[2025-11-23T02:36:15.063Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:36:20.809Z] getPortalSessionFromRequest called
+[2025-11-23T02:36:20.809Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:36:20.812Z] Access token verification: true 
+[2025-11-23T02:36:21.050Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:36:26.777Z] getPortalSessionFromRequest called
+[2025-11-23T02:36:26.777Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:36:26.783Z] Access token verification: true 
+[2025-11-23T02:36:27.017Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:36:41.523Z] getPortalSessionFromRequest called
+[2025-11-23T02:36:41.524Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:36:41.575Z] Access token verification: true 
+[2025-11-23T02:36:42.051Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:36:50.468Z] getPortalSessionFromRequest called
+[2025-11-23T02:36:50.469Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:36:50.499Z] Access token verification: true 
+[2025-11-23T02:36:50.566Z] getPortalSessionFromRequest called
+[2025-11-23T02:36:50.568Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:36:50.591Z] Access token verification: true 
+[2025-11-23T02:36:50.745Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:36:50.852Z] getPortalSessionFromRequest called
+[2025-11-23T02:36:50.853Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:36:50.910Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:36:50.927Z] Access token verification: true 
+[2025-11-23T02:36:51.207Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:36:52.419Z] getPortalSessionFromRequest called
+[2025-11-23T02:36:52.419Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:36:52.424Z] Access token verification: true 
+[2025-11-23T02:36:52.656Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:36:53.007Z] getPortalSessionFromRequest called
+[2025-11-23T02:36:53.008Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:36:53.009Z] getPortalSessionFromRequest called
+[2025-11-23T02:36:53.010Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:36:53.026Z] Access token verification: true 
+[2025-11-23T02:36:53.031Z] Access token verification: true 
+[2025-11-23T02:36:53.254Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:36:53.277Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:36:53.581Z] getPortalSessionFromRequest called
+[2025-11-23T02:36:53.582Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:36:53.590Z] Access token verification: true 
+[2025-11-23T02:36:53.795Z] getPortalSessionFromRequest called
+[2025-11-23T02:36:53.796Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:36:53.802Z] Access token verification: true 
+[2025-11-23T02:36:54.029Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:36:55.003Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:36:57.525Z] getPortalSessionFromRequest called
+[2025-11-23T02:36:57.526Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:36:57.533Z] Access token verification: true 
+[2025-11-23T02:36:57.768Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:37:03.511Z] getPortalSessionFromRequest called
+[2025-11-23T02:37:03.512Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:37:03.517Z] Access token verification: true 
+[2025-11-23T02:37:03.753Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:37:09.467Z] getPortalSessionFromRequest called
+[2025-11-23T02:37:09.469Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:37:09.474Z] Access token verification: true 
+[2025-11-23T02:37:09.709Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:37:15.469Z] getPortalSessionFromRequest called
+[2025-11-23T02:37:15.470Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:37:15.479Z] Access token verification: true 
+[2025-11-23T02:37:15.733Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:37:21.456Z] getPortalSessionFromRequest called
+[2025-11-23T02:37:21.457Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:37:21.463Z] Access token verification: true 
+[2025-11-23T02:37:21.697Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:37:27.412Z] getPortalSessionFromRequest called
+[2025-11-23T02:37:27.412Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:37:27.419Z] Access token verification: true 
+[2025-11-23T02:37:27.653Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:37:33.378Z] getPortalSessionFromRequest called
+[2025-11-23T02:37:33.379Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:37:33.386Z] Access token verification: true 
+[2025-11-23T02:37:33.621Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:37:39.352Z] getPortalSessionFromRequest called
+[2025-11-23T02:37:39.352Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:37:39.362Z] Access token verification: true 
+[2025-11-23T02:37:39.596Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:37:45.322Z] getPortalSessionFromRequest called
+[2025-11-23T02:37:45.322Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:37:45.330Z] Access token verification: true 
+[2025-11-23T02:37:45.560Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:37:51.288Z] getPortalSessionFromRequest called
+[2025-11-23T02:37:51.288Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:37:51.293Z] Access token verification: true 
+[2025-11-23T02:37:51.538Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:37:57.292Z] getPortalSessionFromRequest called
+[2025-11-23T02:37:57.292Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:37:57.298Z] Access token verification: true 
+[2025-11-23T02:37:57.540Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:38:03.264Z] getPortalSessionFromRequest called
+[2025-11-23T02:38:03.264Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:38:03.273Z] Access token verification: true 
+[2025-11-23T02:38:03.509Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:38:09.235Z] getPortalSessionFromRequest called
+[2025-11-23T02:38:09.235Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:38:09.240Z] Access token verification: true 
+[2025-11-23T02:38:09.477Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:38:15.211Z] getPortalSessionFromRequest called
+[2025-11-23T02:38:15.213Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:38:15.218Z] Access token verification: true 
+[2025-11-23T02:38:15.449Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:38:21.183Z] getPortalSessionFromRequest called
+[2025-11-23T02:38:21.184Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:38:21.193Z] Access token verification: true 
+[2025-11-23T02:38:21.426Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:38:27.231Z] getPortalSessionFromRequest called
+[2025-11-23T02:38:27.231Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:38:27.236Z] Access token verification: true 
+[2025-11-23T02:38:27.471Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:38:33.210Z] getPortalSessionFromRequest called
+[2025-11-23T02:38:33.212Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:38:33.217Z] Access token verification: true 
+[2025-11-23T02:38:33.453Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:38:39.182Z] getPortalSessionFromRequest called
+[2025-11-23T02:38:39.183Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:38:39.193Z] Access token verification: true 
+[2025-11-23T02:38:39.427Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:38:45.165Z] getPortalSessionFromRequest called
+[2025-11-23T02:38:45.166Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:38:45.174Z] Access token verification: true 
+[2025-11-23T02:38:45.414Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:38:51.156Z] getPortalSessionFromRequest called
+[2025-11-23T02:38:51.158Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:38:51.167Z] Access token verification: true 
+[2025-11-23T02:38:51.401Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:38:57.123Z] getPortalSessionFromRequest called
+[2025-11-23T02:38:57.124Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:38:57.128Z] Access token verification: true 
+[2025-11-23T02:38:57.365Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:39:03.097Z] getPortalSessionFromRequest called
+[2025-11-23T02:39:03.098Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:39:03.107Z] Access token verification: true 
+[2025-11-23T02:39:03.335Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:39:09.053Z] getPortalSessionFromRequest called
+[2025-11-23T02:39:09.054Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:39:09.062Z] Access token verification: true 
+[2025-11-23T02:39:09.298Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:39:15.026Z] getPortalSessionFromRequest called
+[2025-11-23T02:39:15.027Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:39:15.034Z] Access token verification: true 
+[2025-11-23T02:39:15.272Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:39:21.008Z] getPortalSessionFromRequest called
+[2025-11-23T02:39:21.009Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:39:21.019Z] Access token verification: true 
+[2025-11-23T02:39:21.258Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:39:26.989Z] getPortalSessionFromRequest called
+[2025-11-23T02:39:26.990Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:39:26.996Z] Access token verification: true 
+[2025-11-23T02:39:27.233Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:39:32.963Z] getPortalSessionFromRequest called
+[2025-11-23T02:39:32.964Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:39:32.968Z] Access token verification: true 
+[2025-11-23T02:39:33.205Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:39:38.959Z] getPortalSessionFromRequest called
+[2025-11-23T02:39:38.960Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:39:38.966Z] Access token verification: true 
+[2025-11-23T02:39:39.201Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:39:44.921Z] getPortalSessionFromRequest called
+[2025-11-23T02:39:44.922Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:39:44.929Z] Access token verification: true 
+[2025-11-23T02:39:45.164Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:39:50.913Z] getPortalSessionFromRequest called
+[2025-11-23T02:39:50.913Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:39:50.922Z] Access token verification: true 
+[2025-11-23T02:39:51.157Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:39:56.894Z] getPortalSessionFromRequest called
+[2025-11-23T02:39:56.894Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:39:56.908Z] Access token verification: true 
+[2025-11-23T02:39:57.139Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:40:02.880Z] getPortalSessionFromRequest called
+[2025-11-23T02:40:02.881Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:40:02.884Z] Access token verification: true 
+[2025-11-23T02:40:03.115Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:40:08.852Z] getPortalSessionFromRequest called
+[2025-11-23T02:40:08.852Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:40:08.856Z] Access token verification: true 
+[2025-11-23T02:40:09.088Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:40:14.807Z] getPortalSessionFromRequest called
+[2025-11-23T02:40:14.807Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:40:14.811Z] Access token verification: true 
+[2025-11-23T02:40:15.047Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:40:20.816Z] getPortalSessionFromRequest called
+[2025-11-23T02:40:20.818Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:40:20.829Z] Access token verification: true 
+[2025-11-23T02:40:21.067Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:40:26.800Z] getPortalSessionFromRequest called
+[2025-11-23T02:40:26.801Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:40:26.807Z] Access token verification: true 
+[2025-11-23T02:40:27.069Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:40:32.796Z] getPortalSessionFromRequest called
+[2025-11-23T02:40:32.796Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:40:32.805Z] Access token verification: true 
+[2025-11-23T02:40:33.046Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:40:38.809Z] getPortalSessionFromRequest called
+[2025-11-23T02:40:38.810Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:40:38.815Z] Access token verification: true 
+[2025-11-23T02:40:39.052Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:40:44.787Z] getPortalSessionFromRequest called
+[2025-11-23T02:40:44.789Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:40:44.795Z] Access token verification: true 
+[2025-11-23T02:40:45.029Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:40:50.753Z] getPortalSessionFromRequest called
+[2025-11-23T02:40:50.753Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:40:50.757Z] Access token verification: true 
+[2025-11-23T02:40:50.988Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:40:56.707Z] getPortalSessionFromRequest called
+[2025-11-23T02:40:56.707Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:40:56.712Z] Access token verification: true 
+[2025-11-23T02:40:56.950Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:41:02.714Z] getPortalSessionFromRequest called
+[2025-11-23T02:41:02.715Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:41:02.721Z] Access token verification: true 
+[2025-11-23T02:41:02.956Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:41:08.696Z] getPortalSessionFromRequest called
+[2025-11-23T02:41:08.697Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:41:08.701Z] Access token verification: true 
+[2025-11-23T02:41:08.935Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:41:14.663Z] getPortalSessionFromRequest called
+[2025-11-23T02:41:14.665Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:41:14.671Z] Access token verification: true 
+[2025-11-23T02:41:14.912Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:41:20.652Z] getPortalSessionFromRequest called
+[2025-11-23T02:41:20.653Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:41:20.657Z] Access token verification: true 
+[2025-11-23T02:41:20.892Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:41:26.621Z] getPortalSessionFromRequest called
+[2025-11-23T02:41:26.622Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:41:26.626Z] Access token verification: true 
+[2025-11-23T02:41:26.863Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:41:32.614Z] getPortalSessionFromRequest called
+[2025-11-23T02:41:32.615Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:41:32.621Z] Access token verification: true 
+[2025-11-23T02:41:32.860Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:41:38.589Z] getPortalSessionFromRequest called
+[2025-11-23T02:41:38.590Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:41:38.596Z] Access token verification: true 
+[2025-11-23T02:41:38.837Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:41:44.588Z] getPortalSessionFromRequest called
+[2025-11-23T02:41:44.589Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:41:44.595Z] Access token verification: true 
+[2025-11-23T02:41:44.830Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:41:50.555Z] getPortalSessionFromRequest called
+[2025-11-23T02:41:50.555Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:41:50.562Z] Access token verification: true 
+[2025-11-23T02:41:50.796Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:41:55.453Z] getPortalSessionFromRequest called
+[2025-11-23T02:41:55.454Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:41:55.457Z] Access token verification: true 
+[2025-11-23T02:41:55.692Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:41:56.530Z] getPortalSessionFromRequest called
+[2025-11-23T02:41:56.531Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:41:56.536Z] Access token verification: true 
+[2025-11-23T02:41:56.777Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:42:02.520Z] getPortalSessionFromRequest called
+[2025-11-23T02:42:02.520Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:42:02.524Z] Access token verification: true 
+[2025-11-23T02:42:02.766Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:42:08.493Z] getPortalSessionFromRequest called
+[2025-11-23T02:42:08.494Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:42:08.497Z] Access token verification: true 
+[2025-11-23T02:42:08.727Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:42:14.483Z] getPortalSessionFromRequest called
+[2025-11-23T02:42:14.484Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:42:14.489Z] Access token verification: true 
+[2025-11-23T02:42:14.723Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:42:20.449Z] getPortalSessionFromRequest called
+[2025-11-23T02:42:20.450Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:42:20.454Z] Access token verification: true 
+[2025-11-23T02:42:20.696Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:42:26.410Z] getPortalSessionFromRequest called
+[2025-11-23T02:42:26.411Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:42:26.412Z] Access token verification: true 
+[2025-11-23T02:42:26.651Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:42:32.367Z] getPortalSessionFromRequest called
+[2025-11-23T02:42:32.368Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:42:32.370Z] Access token verification: true 
+[2025-11-23T02:42:32.598Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:42:38.313Z] getPortalSessionFromRequest called
+[2025-11-23T02:42:38.313Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:42:38.319Z] Access token verification: true 
+[2025-11-23T02:42:38.555Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:42:44.291Z] getPortalSessionFromRequest called
+[2025-11-23T02:42:44.291Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:42:44.295Z] Access token verification: true 
+[2025-11-23T02:42:44.528Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:42:50.258Z] getPortalSessionFromRequest called
+[2025-11-23T02:42:50.259Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:42:50.263Z] Access token verification: true 
+[2025-11-23T02:42:50.496Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:42:56.229Z] getPortalSessionFromRequest called
+[2025-11-23T02:42:56.230Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:42:56.233Z] Access token verification: true 
+[2025-11-23T02:42:56.465Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:43:02.177Z] getPortalSessionFromRequest called
+[2025-11-23T02:43:02.178Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:43:02.181Z] Access token verification: true 
+[2025-11-23T02:43:02.413Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:43:08.127Z] getPortalSessionFromRequest called
+[2025-11-23T02:43:08.127Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:43:08.130Z] Access token verification: true 
+[2025-11-23T02:43:08.360Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:43:14.081Z] getPortalSessionFromRequest called
+[2025-11-23T02:43:14.082Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:43:14.084Z] Access token verification: true 
+[2025-11-23T02:43:14.331Z] Session restored from access token for: 680da10c6a7b047db058465b
+[2025-11-23T02:43:53.870Z] getPortalSessionFromRequest called
+[2025-11-23T02:43:53.871Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:43:53.906Z] Access token verification: true 
+[2025-11-23T02:43:54.751Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:43:58.869Z] getPortalSessionFromRequest called
+[2025-11-23T02:43:58.870Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:43:58.879Z] Access token verification: true 
+[2025-11-23T02:43:59.128Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:44:03.836Z] getPortalSessionFromRequest called
+[2025-11-23T02:44:03.837Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:44:03.852Z] Access token verification: true 
+[2025-11-23T02:44:04.092Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:44:06.551Z] getPortalSessionFromRequest called
+[2025-11-23T02:44:06.552Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:44:06.555Z] getPortalSessionFromRequest called
+[2025-11-23T02:44:06.556Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:44:06.584Z] Access token verification: true 
+[2025-11-23T02:44:06.596Z] Access token verification: true 
+[2025-11-23T02:44:06.823Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:44:06.835Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:44:09.887Z] getPortalSessionFromRequest called
+[2025-11-23T02:44:09.888Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:44:09.893Z] Access token verification: true 
+[2025-11-23T02:44:10.125Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:44:11.735Z] getPortalSessionFromRequest called
+[2025-11-23T02:44:11.736Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:44:11.744Z] Access token verification: true 
+[2025-11-23T02:44:11.764Z] getPortalSessionFromRequest called
+[2025-11-23T02:44:11.765Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:44:11.775Z] Access token verification: true 
+[2025-11-23T02:44:12.001Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:44:12.014Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:44:12.549Z] getPortalSessionFromRequest called
+[2025-11-23T02:44:12.551Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:44:12.562Z] Access token verification: true 
+[2025-11-23T02:44:12.609Z] getPortalSessionFromRequest called
+[2025-11-23T02:44:12.610Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:44:12.615Z] Access token verification: true 
+[2025-11-23T02:44:12.633Z] getPortalSessionFromRequest called
+[2025-11-23T02:44:12.634Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:44:12.637Z] Access token verification: true 
+[2025-11-23T02:44:12.826Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:44:12.849Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:44:12.871Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:44:13.344Z] getPortalSessionFromRequest called
+[2025-11-23T02:44:13.344Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:44:13.349Z] Access token verification: true 
+[2025-11-23T02:44:13.423Z] getPortalSessionFromRequest called
+[2025-11-23T02:44:13.424Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:44:13.428Z] Access token verification: true 
+[2025-11-23T02:44:13.438Z] getPortalSessionFromRequest called
+[2025-11-23T02:44:13.438Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:44:13.441Z] Access token verification: true 
+[2025-11-23T02:44:13.601Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:44:13.670Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:44:13.676Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:44:14.179Z] getPortalSessionFromRequest called
+[2025-11-23T02:44:14.180Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:44:14.192Z] Access token verification: true 
+[2025-11-23T02:44:14.213Z] getPortalSessionFromRequest called
+[2025-11-23T02:44:14.214Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:44:14.218Z] Access token verification: true 
+[2025-11-23T02:44:14.230Z] getPortalSessionFromRequest called
+[2025-11-23T02:44:14.231Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:44:14.234Z] Access token verification: true 
+[2025-11-23T02:44:14.435Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:44:14.456Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:44:14.503Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:44:14.774Z] getPortalSessionFromRequest called
+[2025-11-23T02:44:14.774Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:44:14.777Z] Access token verification: true 
+[2025-11-23T02:44:15.013Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:44:15.047Z] getPortalSessionFromRequest called
+[2025-11-23T02:44:15.048Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:44:15.053Z] Access token verification: true 
+[2025-11-23T02:44:15.124Z] getPortalSessionFromRequest called
+[2025-11-23T02:44:15.124Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:44:15.128Z] Access token verification: true 
+[2025-11-23T02:44:15.442Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:44:15.453Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:44:15.499Z] getPortalSessionFromRequest called
+[2025-11-23T02:44:15.501Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:44:15.508Z] Access token verification: true 
+[2025-11-23T02:44:15.846Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:44:15.936Z] getPortalSessionFromRequest called
+[2025-11-23T02:44:15.938Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:44:15.948Z] Access token verification: true 
+[2025-11-23T02:44:16.155Z] getPortalSessionFromRequest called
+[2025-11-23T02:44:16.155Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:44:16.160Z] Access token verification: true 
+[2025-11-23T02:44:16.192Z] getPortalSessionFromRequest called
+[2025-11-23T02:44:16.193Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:44:16.202Z] Access token verification: true 
+[2025-11-23T02:44:16.232Z] getPortalSessionFromRequest called
+[2025-11-23T02:44:16.234Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:44:16.241Z] Access token verification: true 
+[2025-11-23T02:44:16.459Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:44:16.475Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:44:16.488Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:44:16.744Z] getPortalSessionFromRequest called
+[2025-11-23T02:44:16.744Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:44:16.749Z] Access token verification: true 
+[2025-11-23T02:44:16.963Z] getPortalSessionFromRequest called
+[2025-11-23T02:44:16.963Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:44:16.972Z] Access token verification: true 
+[2025-11-23T02:44:17.011Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:44:17.042Z] getPortalSessionFromRequest called
+[2025-11-23T02:44:17.042Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:44:17.047Z] Access token verification: true 
+[2025-11-23T02:44:17.212Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:44:17.284Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:44:17.296Z] getPortalSessionFromRequest called
+[2025-11-23T02:44:17.297Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:44:17.303Z] Access token verification: true 
+[2025-11-23T02:44:17.410Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:44:17.553Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:44:17.728Z] getPortalSessionFromRequest called
+[2025-11-23T02:44:17.728Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:44:17.733Z] Access token verification: true 
+[2025-11-23T02:44:17.897Z] getPortalSessionFromRequest called
+[2025-11-23T02:44:17.897Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:44:17.905Z] Access token verification: true 
+[2025-11-23T02:44:17.922Z] getPortalSessionFromRequest called
+[2025-11-23T02:44:17.923Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:44:17.927Z] Access token verification: true 
+[2025-11-23T02:44:17.981Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:44:18.140Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:44:18.160Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:44:18.380Z] getPortalSessionFromRequest called
+[2025-11-23T02:44:18.381Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:44:18.384Z] Access token verification: true 
+[2025-11-23T02:44:18.521Z] getPortalSessionFromRequest called
+[2025-11-23T02:44:18.521Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:44:18.524Z] Access token verification: true 
+[2025-11-23T02:44:18.614Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:44:18.673Z] getPortalSessionFromRequest called
+[2025-11-23T02:44:18.673Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:44:18.678Z] Access token verification: true 
+[2025-11-23T02:44:18.769Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:44:18.856Z] getPortalSessionFromRequest called
+[2025-11-23T02:44:18.857Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:44:18.859Z] Access token verification: true 
+[2025-11-23T02:44:18.910Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:44:19.090Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:44:19.308Z] getPortalSessionFromRequest called
+[2025-11-23T02:44:19.308Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:44:19.310Z] Access token verification: true 
+[2025-11-23T02:44:19.344Z] getPortalSessionFromRequest called
+[2025-11-23T02:44:19.345Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:44:19.353Z] Access token verification: true 
+[2025-11-23T02:44:19.435Z] getPortalSessionFromRequest called
+[2025-11-23T02:44:19.435Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:44:19.440Z] Access token verification: true 
+[2025-11-23T02:44:19.557Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:44:19.621Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:44:19.721Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:44:19.878Z] getPortalSessionFromRequest called
+[2025-11-23T02:44:19.879Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:44:19.885Z] Access token verification: true 
+[2025-11-23T02:44:20.117Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:44:20.159Z] getPortalSessionFromRequest called
+[2025-11-23T02:44:20.160Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:44:20.162Z] Access token verification: true 
+[2025-11-23T02:44:20.419Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:44:20.442Z] getPortalSessionFromRequest called
+[2025-11-23T02:44:20.442Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:44:20.448Z] Access token verification: true 
+[2025-11-23T02:44:20.688Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:44:21.163Z] getPortalSessionFromRequest called
+[2025-11-23T02:44:21.164Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:44:21.169Z] Access token verification: true 
+[2025-11-23T02:44:21.402Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:46:22.400Z] getPortalSessionFromRequest called
+[2025-11-23T02:46:22.401Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:46:22.448Z] Access token verification: true 
+[2025-11-23T02:46:22.967Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:46:29.557Z] getPortalSessionFromRequest called
+[2025-11-23T02:46:29.558Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:46:29.564Z] Access token verification: true 
+[2025-11-23T02:46:29.817Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:46:30.325Z] getPortalSessionFromRequest called
+[2025-11-23T02:46:30.325Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:46:30.328Z] Access token verification: true 
+[2025-11-23T02:46:30.583Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:46:31.317Z] getPortalSessionFromRequest called
+[2025-11-23T02:46:31.318Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:46:31.343Z] Access token verification: true 
+[2025-11-23T02:46:31.619Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:46:31.918Z] getPortalSessionFromRequest called
+[2025-11-23T02:46:31.919Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:46:31.920Z] getPortalSessionFromRequest called
+[2025-11-23T02:46:31.920Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:46:31.934Z] Access token verification: true 
+[2025-11-23T02:46:31.939Z] Access token verification: true 
+[2025-11-23T02:46:32.168Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:46:32.175Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:46:32.422Z] getPortalSessionFromRequest called
+[2025-11-23T02:46:32.423Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:46:32.426Z] Access token verification: true 
+[2025-11-23T02:46:32.658Z] getPortalSessionFromRequest called
+[2025-11-23T02:46:32.658Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:46:32.662Z] Access token verification: true 
+[2025-11-23T02:46:32.671Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:46:32.889Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:46:32.917Z] getPortalSessionFromRequest called
+[2025-11-23T02:46:32.917Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:46:32.920Z] Access token verification: true 
+[2025-11-23T02:46:33.169Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:46:33.390Z] getPortalSessionFromRequest called
+[2025-11-23T02:46:33.390Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:46:33.395Z] Access token verification: true 
+[2025-11-23T02:46:33.418Z] getPortalSessionFromRequest called
+[2025-11-23T02:46:33.419Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:46:33.421Z] Access token verification: true 
+[2025-11-23T02:46:33.630Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:46:33.660Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:46:33.706Z] getPortalSessionFromRequest called
+[2025-11-23T02:46:33.707Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:46:33.711Z] Access token verification: true 
+[2025-11-23T02:46:33.944Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:46:34.132Z] getPortalSessionFromRequest called
+[2025-11-23T02:46:34.133Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:46:34.142Z] Access token verification: true 
+[2025-11-23T02:46:34.393Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:46:36.327Z] getPortalSessionFromRequest called
+[2025-11-23T02:46:36.327Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:46:36.333Z] Access token verification: true 
+[2025-11-23T02:46:36.566Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:46:37.315Z] getPortalSessionFromRequest called
+[2025-11-23T02:46:37.315Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:46:37.325Z] Access token verification: true 
+[2025-11-23T02:46:37.578Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:46:42.392Z] getPortalSessionFromRequest called
+[2025-11-23T02:46:42.393Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:46:42.396Z] Access token verification: true 
+[2025-11-23T02:46:42.648Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:46:48.451Z] getPortalSessionFromRequest called
+[2025-11-23T02:46:48.451Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:46:48.453Z] Access token verification: true 
+[2025-11-23T02:46:48.714Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:46:54.490Z] getPortalSessionFromRequest called
+[2025-11-23T02:46:54.491Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:46:54.494Z] Access token verification: true 
+[2025-11-23T02:46:54.743Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:47:00.500Z] getPortalSessionFromRequest called
+[2025-11-23T02:47:00.501Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:47:00.504Z] Access token verification: true 
+[2025-11-23T02:47:00.759Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:47:04.236Z] getPortalSessionFromRequest called
+[2025-11-23T02:47:04.236Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:47:04.241Z] Access token verification: true 
+[2025-11-23T02:47:04.491Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:47:06.542Z] getPortalSessionFromRequest called
+[2025-11-23T02:47:06.542Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:47:06.547Z] Access token verification: true 
+[2025-11-23T02:47:06.797Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:47:12.571Z] getPortalSessionFromRequest called
+[2025-11-23T02:47:12.572Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:47:12.576Z] Access token verification: true 
+[2025-11-23T02:47:12.825Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:47:26.569Z] getPortalSessionFromRequest called
+[2025-11-23T02:47:26.570Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:47:26.583Z] Access token verification: true 
+[2025-11-23T02:47:27.118Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:47:29.379Z] getPortalSessionFromRequest called
+[2025-11-23T02:47:29.380Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:47:29.387Z] Access token verification: true 
+[2025-11-23T02:47:29.620Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:47:29.646Z] getPortalSessionFromRequest called
+[2025-11-23T02:47:29.646Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:47:29.650Z] Access token verification: true 
+[2025-11-23T02:47:29.945Z] getPortalSessionFromRequest called
+[2025-11-23T02:47:29.946Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:47:29.950Z] Access token verification: true 
+[2025-11-23T02:47:29.960Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:47:30.187Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:47:30.442Z] getPortalSessionFromRequest called
+[2025-11-23T02:47:30.442Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:47:30.445Z] Access token verification: true 
+[2025-11-23T02:47:30.683Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:47:30.887Z] getPortalSessionFromRequest called
+[2025-11-23T02:47:30.888Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:47:30.904Z] Access token verification: true 
+[2025-11-23T02:47:31.153Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:47:31.329Z] getPortalSessionFromRequest called
+[2025-11-23T02:47:31.330Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:47:31.339Z] Access token verification: true 
+[2025-11-23T02:47:31.449Z] getPortalSessionFromRequest called
+[2025-11-23T02:47:31.449Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:47:31.453Z] Access token verification: true 
+[2025-11-23T02:47:31.597Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:47:31.714Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:47:31.829Z] getPortalSessionFromRequest called
+[2025-11-23T02:47:31.830Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:47:31.832Z] getPortalSessionFromRequest called
+[2025-11-23T02:47:31.832Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:47:31.848Z] Access token verification: true 
+[2025-11-23T02:47:31.856Z] Access token verification: true 
+[2025-11-23T02:47:32.091Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:47:32.849Z] getPortalSessionFromRequest called
+[2025-11-23T02:47:32.850Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:47:32.856Z] Access token verification: true 
+[2025-11-23T02:47:33.101Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:47:33.333Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:47:33.597Z] getPortalSessionFromRequest called
+[2025-11-23T02:47:33.597Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:47:33.601Z] Access token verification: true 
+[2025-11-23T02:47:33.834Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:47:36.170Z] getPortalSessionFromRequest called
+[2025-11-23T02:47:36.172Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:47:36.179Z] Access token verification: true 
+[2025-11-23T02:47:36.417Z] Session restored from access token for: 68fbd4b004f600d268b94009
+[2025-11-23T02:47:42.149Z] getPortalSessionFromRequest called
+[2025-11-23T02:47:42.149Z] Cookies found - Access: true, Refresh: true
+[2025-11-23T02:47:42.155Z] Access token verification: true 
+[2025-11-23T02:47:42.403Z] Session restored from access token for: 68fbd4b004f600d268b94009

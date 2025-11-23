@@ -76,7 +76,7 @@ export default async function handler(req, res) {
   try {
     await connectDb();
 
-    const authResult = await authenticateStudentFromRequest(req);
+    const authResult = await authenticateStudentFromRequest(req, res);
     if (authResult.error) {
       return res.status(authResult.status || 401).json({ error: authResult.error });
     }

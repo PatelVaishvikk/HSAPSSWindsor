@@ -14,9 +14,15 @@ const BirthdayReminder = () => {
       if (res.status === 401) {
         return;
       }
-      if (!res.ok) throw new Error('Failed to fetch birthdays');
-      const data = await res.json();
-      
+      if (!res.ok) {
+        console.warn('Birthday reminder request failed:', res.status);
+        return;
+      }
+      const data = await res.json().catch(() => ({ birthdays: [] }));
+      if (!data || !Array.isArray(data.birthdays)) {
+        return;
+      }
+
       if (data.birthdays.length > 0) {
         setBirthdays(data.birthdays);
         setShowToast(true);

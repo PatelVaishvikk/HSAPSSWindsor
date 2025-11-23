@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        button {
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        pre {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>🔐 Login Diagnostic Tool</h1>
+    
+    <div class="test-section">
+        <h2>Test Credentials</h2>
+        <p><strong>Phone:</strong> 1234567890</p>
+        <p><strong>Password:</strong> test123</p>
+    </div>
+
+    <div class="test-section">
+        <h2>1. Test Database Connection</h2>
+        <button onclick="testDatabase()">Test Database</button>
+        <pre id="db-result">Click button to test...</pre>
+    </div>
+
+    <div class="test-section">
+        <h2>2. Test Login API</h2>
+        <button onclick="testLogin()">Test Login</button>
+        <pre id="login-result">Click button to test...</pre>
+    </div>
+
+    <div class="test-section">
+        <h2>3. Create Test Student</h2>
+        <button onclick="createTestStudent()">Create Test Student</button>
+        <pre id="create-result">Click button to test...</pre>
+    </div>
+
+    <script>
+        async function testDatabase() {
+            const result = document.getElementById('db-result');
+            result.textContent = 'Testing...';
+            
+            try {
+                const response = await fetch('/api/db-test');
+                const data = await response.json();
+                result.innerHTML = `<span class="success">✓ Database Connected</span>\n${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                result.innerHTML = `<span class="error">✗ Error:</span> ${error.message}`;
+            }
+        }
+
+        async function testLogin() {
+            const result = document.getElementById('login-result');
+            result.textContent = 'Testing login...';
+            
+            try {
+                const response = await fetch('/api/student-portal/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        phone: '1234567890',
+                        password: 'test123'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    result.innerHTML = `<span class="success">✓ Login Successful!</span>\n${JSON.stringify(data, null, 2)}`;
+                } else {
+                    result.innerHTML = `<span class="error">✗ Login Failed (${response.status})</span>\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                result.innerHTML = `<span class="error">✗ Error:</span> ${error.message}`;
+            }
+        }
+
+        async function createTestStudent() {
+            const result = document.getElementById('create-result');
+            result.textContent = 'Creating test student...';
+            
+            try {
+                const response = await fetch('/api/create-test-student', {
+                    method: 'POST'
+                });
+                
+                const data = await response.json();
+                result.innerHTML = `<span class="success">✓ Success</span>\n${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                result.innerHTML = `<span class="error">✗ Error:</span> ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>

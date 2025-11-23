@@ -41,6 +41,12 @@ app.prepare().then(() => {
   expressApp.use(express.static(path.join(__dirname, 'public')));
   expressApp.use('/styles', express.static(path.join(__dirname, 'public/styles')));
 
+  // Log all requests
+  expressApp.use((req, res, next) => {
+    console.log(`[EXPRESS] ${req.method} ${req.url}`);
+    next();
+  });
+
   // Let Next.js handle all other routes including API routes
   expressApp.all('*', (req, res) => handle(req, res));
 
@@ -66,6 +72,10 @@ app.prepare().then(() => {
 
     socket.on('admin:join', () => {
       socket.join('admin-suite');
+    });
+
+    socket.on('feed:join', () => {
+      socket.join('feed');
     });
 
     socket.on('disconnect', () => {

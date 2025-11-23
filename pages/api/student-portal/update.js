@@ -26,15 +26,11 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: `Method ${req.method} not allowed` });
   }
 
-  const { studentId, password, updates } = req.body || {};
-
-  if (!studentId || !password) {
-    return res.status(400).json({ error: 'Missing student id or password' });
-  }
+  const { updates } = req.body || {};
 
   try {
     await connectDb();
-    const authResult = await authenticateStudentFromRequest(req);
+    const authResult = await authenticateStudentFromRequest(req, res);
     if (authResult.error) {
       return res.status(authResult.status || 401).json({ error: authResult.error });
     }

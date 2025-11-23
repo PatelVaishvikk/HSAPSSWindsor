@@ -1,0 +1,681 @@
+[2025-11-23T02:36:50.747Z] getServerSideProps called for /login?next=%2Fstudent-portal
+[2025-11-23T02:36:50.749Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T02:36:50.758Z] Returning props with initialStudent: FOUND
+[2025-11-23T02:36:51.207Z] getServerSideProps called for /login?next=%2Fstudent-portal
+[2025-11-23T02:36:51.209Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T02:36:51.211Z] Returning props with initialStudent: FOUND
+[2025-11-23T02:46:29.818Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T02:46:29.820Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T02:46:29.833Z] Returning props with initialStudent: FOUND
+[2025-11-23T02:46:30.584Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T02:46:30.586Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T02:46:30.588Z] Returning props with initialStudent: FOUND
+[2025-11-23T02:50:43.751Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T02:50:43.752Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T02:50:43.761Z] Returning props with initialStudent: FOUND
+[2025-11-23T02:50:44.211Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T02:50:44.212Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T02:50:44.214Z] Returning props with initialStudent: FOUND
+[2025-11-23T02:50:44.541Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T02:50:44.542Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T02:50:44.545Z] Returning props with initialStudent: FOUND
+[2025-11-23T02:50:45.113Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T02:50:45.114Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T02:50:45.115Z] Returning props with initialStudent: FOUND
+[2025-11-23T02:50:45.470Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T02:50:45.471Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T02:50:45.472Z] Returning props with initialStudent: FOUND
+[2025-11-23T02:52:07.586Z] getServerSideProps called for /
+[2025-11-23T02:52:07.587Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T02:52:07.595Z] Returning props with initialStudent: FOUND
+[2025-11-23T02:52:07.698Z] getServerSideProps called for /
+[2025-11-23T02:52:07.700Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T02:52:07.703Z] Returning props with initialStudent: FOUND
+[2025-11-23T02:52:07.732Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T02:52:07.734Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T02:52:07.736Z] Returning props with initialStudent: FOUND
+[2025-11-23T02:52:07.918Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T02:52:07.919Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T02:52:07.921Z] Returning props with initialStudent: FOUND
+[2025-11-23T02:52:08.012Z] getServerSideProps called for /
+[2025-11-23T02:52:08.013Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T02:52:08.017Z] Returning props with initialStudent: FOUND
+[2025-11-23T02:52:08.052Z] getServerSideProps called for /
+[2025-11-23T02:52:08.053Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T02:52:08.055Z] Returning props with initialStudent: FOUND
+[2025-11-23T02:52:08.343Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T02:52:08.344Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T02:52:08.346Z] Returning props with initialStudent: FOUND
+[2025-11-23T02:52:08.955Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T02:52:08.957Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T02:52:08.959Z] Returning props with initialStudent: FOUND
+[2025-11-23T02:52:39.460Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T02:52:39.461Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T02:52:39.465Z] Returning props with initialStudent: FOUND
+[2025-11-23T02:52:45.507Z] getServerSideProps called for /
+[2025-11-23T02:52:45.509Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T02:52:45.512Z] Returning props with initialStudent: FOUND
+[2025-11-23T02:52:53.259Z] getServerSideProps called for /
+[2025-11-23T02:52:53.262Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T02:52:53.266Z] Returning props with initialStudent: FOUND
+[2025-11-23T02:52:58.762Z] getServerSideProps called for /
+[2025-11-23T02:52:58.764Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T02:52:58.767Z] Returning props with initialStudent: FOUND
+[2025-11-23T02:55:06.006Z] getServerSideProps called for /
+[2025-11-23T02:55:06.008Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T02:55:06.012Z] Returning props with initialStudent: FOUND
+[2025-11-23T02:55:06.045Z] getServerSideProps called for /
+[2025-11-23T02:55:06.046Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T02:55:06.048Z] Returning props with initialStudent: FOUND
+[2025-11-23T02:55:06.415Z] getServerSideProps called for /
+[2025-11-23T02:55:06.416Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T02:55:06.418Z] Returning props with initialStudent: FOUND
+[2025-11-23T02:55:06.684Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T02:55:06.685Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T02:55:06.686Z] Returning props with initialStudent: FOUND
+[2025-11-23T02:55:06.932Z] getServerSideProps called for /
+[2025-11-23T02:55:06.933Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T02:55:06.935Z] Returning props with initialStudent: FOUND
+[2025-11-23T02:55:07.188Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T02:55:07.189Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T02:55:07.191Z] Returning props with initialStudent: FOUND
+[2025-11-23T02:55:07.207Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T02:55:07.208Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T02:55:07.210Z] Returning props with initialStudent: FOUND
+[2025-11-23T02:55:07.489Z] getServerSideProps called for /
+[2025-11-23T02:55:07.490Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T02:55:07.492Z] Returning props with initialStudent: FOUND
+[2025-11-23T02:55:07.943Z] getServerSideProps called for /
+[2025-11-23T02:55:07.943Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T02:55:07.947Z] Returning props with initialStudent: FOUND
+[2025-11-23T02:56:04.965Z] getServerSideProps called for /
+[2025-11-23T02:56:04.966Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T02:56:04.970Z] Returning props with initialStudent: FOUND
+[2025-11-23T02:56:05.005Z] getServerSideProps called for /
+[2025-11-23T02:56:05.005Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T02:56:05.008Z] Returning props with initialStudent: FOUND
+[2025-11-23T02:56:05.649Z] getServerSideProps called for /
+[2025-11-23T02:56:05.651Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T02:56:05.658Z] Returning props with initialStudent: FOUND
+[2025-11-23T02:56:05.688Z] getServerSideProps called for /
+[2025-11-23T02:56:05.689Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T02:56:05.691Z] Returning props with initialStudent: FOUND
+[2025-11-23T02:56:05.969Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T02:56:05.970Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T02:56:05.972Z] Returning props with initialStudent: FOUND
+[2025-11-23T02:56:06.334Z] getServerSideProps called for /
+[2025-11-23T02:56:06.335Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T02:56:06.337Z] Returning props with initialStudent: FOUND
+[2025-11-23T02:56:06.427Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T02:56:06.428Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T02:56:06.430Z] Returning props with initialStudent: FOUND
+[2025-11-23T02:56:06.524Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T02:56:06.525Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T02:56:06.527Z] Returning props with initialStudent: FOUND
+[2025-11-23T02:56:06.604Z] getServerSideProps called for /
+[2025-11-23T02:56:06.605Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T02:56:06.607Z] Returning props with initialStudent: FOUND
+[2025-11-23T02:56:34.625Z] getServerSideProps called for /
+[2025-11-23T02:56:34.626Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T02:56:34.631Z] Returning props with initialStudent: FOUND
+[2025-11-23T02:57:47.903Z] getServerSideProps called for /
+[2025-11-23T02:57:47.906Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T02:57:47.912Z] Returning props with initialStudent: FOUND
+[2025-11-23T02:57:54.953Z] getServerSideProps called for /
+[2025-11-23T02:57:54.954Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T02:57:54.956Z] Returning props with initialStudent: FOUND
+[2025-11-23T02:58:36.238Z] getServerSideProps called for /
+[2025-11-23T02:58:36.240Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T02:58:36.244Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:03:11.122Z] getServerSideProps called for /
+[2025-11-23T03:03:11.124Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:03:11.130Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:03:43.124Z] getServerSideProps called for /
+[2025-11-23T03:03:43.126Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:03:43.130Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:06:23.636Z] getServerSideProps called for /
+[2025-11-23T03:06:23.637Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:06:23.643Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:06:23.884Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:06:23.884Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:06:23.887Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:06:24.609Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:06:24.682Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:06:24.787Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:06:24.809Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:06:24.810Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:06:24.811Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:07:49.217Z] getServerSideProps called for /student-portal
+[2025-11-23T03:07:49.219Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:07:49.225Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:08:51.803Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:08:51.820Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:08:51.825Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:08:51.861Z] getServerSideProps called for /student-portal
+[2025-11-23T03:08:51.861Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:08:51.864Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:08:51.882Z] getServerSideProps called for /
+[2025-11-23T03:08:51.883Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:08:51.885Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:08:52.134Z] getServerSideProps called for /
+[2025-11-23T03:08:52.135Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:08:52.136Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:08:52.151Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:08:52.152Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:08:52.153Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:08:52.167Z] getServerSideProps called for /student-portal
+[2025-11-23T03:08:52.168Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:08:52.170Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:08:58.876Z] getServerSideProps called for /student-portal
+[2025-11-23T03:08:58.877Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:08:58.882Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:10:30.927Z] getServerSideProps called for /
+[2025-11-23T03:10:30.929Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:10:30.933Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:10:47.490Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:10:47.492Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:10:47.496Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:11:52.139Z] getServerSideProps called for /
+[2025-11-23T03:11:52.141Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:11:52.145Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:13:13.613Z] getServerSideProps called for /
+[2025-11-23T03:13:13.616Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:13:13.625Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:13:13.677Z] getServerSideProps called for /student-portal
+[2025-11-23T03:13:13.678Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:13:13.680Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:13:13.701Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:13:13.701Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:13:13.702Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:13:13.904Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:13:13.905Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:13:13.906Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:13:14.149Z] getServerSideProps called for /
+[2025-11-23T03:13:14.150Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:13:14.153Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:13:14.211Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:13:14.212Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:13:14.215Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:13:14.717Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:13:14.718Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:13:14.720Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:13:15.113Z] getServerSideProps called for /student-portal
+[2025-11-23T03:13:15.114Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:13:15.116Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:13:15.406Z] getServerSideProps called for /student-portal
+[2025-11-23T03:13:15.407Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:13:15.409Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:14:05.583Z] getServerSideProps called for /
+[2025-11-23T03:14:05.585Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:14:05.588Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:15:16.624Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:15:16.625Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:15:16.632Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:15:16.667Z] getServerSideProps called for /
+[2025-11-23T03:15:16.668Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:15:16.669Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:15:16.684Z] getServerSideProps called for /student-portal
+[2025-11-23T03:15:16.684Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:15:16.686Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:15:16.838Z] getServerSideProps called for /student-portal
+[2025-11-23T03:15:16.839Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:15:16.842Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:15:16.867Z] getServerSideProps called for /
+[2025-11-23T03:15:16.868Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:15:16.871Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:15:17.172Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:15:17.172Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:15:17.174Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:15:17.685Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:15:17.686Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:15:17.688Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:15:42.477Z] getServerSideProps called for /
+[2025-11-23T03:15:42.478Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:15:42.484Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:17:04.807Z] getServerSideProps called for /
+[2025-11-23T03:17:04.809Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:17:04.816Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:17:10.092Z] getServerSideProps called for /
+[2025-11-23T03:17:10.094Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:17:10.098Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:20:55.005Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:20:55.007Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:20:55.013Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:20:55.236Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:20:55.239Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:20:55.243Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:20:55.716Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:20:55.718Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:20:55.722Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:20:55.987Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:20:55.988Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:20:55.989Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:20:56.004Z] getServerSideProps called for /student-portal
+[2025-11-23T03:20:56.004Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:20:56.006Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:20:56.260Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:20:56.261Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:20:56.262Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:20:59.878Z] getServerSideProps called for /
+[2025-11-23T03:20:59.880Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:20:59.885Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:20:59.949Z] getServerSideProps called for /
+[2025-11-23T03:20:59.949Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:20:59.950Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:21:00.179Z] getServerSideProps called for /
+[2025-11-23T03:21:00.180Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:21:00.182Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:21:49.105Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:21:49.107Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:21:49.112Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:23:53.984Z] getServerSideProps called for /
+[2025-11-23T03:23:53.984Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:23:53.987Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:24:13.630Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:24:13.631Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:24:13.635Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:25:42.769Z] getServerSideProps called for /student-portal
+[2025-11-23T03:25:42.770Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:25:42.778Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:25:42.815Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:25:42.816Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:25:42.817Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:25:42.829Z] getServerSideProps called for /
+[2025-11-23T03:25:42.830Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:25:42.832Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:25:43.082Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:25:43.083Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:25:43.087Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:25:43.109Z] getServerSideProps called for /
+[2025-11-23T03:25:43.109Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:25:43.111Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:25:43.128Z] getServerSideProps called for /student-portal
+[2025-11-23T03:25:43.129Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:25:43.131Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:25:43.375Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:25:43.375Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:25:43.377Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:25:43.921Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:25:43.922Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:25:43.924Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:27:43.271Z] getServerSideProps called for /
+[2025-11-23T03:27:43.272Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:27:43.285Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:27:43.378Z] getServerSideProps called for /student-portal
+[2025-11-23T03:27:43.380Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:27:43.393Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:27:43.465Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:27:43.466Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:27:43.474Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:27:43.755Z] getServerSideProps called for /student-portal
+[2025-11-23T03:27:43.758Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:27:43.765Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:27:45.298Z] getServerSideProps called for /
+[2025-11-23T03:27:45.300Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:27:45.304Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:27:45.354Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:27:45.355Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:27:45.357Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:27:46.189Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:27:46.191Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:27:46.194Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:27:48.958Z] getServerSideProps called for /
+[2025-11-23T03:27:48.960Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:27:48.962Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:27:49.435Z] getServerSideProps called for /
+[2025-11-23T03:27:49.437Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:27:49.439Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:27:49.635Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:27:49.636Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:27:49.638Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:27:50.286Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:27:50.287Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:27:50.289Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:27:50.472Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:27:50.473Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:27:50.475Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:27:54.609Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:27:54.611Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:27:54.615Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:28:42.300Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:28:42.318Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:28:42.323Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:29:12.056Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:29:12.058Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:29:12.064Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:30:51.927Z] getServerSideProps called for /student-portal
+[2025-11-23T03:30:51.929Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:30:51.938Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:30:52.023Z] getServerSideProps called for /
+[2025-11-23T03:30:52.025Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:30:52.028Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:30:52.070Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:30:52.071Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:30:52.073Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:30:52.386Z] getServerSideProps called for /student-portal
+[2025-11-23T03:30:52.387Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:30:52.392Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:30:52.476Z] getServerSideProps called for /
+[2025-11-23T03:30:52.480Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:30:52.486Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:30:52.783Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:30:52.785Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:30:52.786Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:30:53.540Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:30:53.541Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:30:53.543Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:31:39.309Z] getServerSideProps called for /
+[2025-11-23T03:31:39.311Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:31:39.319Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:33:53.330Z] getServerSideProps called for /
+[2025-11-23T03:33:53.332Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:33:53.336Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:35:18.948Z] getServerSideProps called for /
+[2025-11-23T03:35:18.950Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:35:18.952Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:37:12.540Z] getServerSideProps called for /student-portal
+[2025-11-23T03:37:12.542Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:37:12.551Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:37:12.652Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:37:12.653Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:37:12.656Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:37:12.892Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:37:12.894Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:37:12.897Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:37:12.991Z] getServerSideProps called for /student-portal
+[2025-11-23T03:37:12.992Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:37:12.994Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:37:14.312Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:37:14.313Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:37:14.315Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:37:14.887Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:37:14.889Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:37:14.892Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:37:15.266Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:37:15.268Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:37:15.272Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:37:30.734Z] getServerSideProps called for /
+[2025-11-23T03:37:30.736Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:37:30.742Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:38:38.495Z] getServerSideProps called for /
+[2025-11-23T03:38:38.497Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:38:38.503Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:40:33.122Z] getServerSideProps called for /student-portal
+[2025-11-23T03:40:33.124Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:40:33.139Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:40:33.285Z] getServerSideProps called for /
+[2025-11-23T03:40:33.287Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:40:33.297Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:40:33.360Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:40:33.362Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:40:33.366Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:40:33.495Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:40:33.496Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:40:33.498Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:40:33.524Z] getServerSideProps called for /
+[2025-11-23T03:40:33.525Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:40:33.530Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:40:34.920Z] getServerSideProps called for /student-portal
+[2025-11-23T03:40:34.921Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:40:34.935Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:40:35.077Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:40:35.078Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:40:35.083Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:40:35.637Z] getServerSideProps called for /student-portal
+[2025-11-23T03:40:35.638Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:40:35.640Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:40:35.669Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:40:35.670Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:40:35.671Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:43:11.362Z] getServerSideProps called for /
+[2025-11-23T03:43:11.364Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:43:11.370Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:44:35.551Z] getServerSideProps called for /student-portal
+[2025-11-23T03:44:35.554Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:44:35.568Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:44:35.652Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:44:35.654Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:44:35.659Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:44:35.704Z] getServerSideProps called for /
+[2025-11-23T03:44:35.705Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:44:35.707Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:44:35.969Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:44:35.971Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:44:35.974Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:44:36.001Z] getServerSideProps called for /
+[2025-11-23T03:44:36.002Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:44:36.005Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:44:36.044Z] getServerSideProps called for /student-portal
+[2025-11-23T03:44:36.046Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:44:36.050Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:44:36.094Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:44:36.096Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:44:36.099Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:44:36.973Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:44:36.974Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:44:36.977Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:45:30.147Z] getServerSideProps called for /student-portal
+[2025-11-23T03:45:30.148Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:45:30.155Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:45:30.375Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:45:30.376Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:45:30.378Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:45:30.888Z] getServerSideProps called for /student-portal
+[2025-11-23T03:45:30.890Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:45:30.895Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:45:30.912Z] getServerSideProps called for /
+[2025-11-23T03:45:30.912Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:45:30.915Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:45:31.122Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:45:31.123Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:45:31.127Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:45:31.354Z] getServerSideProps called for /
+[2025-11-23T03:45:31.356Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:45:31.359Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:45:31.815Z] getServerSideProps called for /student-portal
+[2025-11-23T03:45:31.816Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:45:31.818Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:45:31.920Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:45:31.921Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:45:31.924Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:45:32.417Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:45:32.420Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:45:32.424Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:45:38.843Z] getServerSideProps called for /
+[2025-11-23T03:45:38.844Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:45:38.846Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:46:28.194Z] getServerSideProps called for /
+[2025-11-23T03:46:28.195Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:46:28.202Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:46:28.267Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:46:28.268Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:46:28.272Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:46:28.306Z] getServerSideProps called for /student-portal
+[2025-11-23T03:46:28.308Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:46:28.311Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:46:28.524Z] getServerSideProps called for /
+[2025-11-23T03:46:28.526Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:46:28.529Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:46:28.604Z] getServerSideProps called for /student-portal
+[2025-11-23T03:46:28.605Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:46:28.608Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:46:28.636Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:46:28.637Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:46:28.639Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:46:28.728Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:46:28.729Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:46:28.731Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:46:29.306Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:46:29.307Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:46:29.310Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:46:36.973Z] getServerSideProps called for /
+[2025-11-23T03:46:36.974Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:46:36.980Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:47:44.394Z] getServerSideProps called for /student-portal
+[2025-11-23T03:47:44.401Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:47:44.422Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:47:44.505Z] getServerSideProps called for /
+[2025-11-23T03:47:44.506Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:47:44.509Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:47:44.556Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:47:44.558Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:47:44.561Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:47:44.779Z] getServerSideProps called for /
+[2025-11-23T03:47:44.780Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:47:44.784Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:47:44.813Z] getServerSideProps called for /student-portal
+[2025-11-23T03:47:44.814Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:47:44.819Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:47:45.159Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:47:45.160Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:47:45.162Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:47:45.918Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:47:45.919Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:47:45.921Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:48:53.616Z] getServerSideProps called for /student-portal
+[2025-11-23T03:48:53.618Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:48:53.625Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:48:53.708Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:48:53.709Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:48:53.711Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:48:53.730Z] getServerSideProps called for /
+[2025-11-23T03:48:53.731Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:48:53.733Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:48:53.991Z] getServerSideProps called for /
+[2025-11-23T03:48:53.992Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:48:53.993Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:48:54.007Z] getServerSideProps called for /student-portal
+[2025-11-23T03:48:54.008Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:48:54.010Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:48:54.024Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:48:54.025Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:48:54.027Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:48:54.268Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:48:54.269Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:48:54.270Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:48:54.816Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:48:54.817Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:48:54.819Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:49:07.449Z] getServerSideProps called for /
+[2025-11-23T03:49:07.452Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:49:07.459Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:50:01.758Z] getServerSideProps called for /student-portal
+[2025-11-23T03:50:01.759Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:50:01.765Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:50:01.815Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:50:01.816Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:50:01.819Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:50:01.843Z] getServerSideProps called for /
+[2025-11-23T03:50:01.843Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:50:01.845Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:50:02.101Z] getServerSideProps called for /
+[2025-11-23T03:50:02.102Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:50:02.103Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:50:02.118Z] getServerSideProps called for /student-portal
+[2025-11-23T03:50:02.119Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:50:02.121Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:50:02.208Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:50:02.209Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:50:02.210Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:50:02.713Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:50:02.714Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:50:02.715Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:50:11.464Z] getServerSideProps called for /
+[2025-11-23T03:50:11.465Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:50:11.470Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:51:18.638Z] getServerSideProps called for /
+[2025-11-23T03:51:18.639Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:51:18.643Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:51:18.877Z] getServerSideProps called for /student-portal
+[2025-11-23T03:51:18.877Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:51:18.879Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:51:19.315Z] getServerSideProps called for /
+[2025-11-23T03:51:19.316Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:51:19.319Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:51:19.367Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:51:19.368Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:51:19.372Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:51:20.101Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:51:20.102Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:51:20.103Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:51:20.247Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:51:20.248Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:51:20.249Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:51:20.290Z] getServerSideProps called for /student-portal
+[2025-11-23T03:51:20.291Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:51:20.293Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:51:20.661Z] getServerSideProps called for /student-portal
+[2025-11-23T03:51:20.662Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:51:20.663Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:51:20.942Z] getServerSideProps called for /student-portal
+[2025-11-23T03:51:20.943Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:51:20.945Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:51:21.373Z] getServerSideProps called for /student-portal
+[2025-11-23T03:51:21.374Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:51:21.376Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:51:44.393Z] getServerSideProps called for /student-portal
+[2025-11-23T03:51:44.394Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:51:44.404Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:51:44.444Z] getServerSideProps called for /student-portal
+[2025-11-23T03:51:44.445Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:51:44.447Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:51:44.462Z] getServerSideProps called for /
+[2025-11-23T03:51:44.462Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:51:44.464Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:51:44.477Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:51:44.477Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:51:44.478Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:51:44.726Z] getServerSideProps called for /student-portal
+[2025-11-23T03:51:44.726Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:51:44.728Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:51:44.968Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:51:44.969Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:51:44.971Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:51:45.477Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:51:45.478Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:51:45.480Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:51:45.734Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:51:45.735Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:51:45.737Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:52:06.374Z] getServerSideProps called for /
+[2025-11-23T03:52:06.375Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:52:06.379Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:54:33.466Z] getServerSideProps called for /
+[2025-11-23T03:54:33.467Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:54:33.473Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:54:58.189Z] getServerSideProps called for /
+[2025-11-23T03:54:58.190Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:54:58.194Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:56:37.903Z] getServerSideProps called for /
+[2025-11-23T03:56:37.905Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:56:37.910Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:56:38.933Z] getServerSideProps called for /student-portal?test=1
+[2025-11-23T03:56:38.934Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T03:56:38.937Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:56:38.980Z] getServerSideProps called for /student-portal
+[2025-11-23T03:56:38.982Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:56:38.993Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:57:56.114Z] getServerSideProps called for /
+[2025-11-23T03:57:56.116Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:57:56.122Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:57:56.586Z] getServerSideProps called for /
+[2025-11-23T03:57:56.587Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:57:56.590Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:57:56.882Z] getServerSideProps called for /
+[2025-11-23T03:57:56.884Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:57:56.887Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:57:57.201Z] getServerSideProps called for /
+[2025-11-23T03:57:57.203Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:57:57.208Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:57:58.315Z] getServerSideProps called for /
+[2025-11-23T03:57:58.316Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:57:58.319Z] Returning props with initialStudent: FOUND
+[2025-11-23T03:57:58.606Z] getServerSideProps called for /
+[2025-11-23T03:57:58.607Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T03:57:58.611Z] Returning props with initialStudent: FOUND
+[2025-11-23T04:02:49.614Z] getServerSideProps called for /
+[2025-11-23T04:02:49.616Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T04:02:49.622Z] Returning props with initialStudent: FOUND
+[2025-11-23T04:07:40.202Z] getServerSideProps called for /
+[2025-11-23T04:07:40.204Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T04:07:40.211Z] Returning props with initialStudent: FOUND

@@ -106,7 +106,7 @@ async function listHelpRequests(viewer, scope) {
 export default async function handler(req, res) {
   try {
     await connectDb();
-    const authResult = await authenticateStudentFromRequest(req);
+    const authResult = await authenticateStudentFromRequest(req, res);
     if (authResult.error) {
       return res.status(authResult.status || 401).json({ error: authResult.error });
     }
@@ -214,7 +214,8 @@ export default async function handler(req, res) {
         }
 
         if (action === 'close') {
-          if (request.student.toString() !== viewer._id.toString()) {
+          const requestOwnerId = request.student?._id?.toString() || request.student?.toString();
+          if (requestOwnerId !== viewer._id.toString()) {
             return res.status(403).json({ error: 'Only the owner can close a request' });
           }
 

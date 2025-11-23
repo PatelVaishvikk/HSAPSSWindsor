@@ -45,6 +45,8 @@ CommunityMessageSchema.pre('save', function handleTimestamp(next) {
   next();
 });
 
+CommunityMessageSchema.index({ sender: 1, created_at: -1 });
+CommunityMessageSchema.index({ recipient: 1, created_at: -1 });
 CommunityMessageSchema.index({ sender: 1, recipient: 1, created_at: -1 });
 
 export default mongoose.models.CommunityMessage ||

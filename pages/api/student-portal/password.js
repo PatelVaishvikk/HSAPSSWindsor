@@ -1,8 +1,8 @@
 import connectDb from '../../../lib/db.js';
-import Student from '../../../models/Student.js';
 import {
   hashPortalPassword,
-  verifyStudentPortalSecret
+  verifyStudentPortalSecret,
+  authenticateStudentFromRequest
 } from '../../../lib/studentPortalAuth.js';
 
 const sanitizeString = (value) => (typeof value === 'string' ? value.trim() : '');
@@ -13,13 +13,12 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: `Method ${req.method} not allowed` });
   }
 
-  const { studentId, currentPassword, newPassword } = req.body || {};
-  const cleanId = sanitizeString(studentId);
+  const { currentPassword, newPassword } = req.body || {};
   const current = sanitizeString(currentPassword);
   const next = sanitizeString(newPassword);
 
-  if (!cleanId || !current || !next) {
-    return res.status(400).json({ error: 'Student id, current password, and new password are required' });
+  if (!current || !next) {
+    return res.status(400).json({ error: 'Current password and new password are required' });
   }
 
   if (next.length < 8) {
@@ -29,10 +28,11 @@ export default async function handler(req, res) {
   try {
     await connectDb();
 
-    const student = await Student.findById(cleanId);
-    if (!student) {
-      return res.status(404).json({ error: 'Student not found' });
+    const authResult = await authenticateStudentFromRequest(req, res);
+    if (authResult?.error) {
+      return res.status(authResult.status || 401).json({ error: authResult.error });
     }
+    const { student } = authResult;
 
     const isCurrentValid = await verifyStudentPortalSecret(student, current);
     if (!isCurrentValid) {

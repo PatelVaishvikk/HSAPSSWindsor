@@ -38,7 +38,7 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Database connection failed' });
   }
 
-  const authResult = await authenticateStudentFromRequest(req);
+  const authResult = await authenticateStudentFromRequest(req, res);
   if (authResult.error) {
     return res.status(authResult.status || 401).json({ error: authResult.error });
   }
@@ -212,9 +212,16 @@ export default async function handler(req, res) {
 
     const io = global?.io;
     if (io) {
-      const payload = { type: 'conversation:cleared', studentId: targetObjectId.toString() };
-      io.to(`student:${viewerId.toString()}`).emit('community:conversation', payload);
-      io.to(`student:${targetObjectId.toString()}`).emit('community:conversation', payload);
+      // Notify viewer (cleared with target)
+      io.to(`student:${viewerId.toString()}`).emit('community:conversation', { 
+        type: 'conversation:cleared', 
+        studentId: targetObjectId.toString() 
+      });
+      // Notify target (cleared with viewer)
+      io.to(`student:${targetObjectId.toString()}`).emit('community:conversation', { 
+        type: 'conversation:cleared', 
+        studentId: viewerId.toString() 
+      });
     }
 
     return res.status(204).end();
@@ -224,31 +231,27 @@ export default async function handler(req, res) {
     $or: [{ sender: viewerId }, { recipient: viewerId }]
   };
 
+  // Optimized aggregation pipeline
   const threads = await CommunityMessage.aggregate([
     { $match: baseMatch },
-    {
-      $addFields: {
-        other: {
-          $cond: [{ $eq: ['$sender', viewerId] }, '$recipient', '$sender']
-        },
-        isIncoming: { $eq: ['$recipient', viewerId] },
-        isUnread: {
-          $cond: [
-            { $and: [{ $eq: ['$recipient', viewerId] }, { $eq: ['$read_at', null] }] },
-            1,
-            0
-          ]
-        }
-      }
-    },
-    { $sort: { created_at: -1 } },
+    { $sort: { created_at: -1 } }, // Sort first to get latest messages efficiently
     {
       $group: {
-        _id: '$other',
+        _id: {
+          $cond: [{ $eq: ['$sender', viewerId] }, '$recipient', '$sender']
+        },
         lastMessage: { $first: '$message' },
         lastTimestamp: { $first: '$created_at' },
         lastSender: { $first: '$sender' },
-        unreadCount: { $sum: '$isUnread' }
+        unreadCount: { 
+          $sum: {
+            $cond: [
+              { $and: [{ $eq: ['$recipient', viewerId] }, { $eq: ['$read_at', null] }] },
+              1,
+              0
+            ]
+          }
+        }
       }
     },
     { $sort: { lastTimestamp: -1 } },

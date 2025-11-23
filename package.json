@@ -11,8 +11,8 @@
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^6.7.2",
-    "bootstrap": "^5.3.3",
     "bcryptjs": "^2.4.3",
+    "bootstrap": "^5.3.3",
     "chart.js": "^4.4.8",
     "date-fns": "^4.1.0",
     "dotenv": "^16.4.7",
@@ -37,6 +37,7 @@
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
     "styled-components": "^6.1.17",
+    "swr": "^2.3.6",
     "twilio": "^4.23.0"
   },
   "devDependencies": {
