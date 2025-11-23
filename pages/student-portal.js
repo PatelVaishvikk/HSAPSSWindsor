@@ -3709,12 +3709,9 @@ export async function getServerSideProps(context) {
   const resolvedPath = context.resolvedUrl || context.req?.url || '';
   const isLoginRoute = resolvedPath.startsWith('/login');
 
-  const fs = require('fs');
-  const path = require('path');
-  const logFile = path.join(process.cwd(), 'ssr-debug.log');
   const logSSR = (msg) => {
     const timestamp = new Date().toISOString();
-    fs.appendFileSync(logFile, `[${timestamp}] ${msg}\n`);
+    console.log(`[SSR DEBUG] [${timestamp}] ${msg}`);
   };
 
   logSSR(`getServerSideProps called for ${resolvedPath}`);
