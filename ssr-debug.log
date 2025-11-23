@@ -679,3 +679,34 @@
 [2025-11-23T04:07:40.202Z] getServerSideProps called for /
 [2025-11-23T04:07:40.204Z] Session found for student: 680da10c6a7b047db058465b
 [2025-11-23T04:07:40.211Z] Returning props with initialStudent: FOUND
+[2025-11-23T19:15:59.586Z] getServerSideProps called for /
+[2025-11-23T19:15:59.592Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T19:15:59.603Z] Returning props with initialStudent: FOUND
+[2025-11-23T19:22:37.999Z] getServerSideProps called for /
+[2025-11-23T19:22:38.007Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T19:22:38.029Z] Returning props with initialStudent: FOUND
+[2025-11-23T19:22:38.232Z] getServerSideProps called for /
+[2025-11-23T19:22:38.235Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T19:22:38.246Z] Returning props with initialStudent: FOUND
+[2025-11-23T19:23:43.900Z] getServerSideProps called for /
+[2025-11-23T19:23:43.903Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T19:23:43.923Z] Returning props with initialStudent: FOUND
+[2025-11-23T19:23:44.822Z] getServerSideProps called for /
+[2025-11-23T19:23:44.826Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T19:23:44.935Z] Returning props with initialStudent: FOUND
+[2025-11-23T19:23:46.907Z] getServerSideProps called for /
+[2025-11-23T19:23:46.912Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T19:23:46.918Z] Returning props with initialStudent: FOUND
+[2025-11-23T19:23:47.001Z] getServerSideProps called for /
+[2025-11-23T19:23:47.003Z] Session found for student: 680da10c6a7b047db058465b
+[2025-11-23T19:23:47.006Z] Returning props with initialStudent: FOUND
+[2025-11-23T19:31:53.363Z] getServerSideProps called for /
+[2025-11-23T19:31:53.368Z] No session found. Redirecting.
+[2025-11-23T19:32:02.890Z] getServerSideProps called for /login?next=%2F
+[2025-11-23T19:32:02.891Z] No session found. Redirecting.
+[2025-11-23T19:33:10.793Z] getServerSideProps called for /
+[2025-11-23T19:33:10.796Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T19:33:10.814Z] Returning props with initialStudent: FOUND
+[2025-11-23T19:33:11.235Z] getServerSideProps called for /
+[2025-11-23T19:33:11.238Z] Session found for student: 68fbd4b004f600d268b94009
+[2025-11-23T19:33:11.241Z] Returning props with initialStudent: FOUND

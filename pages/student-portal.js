@@ -960,30 +960,50 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
 
   const handleClearConversation = async () => {
     if (!activeConversation?.id) {
+      console.warn('[CHAT] Cannot clear conversation: No active conversation ID');
       return;
     }
 
+    console.log('[CHAT] Clearing conversation with:', activeConversation.id);
     setConversationError('');
+    
+    // Immediate feedback
+    enqueueToast({
+      variant: 'primary',
+      title: 'Processing',
+      message: 'Clearing conversation history...'
+    });
+
     try {
       const response = await fetch(`/api/student-portal/messages?with=${activeConversation.id}`, {
         method: 'DELETE',
         headers: portalAuthHeaders || {}
       });
+
       if (!response.ok && response.status !== 204) {
         const data = await response.json().catch(() => ({}));
         throw new Error(data.error || 'Unable to clear conversation');
       }
+
+      console.log('[CHAT] Conversation cleared successfully');
       setConversationMessages([]);
+      
       enqueueToast({
-        variant: 'info',
+        variant: 'success',
         title: 'Conversation cleared',
         message: `History with ${activeConversation.first_name || 'this student'} has been cleared.`
       });
+      
       setMessageDraft('');
       refreshInboxThreads();
     } catch (error) {
-      console.error('Clear conversation failed:', error);
+      console.error('[CHAT] Clear conversation failed:', error);
       setConversationError(error.message || 'Unable to clear conversation');
+      enqueueToast({
+        variant: 'danger',
+        title: 'Error',
+        message: error.message || 'Failed to clear conversation'
+      });
     }
   };
 
@@ -3558,6 +3578,12 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
           </Dropdown>
         </Offcanvas.Header>
         <Offcanvas.Body className="d-flex flex-column p-0 bg-light">
+          {conversationError && (
+            <Alert variant="danger" className="m-3 mb-0">
+              <i className="fas fa-exclamation-circle me-2"></i>
+              {conversationError}
+            </Alert>
+          )}
           {/* Messages Area */}
           <div className="flex-grow-1 p-3 overflow-auto d-flex flex-column gap-3" style={{ scrollBehavior: 'smooth' }}>
             {conversationMessages.length === 0 ? (

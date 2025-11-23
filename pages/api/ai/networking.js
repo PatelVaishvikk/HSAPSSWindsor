@@ -1,4 +1,4 @@
-import dbConnect from '../../../lib/mongodb';
+import dbConnect from '../../../lib/dbConnect';
 import Student from '../../../models/Student';
 import { calculateConnectionScore, generateConversationStarter } from '../../../lib/ai-engine';
 

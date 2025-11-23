@@ -1,4 +1,4 @@
-import dbConnect from '../../../lib/mongodb';
+import dbConnect from '../../../lib/dbConnect';
 import Opportunity from '../../../models/Opportunity';
 import Student from '../../../models/Student';
 

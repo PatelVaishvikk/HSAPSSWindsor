@@ -1,5 +1,5 @@
 import { generateConversationStarter } from '../../../lib/ai-engine';
-import dbConnect from '../../../lib/mongodb';
+import dbConnect from '../../../lib/dbConnect';
 import Student from '../../../models/Student';
 
 /**
