@@ -1,5 +1,5 @@
-import { getPortalSessionFromRequest, parseCookies, verifyAccessToken, verifyRefreshToken } from '../lib/studentPortalAuth';
-import { ACCESS_COOKIE_NAME, REFRESH_COOKIE_NAME } from '../lib/portalSession';
+import { getPortalSessionFromRequest } from '../lib/studentPortalAuth';
+import { ACCESS_COOKIE_NAME, REFRESH_COOKIE_NAME, parseCookies, verifyAccessToken, verifyRefreshToken } from '../lib/portalSession';
 
 export default function DebugAuth({ debugInfo }) {
   return (
