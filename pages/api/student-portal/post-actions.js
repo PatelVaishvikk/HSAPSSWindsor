@@ -1,6 +1,7 @@
 import connectDb from '../../../lib/db.js';
 import Post from '../../../models/Post.js';
 import Comment from '../../../models/Comment.js';
+import Notification from '../../../models/Notification.js';
 import { authenticateStudentFromRequest } from '../../../lib/studentPortalAuth.js';
 
 const sanitizeString = (value) => {
@@ -82,6 +83,30 @@ export default async function handler(req, res) {
 
         const wasLiked = await post.toggleLike(viewer._id);
 
+        if (wasLiked && post.author.toString() !== viewer._id.toString()) {
+          // Create Notification
+          await Notification.create({
+            recipient: post.author,
+            sender: viewer._id,
+            type: 'like',
+            title: 'New Like',
+            message: `${viewer.first_name} ${viewer.last_name} liked your post`,
+            data: { postId: cleanId, userId: viewer._id.toString() }
+          });
+
+          // Emit notification
+          const io = global?.io;
+          if (io) {
+            io.to(post.author.toString()).emit('notification', {
+              title: 'New Like',
+              message: `${viewer.first_name} ${viewer.last_name} liked your post`,
+              variant: 'info',
+              icon: 'heart',
+              timestamp: new Date()
+            });
+          }
+        }
+
         const io = global?.io;
         if (io) {
           io.to('feed').emit('post:like', { 
@@ -131,6 +156,30 @@ export default async function handler(req, res) {
           });
 
           const payload = formatComment(comment);
+
+          if (post.author.toString() !== viewer._id.toString()) {
+            // Create Notification
+            await Notification.create({
+              recipient: post.author,
+              sender: viewer._id,
+              type: 'comment',
+              title: 'New Comment',
+              message: `${viewer.first_name} ${viewer.last_name} commented on your post`,
+              data: { postId: cleanPostId, commentId: comment._id.toString() }
+            });
+
+            // Emit notification
+            const io = global?.io;
+            if (io) {
+              io.to(post.author.toString()).emit('notification', {
+                title: 'New Comment',
+                message: `${viewer.first_name} ${viewer.last_name} commented on your post`,
+                variant: 'info',
+                icon: 'comment',
+                timestamp: new Date()
+              });
+            }
+          }
 
           const io = global?.io;
           if (io) {

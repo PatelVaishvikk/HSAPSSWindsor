@@ -1,4 +1,4 @@
-import connectDb from '../../../lib/db.js';
+import dbConnect from '../../../lib/dbConnect';
 import Post from '../../../models/Post.js';
 import Comment from '../../../models/Comment.js';
 import { authenticateStudentFromRequest } from '../../../lib/studentPortalAuth.js';
@@ -70,7 +70,7 @@ const formatSharedPost = async (sharedPost, viewerId) => {
 
 export default async function handler(req, res) {
   try {
-    await connectDb();
+    await dbConnect();
     const authResult = await authenticateStudentFromRequest(req, res);
     if (authResult.error) {
       return res.status(authResult.status || 401).json({ error: authResult.error });

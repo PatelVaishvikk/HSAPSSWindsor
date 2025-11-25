@@ -13,7 +13,8 @@ import {
   Tooltip,
   Toast,
   ToastContainer,
-  Dropdown
+  Dropdown,
+  Modal
 } from 'react-bootstrap';
 import { io } from 'socket.io-client';
 import { STUDENT_PORTAL_FIELD_DEFS, STUDENT_PORTAL_FIELD_NAMES } from '../config/studentPortalFields.js';
@@ -113,6 +114,19 @@ const buildInitials = (first = '', last = '') => {
     .map((part) => part.trim().charAt(0).toUpperCase())
     .join('')
     .slice(0, 2);
+};
+
+const renderAvatar = (profile) => {
+  if (profile?.profile_picture) {
+    return (
+      <img 
+        src={profile.profile_picture} 
+        alt={`${profile.first_name} ${profile.last_name}`} 
+        className="w-100 h-100 rounded-circle object-fit-cover"
+      />
+    );
+  }
+  return buildInitials(profile?.first_name, profile?.last_name);
 };
 
 const formatConversationTimestamp = (isoString) => {
@@ -233,12 +247,32 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [passwordSuccess, setPasswordSuccess] = useState('');
   const [passwordError, setPasswordError] = useState('');
+  
+  // Social Features State
+  const [showFollowModal, setShowFollowModal] = useState(false);
+  const [followModalType, setFollowModalType] = useState('followers');
+  const [followList, setFollowList] = useState([]);
+  const [followListLoading, setFollowListLoading] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [showNotificationPanel, setShowNotificationPanel] = useState(false);
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
+  
+  // Advanced Theme System - Start with a default to avoid hydration mismatch
+  const [theme, setTheme] = useState('cyberpunk');
+  const [showThemePicker, setShowThemePicker] = useState(false);
+  const [themeLoaded, setThemeLoaded] = useState(false);
+  
+  // Follow Requests State
+  const [followRequests, setFollowRequests] = useState([]);
+  const [isTyping, setIsTyping] = useState(false);
+
   const conversationEndRef = useRef(null);
   const socketRef = useRef(null);
   const activeConversationRef = useRef(null);
   const inboxThreadsRef = useRef([]);
   const helpScopeRef = useRef('open');
   const portalAuthHeadersRef = useRef(null);
+  const typingTimeoutRef = useRef(null);
   const [toastQueue, setToastQueue] = useState([]);
   const [profilePreview, setProfilePreview] = useState(null);
   const [showProfilePreview, setShowProfilePreview] = useState(false);
@@ -268,6 +302,277 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
   const dismissToast = useCallback((id) => {
     setToastQueue((prev) => prev.filter((toast) => toast.id !== id));
   }, []);
+
+  // Notification helpers
+  const fetchNotifications = useCallback(async () => {
+    try {
+      const res = await fetch('/api/student-portal/notifications', {
+        headers: portalAuthHeadersRef.current || {}
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setNotifications(data.notifications);
+        setUnreadNotificationCount(data.unreadCount);
+      }
+    } catch (error) {
+      console.error('Failed to fetch notifications:', error);
+    }
+  }, []);
+
+  const addNotification = useCallback((notification) => {
+    // For real-time notifications, we just add them to the list
+    // The backend should have already saved them
+    const newNotif = {
+      id: notification._id || `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+      read: false,
+      timestamp: new Date().toISOString(),
+      ...notification
+    };
+    
+    setNotifications((prev) => [newNotif, ...prev].slice(0, 50));
+    setUnreadNotificationCount((prev) => prev + 1);
+    
+    enqueueToast({
+      variant: notification.variant || 'info',
+      title: notification.title,
+      message: notification.message
+    });
+  }, [enqueueToast]);
+
+  const markNotificationAsRead = async (notifId) => {
+    // Optimistic update
+    setNotifications((prev) =>
+      prev.map((n) => (n._id === notifId || n.id === notifId ? { ...n, read: true } : n))
+    );
+    setUnreadNotificationCount((prev) => Math.max(0, prev - 1));
+
+    try {
+      await fetch('/api/student-portal/notifications', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(portalAuthHeadersRef.current || {})
+        },
+        body: JSON.stringify({ notificationId: notifId })
+      });
+    } catch (error) {
+      console.error('Failed to mark notification as read:', error);
+    }
+  };
+
+  const markAllNotificationsAsRead = async () => {
+    // Optimistic update
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    setUnreadNotificationCount(0);
+
+    try {
+      await fetch('/api/student-portal/notifications', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(portalAuthHeadersRef.current || {})
+        },
+        body: JSON.stringify({ markAll: true })
+      });
+    } catch (error) {
+      console.error('Failed to mark all notifications as read:', error);
+    }
+  };
+
+  // Fetch notifications on mount
+  useEffect(() => {
+    if (student?.id) {
+      fetchNotifications();
+    }
+  }, [student?.id, fetchNotifications]);
+
+  // Socket.IO Connection
+  useEffect(() => {
+    const socket = io();
+
+    socket.on('connect', () => {
+      console.log('Socket connected');
+      // If student data is already available, join immediately
+      if (student?._id || student?.id) {
+        const studentId = student._id || student.id;
+        console.log('Joining student room:', studentId);
+        socket.emit('student:join', { studentId });
+      }
+    });
+
+    // Also emit join if student data becomes available after connection
+    if (socket.connected && (student?._id || student?.id)) {
+      const studentId = student._id || student.id;
+      console.log('Joining student room (delayed):', studentId);
+      socket.emit('student:join', { studentId });
+    }
+
+    socket.on('notification', (data) => {
+      console.log('Received notification:', data);
+      addNotification(data);
+    });
+
+    socket.on('follow_update', (data) => {
+      if (data.targetId === student?.id || data.followerId === student?.id) {
+        // Refresh student data to get latest counts
+        fetch('/api/student-portal/profile', { 
+          headers: portalAuthHeadersRef.current || {} 
+        })
+          .then(res => res.json())
+          .then(data => {
+            if (data.student) setStudent(data.student);
+          })
+          .catch(err => console.error('Failed to refresh student data on follow update', err));
+      }
+    });
+
+    socket.on('follow_request', (data) => {
+      // Add notification for follow request
+      addNotification({
+        title: 'Follow Request',
+        message: data.message,
+        variant: 'info',
+        actionType: 'follow_request',
+        userId: data.userId,
+        userName: data.userName
+      });
+      
+      // Update follow requests list
+      setFollowRequests(prev => [...prev, data.userId]);
+    });
+
+    socket.on('follow_accepted', (data) => {
+      // Notification that your follow request was accepted
+      addNotification({
+        title: 'Request Accepted',
+        message: data.message,
+        variant: 'success'
+      });
+      
+      // Refresh student data
+      fetch('/api/student-portal/profile', { 
+        headers: portalAuthHeadersRef.current || {} 
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.student) setStudent(data.student);
+        })
+        .catch(err => console.error('Failed to refresh after accept', err));
+    });
+
+    socket.on('typing', (data) => {
+      if (activeConversationRef.current?.id === data.senderId) {
+        setIsTyping(true);
+      }
+    });
+
+    socket.on('stop_typing', (data) => {
+      if (activeConversationRef.current?.id === data.senderId) {
+        setIsTyping(false);
+      }
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [student?._id, student?.id, addNotification]);
+
+  // Load theme from localStorage on client-side only
+  useEffect(() => {
+    const saved = localStorage.getItem('portalTheme');
+    if (saved && saved !== theme) {
+      setTheme(saved);
+    }
+    setThemeLoaded(true);
+  }, []);
+
+  // Apply Advanced Theme to entire app
+  useEffect(() => {
+    const themes = {
+      cyberpunk: {
+        bg: '#09090b',
+        surface: '#18181b',
+        primary: '#d946ef', // Fuchsia 500
+        secondary: '#8b5cf6', // Violet 500
+        accent: '#22c55e', // Green 500
+        text: '#fafafa',
+        textSecondary: '#a1a1aa'
+      },
+      ocean: {
+        bg: '#0f172a',
+        surface: '#1e293b',
+        primary: '#38bdf8', // Sky 400
+        secondary: '#818cf8', // Indigo 400
+        accent: '#2dd4bf', // Teal 400
+        text: '#f8fafc',
+        textSecondary: '#94a3b8'
+      },
+      sunset: {
+        bg: '#2a1b2d', // Deep purple-brown
+        surface: '#452c48',
+        primary: '#fb923c', // Orange 400
+        secondary: '#f472b6', // Pink 400
+        accent: '#facc15', // Yellow 400
+        text: '#fff1f2',
+        textSecondary: '#fda4af'
+      },
+      forest: {
+        bg: '#052e16', // Green 950
+        surface: '#064e3b', // Green 900
+        primary: '#4ade80', // Green 400
+        secondary: '#a3e635', // Lime 400
+        accent: '#22d3ee', // Cyan 400
+        text: '#ffffff', // Pure white for max contrast
+        textSecondary: '#bbf7d0' // Green 200 (lighter/brighter than before)
+      },
+      aurora: {
+        bg: '#020617', // Slate 950
+        surface: '#0f172a', // Slate 900
+        primary: '#a855f7', // Purple 500
+        secondary: '#ec4899', // Pink 500
+        accent: '#14b8a6', // Teal 500
+        text: '#f8fafc',
+        textSecondary: '#cbd5e1'
+      },
+      light: {
+        bg: '#f8fafc', // Slate 50
+        surface: '#ffffff',
+        primary: '#2563eb', // Blue 600
+        secondary: '#4f46e5', // Indigo 600
+        accent: '#059669', // Emerald 600
+        text: '#0f172a', // Slate 900
+        textSecondary: '#64748b' // Slate 500
+      },
+      dark: {
+        bg: '#000000',
+        surface: '#121212',
+        primary: '#3b82f6', // Blue 500
+        secondary: '#a855f7', // Purple 500
+        accent: '#10b981', // Emerald 500
+        text: '#ffffff',
+        textSecondary: '#a3a3a3'
+      }
+    };
+
+    const selectedTheme = themes[theme] || themes.cyberpunk;
+    Object.entries(selectedTheme).forEach(([key, value]) => {
+      document.documentElement.style.setProperty(`--color-${key}`, value);
+    });
+    
+    // Update Bootstrap Variables
+    document.documentElement.style.setProperty('--bs-primary', selectedTheme.primary);
+    document.documentElement.style.setProperty('--bs-body-bg', selectedTheme.bg);
+    document.documentElement.style.setProperty('--bs-body-color', selectedTheme.text);
+    document.documentElement.style.setProperty('--bs-link-color', selectedTheme.primary);
+    document.documentElement.style.setProperty('--bs-link-hover-color', selectedTheme.secondary);
+    
+    // Also set body background
+    document.body.style.background = selectedTheme.bg;
+    document.body.style.color = selectedTheme.text;
+    
+    // Save to localStorage
+    localStorage.setItem('portalTheme', theme);
+  }, [theme]);
 
   useEffect(() => {
     activeConversationRef.current = activeConversation;
@@ -1666,6 +1971,112 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
     }
   };
 
+  const handleShowFollowModal = async (type) => {
+    setFollowModalType(type);
+    setShowFollowModal(true);
+    setFollowListLoading(true);
+    
+    try {
+      const response = await fetch(
+        `/api/student-portal/followers?type=${type}&userId=${student._id}`,
+        { headers: portalAuthHeaders || {} }
+      );
+      
+      if (response.ok) {
+        const data = await response.json();
+        setFollowList(data[type] || []);
+      } else {
+        console.error('Failed to fetch', type);
+        setFollowList([]);
+      }
+    } catch (error) {
+      console.error('Error fetching followers/following:', error);
+      setFollowList([]);
+    } finally {
+      setFollowListLoading(false);
+    }
+  };
+
+  const handleFollow = async (targetId, action) => {
+    // 1. Optimistic UI Update (Instant Feedback)
+    const previousStudent = { ...student }; // Backup for rollback
+    
+    if (action === 'follow') {
+      setStudent(prev => ({
+        ...prev,
+        following: [...(prev.following || []), targetId]
+      }));
+      // Update community profiles instantly if visible
+      if (activePane === 'community') {
+         setCommunityProfiles(prev => prev.map(p => {
+            if (p.id === targetId || p._id === targetId) {
+              const currentFollowers = p.followers || [];
+              // Avoid duplicates
+              if (currentFollowers.includes(student._id)) return p;
+              return { ...p, followers: [...currentFollowers, student._id] };
+            }
+            return p;
+         }));
+      }
+    } else if (action === 'unfollow') {
+      setStudent(prev => ({
+        ...prev,
+        following: (prev.following || []).filter(id => id !== targetId)
+      }));
+       // Update community profiles instantly if visible
+      if (activePane === 'community') {
+         setCommunityProfiles(prev => prev.map(p => {
+            if (p.id === targetId || p._id === targetId) {
+              return { ...p, followers: (p.followers || []).filter(id => id !== student._id) };
+            }
+            return p;
+         }));
+      }
+    }
+
+    try {
+      // 2. Perform API Call in Background
+      const response = await fetch('/api/student-portal/follow', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(portalAuthHeaders || {})
+        },
+        body: JSON.stringify({ targetId, action })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update follow status');
+      }
+
+      const data = await response.json();
+      
+      // 3. Handle specific server responses if needed (e.g., request vs follow)
+      if (action === 'request') {
+         enqueueToast({
+            variant: 'success',
+            title: 'Request Sent!',
+            message: 'Your follow request has been sent'
+          });
+      } else if (action === 'accept') {
+          // ... existing accept logic ...
+      }
+
+    } catch (error) {
+      console.error('Follow action failed:', error);
+      // 4. Rollback on Error
+      setStudent(previousStudent);
+      if (activePane === 'community') {
+          refreshCommunityProfiles(communitySearch); // Re-fetch to be safe
+      }
+      enqueueToast({
+        variant: 'danger',
+        title: 'Error',
+        message: 'Failed to update follow status. Please try again.'
+      });
+    }
+  };
+
   const handleUpdate = async (event) => {
     event.preventDefault();
     if (!student?._id) {
@@ -2250,7 +2661,7 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
                         <div>
                           <div className="d-flex align-items-center gap-2">
                             <div className="conversation-avatar conversation-avatar-sm">
-                              {buildInitials(profile.first_name, profile.last_name)}
+                              {renderAvatar(profile)}
                             </div>
                             <div>
                               <h6
@@ -2378,6 +2789,19 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
                         {!profile.is_self && (
                           <Button
                             size="sm"
+                            variant={student.following?.includes(profile.id) ? "outline-secondary" : "primary"}
+                            onClick={() => {
+                              const isFollowing = student.following?.includes(profile.id);
+                              handleFollow(profile.id, isFollowing ? 'unfollow' : 'follow');
+                            }}
+                          >
+                            <i className={`fas fa-${student.following?.includes(profile.id) ? 'user-check' : 'user-plus'} me-2`}></i>
+                            {student.following?.includes(profile.id) ? 'Following' : 'Follow'}
+                          </Button>
+                        )}
+                        {!profile.is_self && (
+                          <Button
+                            size="sm"
                             variant="primary"
                             onClick={() => openConversationWithStudent(profile)}
                           >
@@ -2435,7 +2859,7 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
   );
 
   const renderFeedPane = () => (
-    <div className="feed-pane">
+    <div className="feed-pane mobile-feed-container">
       <div className="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
         <div>
           <h5 className="fw-semibold mb-1">Community Feed</h5>
@@ -2507,13 +2931,13 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
       ) : (
         <div className="d-flex flex-column gap-3">
           {feedPosts.map((post) => (
-            <Card key={post.id} className="border-0 shadow-sm post-card">
+            <Card key={post.id} className="border-0 shadow-sm post-card feed-card">
               <Card.Body>
                 {/* Post Header */}
-                <div className="d-flex justify-content-between align-items-start mb-3">
+                <div className="d-flex justify-content-between align-items-start mb-3 feed-header">
                   <div className="d-flex gap-3 flex-grow-1">
                     <div className="conversation-avatar conversation-avatar-sm flex-shrink-0">
-                      {buildInitials(post.author?.first_name, post.author?.last_name)}
+                      {renderAvatar(post.author)}
                     </div>
                     <div className="flex-grow-1">
                       <h6 className="fw-bold mb-0">
@@ -2551,7 +2975,7 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
                     </Badge>
                   </div>
                 )}
-                <p className="mb-3">{post.content}</p>
+                <p className="mb-3 feed-content">{post.content}</p>
 
                 {/* Shared Post */}
                 {post.shared_from && (
@@ -2566,8 +2990,8 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
                 )}
 
                 {/* Post Actions */}
-                <div className="border-top pt-2 mt-2">
-                  <div className="d-flex gap-3 mb-2">
+                <div className="border-top pt-2 mt-2 feed-footer">
+                  <div className="d-flex gap-3 mb-2 feed-actions">
                     <Button
                       variant="link"
                       size="sm"
@@ -2605,7 +3029,7 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
                           {postComments[post.id].map((comment) => (
                             <div key={comment.id} className="d-flex gap-2 mb-2">
                               <div className="conversation-avatar conversation-avatar-xs flex-shrink-0">
-                                {buildInitials(comment.author?.first_name, comment.author?.last_name)}
+                                {renderAvatar(comment.author)}
                               </div>
                               <div className="flex-grow-1 bg-light p-2 rounded">
                                 <div className="fw-semibold small">
@@ -2991,8 +3415,84 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
     </div>
   );
 
+  const handleTyping = (e) => {
+    setMessageDraft(e.target.value);
+    
+    if (!socketRef.current || !activeConversation) return;
+
+    socketRef.current.emit('typing', { recipientId: activeConversation.id });
+
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+
+    typingTimeoutRef.current = setTimeout(() => {
+      socketRef.current.emit('stop_typing', { recipientId: activeConversation.id });
+    }, 1000);
+  };
+
   const renderAccountPane = () => (
     <div className="account-pane">
+      {/* Profile Picture & Followers */}
+      <Card className="border-0 shadow-sm mb-4">
+        <Card.Body className="text-center">
+          <div className="position-relative d-inline-block mb-3">
+            <div className="rounded-circle overflow-hidden border border-3 border-white shadow-sm" style={{ width: 100, height: 100 }}>
+              {student.profile_picture ? (
+                <img src={student.profile_picture} alt="Profile" className="w-100 h-100 object-fit-cover" />
+              ) : (
+                <div className="w-100 h-100 bg-light d-flex align-items-center justify-content-center text-primary fw-bold fs-2">
+                  {buildInitials(student.first_name, student.last_name)}
+                </div>
+              )}
+            </div>
+            <label className="position-absolute bottom-0 end-0 bg-white rounded-circle shadow-sm p-2 cursor-pointer hover-scale" style={{ width: 32, height: 32, cursor: 'pointer' }}>
+              <input
+                type="file"
+                className="d-none"
+                accept="image/*"
+                onChange={async (e) => {
+                  const file = e.target.files[0];
+                  if (!file) return;
+                  
+                  const formData = new FormData();
+                  formData.append('profilePicture', file);
+                  
+                  try {
+                    const res = await fetch('/api/student-portal/upload-profile-picture', {
+                      method: 'POST',
+                      headers: portalAuthHeaders || {},
+                      body: formData
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                      setStudent(prev => ({ ...prev, profile_picture: data.profile_picture }));
+                      enqueueToast({ variant: 'success', title: 'Success', message: 'Profile picture updated!' });
+                    }
+                  } catch (err) {
+                    console.error(err);
+                    enqueueToast({ variant: 'danger', title: 'Error', message: 'Failed to upload picture' });
+                  }
+                }}
+              />
+              <i className="fas fa-camera text-primary small"></i>
+            </label>
+          </div>
+          
+          <h5 className="fw-bold mb-1">{student.first_name} {student.last_name}</h5>
+          <p className="text-muted small mb-3">{student.study || 'Student'}</p>
+          
+          <div className="d-flex justify-content-center gap-4 border-top pt-3">
+            <div className="text-center cursor-pointer" onClick={() => handleShowFollowModal('followers')} style={{ cursor: 'pointer' }}>
+              <div className="fw-bold fs-5">{student.followers?.length || 0}</div>
+              <div className="small text-muted">Followers</div>
+            </div>
+            <div className="text-center cursor-pointer" onClick={() => handleShowFollowModal('following')} style={{ cursor: 'pointer' }}>
+              <div className="fw-bold fs-5">{student.following?.length || 0}</div>
+              <div className="small text-muted">Following</div>
+            </div>
+          </div>
+        </Card.Body>
+      </Card>
+
       <Card className="border-0 shadow-sm mb-4">
         <Card.Body>
           <h5 className="fw-semibold mb-3">Account Security</h5>
@@ -3076,6 +3576,44 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
         </Card.Body>
       </Card>
 
+      <Card className="border-0 shadow-sm mb-4">
+        <Card.Body>
+          <h5 className="fw-semibold mb-3">Theme Customization</h5>
+          <p className="text-muted small mb-4">
+            Choose from 7 stunning themes to personalize your portal experience
+          </p>
+          
+          <Button
+            variant="outline-primary"
+            onClick={() => setShowThemePicker(true)}
+            className="w-100"
+            style={{
+              padding: '1rem',
+              fontSize: '1rem',
+              fontWeight: '500',
+              borderWidth: '2px'
+            }}
+          >
+            <i className="fas fa-palette me-2"></i>
+            Change Theme
+          </Button>
+          
+          <div className="mt-3 text-center">
+            <small className="text-muted">
+              Current: <strong style={{ color: 'var(--color-primary)' }}>
+                {theme === 'cyberpunk' ? 'Cyberpunk' :
+                 theme === 'ocean' ? 'Ocean Depths' :
+                 theme === 'sunset' ? 'Desert Sunset' :
+                 theme === 'forest' ? 'Forest Whisper' :
+                 theme === 'aurora' ? 'Northern Lights' :
+                 theme === 'light' ? 'Clean Light' :
+                 'Midnight Dark'}
+              </strong>
+            </small>
+          </div>
+        </Card.Body>
+      </Card>
+
       <Card className="border-0 shadow-sm">
         <Card.Body>
           <h6 className="fw-semibold mb-2">Session summary</h6>
@@ -3107,6 +3645,208 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
     <>
       <Head>
         <title>Student Portal | HSAPSS Windsor</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="true" />
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+        <style>{`
+          :root {
+            --bs-body-bg: var(--color-bg);
+            --bs-body-color: var(--color-text);
+            --bs-body-font-family: 'Outfit', sans-serif;
+          }
+          
+          body {
+            font-family: 'Outfit', sans-serif !important;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            font-weight: 500; /* Increased from 400 */
+            font-size: 17px; /* Increased from 16px */
+            letter-spacing: 0.01em;
+          }
+          
+          /* Ensure inputs inherit font settings */
+          input, select, textarea, button {
+            font-family: 'Outfit', sans-serif !important;
+            font-weight: 500 !important;
+          }
+
+          /* Improve Label Visibility */
+          .form-label {
+            font-weight: 600 !important; /* Increased from 500 */
+            opacity: 1 !important; /* Full opacity */
+            letter-spacing: 0.02em;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3); /* Add shadow for contrast */
+            font-size: 0.95rem;
+            margin-bottom: 0.5rem;
+          }
+          
+          /* Global Theme Overrides */
+          .card, .modal-content, .offcanvas, .dropdown-menu, .list-group-item, .card-modern, .sidebar-modern {
+            background-color: var(--color-surface) !important;
+            color: var(--color-text) !important;
+            border-color: rgba(255,255,255,0.1) !important;
+          }
+          
+          .form-control, .form-select {
+            background-color: var(--color-bg) !important;
+            color: var(--color-text) !important;
+            border-color: var(--color-textSecondary) !important;
+            font-size: 1.05rem !important; /* Larger input text */
+            padding: 0.75rem 1rem !important; /* More padding */
+          }
+          
+          .form-control::placeholder {
+            color: var(--color-textSecondary) !important;
+            opacity: 0.7 !important;
+          }
+          
+          .form-control:focus, .form-select:focus {
+            background-color: var(--color-bg) !important;
+            color: var(--color-text) !important;
+            border-color: var(--color-primary) !important;
+            box-shadow: 0 0 0 0.25rem rgba(var(--color-primary-rgb), 0.25) !important;
+          }
+
+          .text-muted {
+            color: var(--color-textSecondary) !important;
+          }
+          
+          .bg-light {
+            background-color: rgba(255,255,255,0.05) !important;
+          }
+          
+          .bg-white {
+            background-color: var(--color-surface) !important;
+          }
+          
+          .border-bottom, .border-top, .border {
+            border-color: rgba(255,255,255,0.1) !important;
+          }
+
+          /* Fix Sidebar Contrast */
+          .nav-btn {
+            color: var(--color-text) !important;
+            opacity: 0.8;
+            transition: all 0.2s ease;
+          }
+          
+          .nav-btn:hover {
+            opacity: 1;
+            background-color: rgba(255,255,255,0.05) !important;
+          }
+          
+          .nav-btn.active {
+            opacity: 1;
+            background-color: var(--color-primary) !important;
+            color: #ffffff !important; /* Always white text on active primary button */
+            font-weight: 600;
+          }
+          
+          .nav-btn i {
+            color: inherit !important; /* Icons inherit text color */
+          }
+          
+          /* Override Bootstrap Link Colors */
+          a, .btn-link {
+            color: var(--color-primary);
+          }
+          
+          a:hover, .btn-link:hover {
+            color: var(--color-secondary);
+          }
+
+          /* Mobile Feed Optimization */
+          @media (max-width: 768px) {
+            .mobile-feed-container {
+              padding: 0 !important;
+              background-color: var(--color-bg) !important;
+            }
+
+            .feed-card {
+              border-radius: 0 !important;
+              border-left: none !important;
+              border-right: none !important;
+              border-top: none !important;
+              border-bottom: 1px solid rgba(255,255,255,0.05) !important;
+              margin-bottom: 0 !important;
+              box-shadow: none !important;
+              background-color: var(--color-surface) !important;
+            }
+            
+            .feed-header {
+              padding: 12px 12px 0 12px !important;
+              margin-bottom: 4px !important;
+              display: flex;
+              align-items: center;
+            }
+            
+            .conversation-avatar-sm {
+               width: 32px !important;
+               height: 32px !important;
+               font-size: 0.8rem !important;
+            }
+
+            .feed-content {
+              font-size: 15px !important;
+              line-height: 1.5 !important;
+              padding: 4px 12px 12px 12px !important;
+              margin-bottom: 0 !important;
+            }
+            
+            .feed-actions {
+              padding: 8px 12px !important;
+              border-top: none !important;
+              justify-content: flex-start !important;
+              gap: 24px !important;
+            }
+
+            .feed-actions .btn {
+              padding: 0 !important;
+              font-size: 18px !important;
+              background-color: transparent !important;
+              border-radius: 0;
+              color: var(--color-textSecondary) !important;
+              display: flex;
+              align-items: center;
+              gap: 6px;
+            }
+            
+            .feed-actions .btn span {
+               font-size: 14px !important;
+               font-weight: 500;
+            }
+            
+            .feed-actions .btn:hover, .feed-actions .btn:active {
+              background-color: transparent !important;
+              color: var(--color-text) !important;
+            }
+
+            /* Full width images on mobile */
+            .feed-image {
+              width: 100% !important;
+              margin: 0 !important;
+              border-radius: 0 !important;
+              display: block;
+            }
+          }
+          
+          /* General Mobile Improvements */
+          @media (max-width: 576px) {
+            .container, .container-fluid {
+              padding-left: 12px !important;
+              padding-right: 12px !important;
+            }
+            
+            .btn-lg-mobile {
+              padding: 12px 20px !important;
+              font-size: 1.1rem !important;
+            }
+            
+            .modal-dialog {
+              margin: 0.5rem !important;
+            }
+          }
+        `}</style>
       </Head>
 
       <div className="d-flex flex-column flex-lg-row min-vh-100">
@@ -3119,9 +3859,31 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
             <span className="fw-bold text-dark">HSAPSS Portal</span>
           </div>
           {student && (
-            <Button variant="light" size="sm" onClick={handleLogout}>
-              <i className="fas fa-sign-out-alt text-danger"></i>
-            </Button>
+            <div className="d-flex gap-2">
+              <Button 
+                variant="light" 
+                size="sm" 
+                onClick={() => setShowThemePicker(true)}
+              >
+                <i className="fas fa-palette text-muted"></i>
+              </Button>
+              <Button 
+                variant="light" 
+                size="sm" 
+                className="position-relative"
+                onClick={() => setShowNotificationPanel(!showNotificationPanel)}
+              >
+                <i className={`fas fa-bell ${showNotificationPanel ? 'text-primary' : 'text-muted'}`}></i>
+                {unreadNotificationCount > 0 && (
+                  <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style={{ fontSize: '0.5rem' }}>
+                    {unreadNotificationCount}
+                  </span>
+                )}
+              </Button>
+              <Button variant="light" size="sm" onClick={handleLogout}>
+                <i className="fas fa-sign-out-alt text-danger"></i>
+              </Button>
+            </div>
           )}
         </div>
 
@@ -3132,14 +3894,25 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
             <div className="d-flex flex-column sidebar-modern position-fixed h-100" style={{ width: 280, zIndex: 1000, top: 0, left: 0, overflow: 'hidden' }}>
               {/* Header */}
               <div className="p-4 pb-2 flex-shrink-0">
-                <div className="d-flex align-items-center gap-3">
-                  <div className="rounded-3 overflow-hidden shadow-sm" style={{ width: 48, height: 48 }}>
-                    <img src="/windsor.jpg" alt="HSAPSS Logo" className="w-100 h-100 object-fit-cover" />
+                <div className="d-flex align-items-center justify-content-between">
+                  <div className="d-flex align-items-center gap-3">
+                    <div className="rounded-3 overflow-hidden shadow-sm" style={{ width: 48, height: 48 }}>
+                      <img src="/windsor.jpg" alt="HSAPSS Logo" className="w-100 h-100 object-fit-cover" />
+                    </div>
+                    <div>
+                      <h5 className="fw-bold mb-0 text-dark">HSAPSS</h5>
+                      <small className="text-muted">Student Portal</small>
+                    </div>
                   </div>
-                  <div>
-                    <h5 className="fw-bold mb-0 text-dark">HSAPSS</h5>
-                    <small className="text-muted">Student Portal</small>
-                  </div>
+                  <Button 
+                    variant="light" 
+                    size="sm" 
+                    className="rounded-circle"
+                    onClick={() => setShowThemePicker(true)}
+                    title="Change Theme"
+                  >
+                    <i className="fas fa-palette text-muted"></i>
+                  </Button>
                 </div>
               </div>
 
@@ -3180,6 +3953,31 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
                 >
                   <i className={`fas fa-rss ${activePane === 'feed' ? '' : 'text-muted'}`} style={{ width: 24 }}></i>
                   <span>Feed</span>
+                </Button>
+
+                <Button
+                  variant="link"
+                  className={`text-start d-flex align-items-center gap-3 px-3 py-3 rounded-3 border-0 text-decoration-none nav-btn ${showNotificationPanel ? 'active' : ''}`}
+                  onClick={() => setShowNotificationPanel(!showNotificationPanel)}
+                >
+                  <div className="position-relative">
+                    <i className={`fas fa-bell ${showNotificationPanel ? '' : 'text-muted'}`} style={{ width: 24 }}></i>
+                    {unreadNotificationCount > 0 && (
+                      <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style={{ fontSize: '0.6rem' }}>
+                        {unreadNotificationCount}
+                      </span>
+                    )}
+                  </div>
+                  <span>Notifications</span>
+                </Button>
+
+                <Button
+                  variant="link"
+                  className={`text-start d-flex align-items-center gap-3 px-3 py-3 rounded-3 border-0 text-decoration-none nav-btn ${activePane === 'settings' ? 'active' : ''}`}
+                  onClick={() => setActivePane('settings')}
+                >
+                  <i className={`fas fa-cog ${activePane === 'settings' ? '' : 'text-muted'}`} style={{ width: 24 }}></i>
+                  <span>Settings</span>
                 </Button>
 
                 {portalMeta.can_access_admin && (
@@ -3235,24 +4033,24 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
         <div className={`flex-grow-1 ${student ? 'ms-lg-auto' : ''}`} style={{ marginLeft: 0, width: '100%' }}>
           <div className="container-fluid p-0">
             {student && (
-              <div className="d-lg-none p-2 d-flex gap-2 bg-white border-top position-fixed bottom-0 start-0 end-0 justify-content-around" style={{ zIndex: 900 }}>
-                {['profile', 'community', 'help', 'feed'].map(pane => (
+              <div className="d-lg-none p-1 d-flex bg-white border-top position-fixed bottom-0 start-0 end-0 justify-content-between" style={{ zIndex: 900 }}>
+                {['profile', 'community', 'help', 'feed', 'settings'].map(pane => (
                   <Button
                     key={pane}
                     variant={activePane === pane ? 'primary' : 'light'}
                     size="sm"
-                    className={`flex-grow-1 d-flex flex-column align-items-center gap-1 border-0 ${activePane === pane ? 'btn-primary' : 'btn-light'}`}
+                    className={`flex-grow-1 d-flex flex-column align-items-center justify-content-center gap-1 border-0 ${activePane === pane ? 'btn-primary' : 'btn-light'}`}
                     onClick={() => setActivePane(pane)}
-                    style={{ minHeight: '56px' }}
+                    style={{ minHeight: '56px', padding: '4px 0' }}
                   >
-                    <i className={`fas fa-${pane === 'profile' ? 'user' : pane === 'community' ? 'users' : pane === 'help' ? 'hands-helping' : 'rss'}`}></i>
-                    <span style={{ fontSize: '0.7rem' }}>{pane.charAt(0).toUpperCase() + pane.slice(1)}</span>
+                    <i className={`fas fa-${pane === 'profile' ? 'user' : pane === 'community' ? 'users' : pane === 'help' ? 'hands-helping' : pane === 'feed' ? 'rss' : 'cog'}`}></i>
+                    <span style={{ fontSize: '0.65rem' }}>{pane.charAt(0).toUpperCase() + pane.slice(1)}</span>
                   </Button>
                 ))}
               </div>
             )}
 
-            <div className="p-3 p-lg-5" style={{ maxWidth: 1200, marginLeft: 'auto', marginRight: 'auto' }}>
+            <div className={`p-3 p-lg-5 ${activePane === 'feed' ? 'p-0 p-lg-5' : ''}`} style={{ maxWidth: 1200, marginLeft: 'auto', marginRight: 'auto' }}>
               {/* Content Render */}
               <div className="fade-in-up">
                 {!student ? (
@@ -3502,6 +4300,20 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
                       </div>
                     )}
 
+                    {activePane === 'settings' && (
+                      <div className="row justify-content-center">
+                         <div className="col-lg-6">
+                           <div className="d-flex align-items-center justify-content-between mb-4">
+                             <div>
+                               <h2 className="fw-bold mb-1 text-dark">Settings</h2>
+                               <p className="text-muted mb-0">Manage your account and preferences.</p>
+                             </div>
+                           </div>
+                           {renderAccountPane()}
+                         </div>
+                      </div>
+                    )}
+
                     {activePane === 'analytics' && (
                       <div className="h-100">
                         <AnalyticsDashboard currentUser={student} />
@@ -3534,6 +4346,226 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
         ))}
       </ToastContainer>
 
+      {/* Theme Picker Modal */}
+      {showThemePicker && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0,0,0,0.7)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 2100,
+            padding: '1rem'
+          }}
+          onClick={() => setShowThemePicker(false)}
+        >
+          <div
+            style={{
+              background: 'var(--color-surface)',
+              borderRadius: '20px',
+              padding: '2rem',
+              maxWidth: '600px',
+              width: '100%',
+              border: '2px solid var(--color-primary)',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.75rem',
+              marginBottom: '1.5rem'
+            }}>
+              <i className="fas fa-palette" style={{ fontSize: '1.75rem', color: 'var(--color-primary)' }}></i>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', margin: 0, color: 'var(--color-text)' }}>Choose Your Theme</h2>
+            </div>
+            
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+              gap: '1rem'
+            }}>
+              {[
+                { id: 'cyberpunk', name: 'Cyberpunk', primary: '#ff006e', secondary: '#00f5ff', accent: '#9d4edd' },
+                { id: 'ocean', name: 'Ocean Depths', primary: '#00d4ff', secondary: '#ff6b9d', accent: '#4ecdc4' },
+                { id: 'sunset', name: 'Desert Sunset', primary: '#ff8c42', secondary: '#ff6b9d', accent: '#ffd670' },
+                { id: 'forest', name: 'Forest Whisper', primary: '#7cb342', secondary: '#a8d5ba', accent: '#f4a460' },
+                { id: 'aurora', name: 'Northern Lights', primary: '#00ff87', secondary: '#b967ff', accent: '#05d9e8' },
+                { id: 'light', name: 'Clean Light', primary: '#5b7fff', secondary: '#ff6b9d', accent: '#ffd166' },
+                { id: 'dark', name: 'Midnight', primary: '#bb86fc', secondary: '#03dac6', accent: '#cf6679' }
+              ].map((themeOption) => {
+                const isActive = theme === themeOption.id;
+                
+                return (
+                  <button
+                    key={themeOption.id}
+                    onClick={() => {
+                      setTheme(themeOption.id);
+                      setShowThemePicker(false);
+                      enqueueToast({
+                        variant: 'success',
+                        title: 'Theme Changed',
+                        message: `Welcome to ${themeOption.name}!`
+                      });
+                    }}
+                    style={{
+                      background: isActive ? 'var(--color-bg)' : 'transparent',
+                      border: `2px solid ${isActive ? themeOption.primary : 'transparent'}`,
+                      borderRadius: '12px',
+                      padding: '1rem',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: '0.5rem'
+                    }}
+                    onMouseOver={(e) => {
+                      e.currentTarget.style.transform = 'scale(1.05)';
+                      e.currentTarget.style.borderColor = themeOption.primary;
+                    }}
+                    onMouseOut={(e) => {
+                      e.currentTarget.style.transform = 'scale(1)';
+                      if (!isActive) e.currentTarget.style.borderColor = 'transparent';
+                    }}
+                  >
+                    <div style={{ fontSize: '2rem' }}>
+                      {themeOption.id === 'cyberpunk' ? '⚡' :
+                       themeOption.id === 'ocean' ? '🌊' :
+                       themeOption.id === 'sunset' ? '🌅' :
+                       themeOption.id === 'forest' ? '🌲' :
+                       themeOption.id === 'aurora' ? '⭐' :
+                       themeOption.id === 'light' ? '☀️' :
+                       '🌙'}
+                    </div>
+                    <span style={{
+                      fontSize: '0.875rem',
+                      fontWeight: isActive ? 'bold' : 'normal',
+                      color: isActive ? themeOption.primary : 'var(--color-text)'
+                    }}>
+                      {themeOption.name}
+                    </span>
+                    <div style={{
+                      display: 'flex',
+                      gap: '4px',
+                      marginTop: '0.25rem'
+                    }}>
+                      {[themeOption.primary, themeOption.secondary, themeOption.accent].map((color, i) => (
+                        <div
+                          key={i}
+                          style={{
+                            width: '12px',
+                            height: '12px',
+                            borderRadius: '50%',
+                            background: color
+                          }}
+                        />
+                      ))}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Notification Panel */}
+      <Offcanvas 
+        show={showNotificationPanel} 
+        onHide={() => setShowNotificationPanel(false)} 
+        placement="end"
+        className="border-0 shadow-lg"
+      >
+        <Offcanvas.Header closeButton className="border-bottom">
+          <Offcanvas.Title className="fw-bold">
+            Notifications
+            {unreadNotificationCount > 0 && (
+              <Badge bg="danger" className="ms-2 rounded-pill">
+                {unreadNotificationCount}
+              </Badge>
+            )}
+          </Offcanvas.Title>
+        </Offcanvas.Header>
+        <Offcanvas.Body className="p-0">
+          {notifications.length === 0 ? (
+            <div className="text-center py-5 text-muted">
+              <i className="far fa-bell fa-3x mb-3 opacity-50"></i>
+              <p>No notifications yet</p>
+            </div>
+          ) : (
+            <ListGroup variant="flush">
+              {notifications.map((notif) => (
+                <ListGroup.Item 
+                  key={notif.id} 
+                  className={`p-3 border-bottom ${!notif.read ? 'bg-light' : ''}`}
+                  action
+                >
+                  <div className="d-flex justify-content-between align-items-start mb-1">
+                    <strong className={!notif.read ? 'text-primary' : 'text-dark'}>
+                      {notif.title}
+                    </strong>
+                    <small className="text-muted">
+                      {notif.timestamp ? formatConversationTimestamp(notif.timestamp) : 'Just now'}
+                    </small>
+                  </div>
+                  <p className="mb-2 text-muted small">{notif.message}</p>
+                  
+                  {/* Action Buttons for Follow Requests */}
+                  {notif.actionType === 'follow_request' && (
+                    <div className="d-flex gap-2 mt-2">
+                      <Button 
+                        size="sm" 
+                        variant="primary" 
+                        className="flex-grow-1"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleFollow(notif.userId, 'accept');
+                          markNotificationAsRead(notif.id);
+                        }}
+                      >
+                        Accept
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline-secondary" 
+                        className="flex-grow-1"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleFollow(notif.userId, 'reject');
+                          markNotificationAsRead(notif.id);
+                        }}
+                      >
+                        Reject
+                      </Button>
+                    </div>
+                  )}
+                </ListGroup.Item>
+              ))}
+            </ListGroup>
+          )}
+        </Offcanvas.Body>
+        {notifications.length > 0 && (
+          <div className="p-3 border-top bg-light">
+            <Button 
+              variant="outline-primary" 
+              size="sm" 
+              className="w-100"
+              onClick={markAllNotificationsAsRead}
+            >
+              Mark all as read
+            </Button>
+          </div>
+        )}
+      </Offcanvas>
+
       {/* Offcanvas Components */}
       <Offcanvas 
         show={showConversationPanel} 
@@ -3548,7 +4580,7 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
               <div className="d-flex align-items-center gap-3">
                 <div className="position-relative">
                   <div className="conversation-avatar shadow-sm">
-                    {buildInitials(activeConversation.first_name, activeConversation.last_name)}
+                    {renderAvatar(activeConversation)}
                   </div>
                   {activeConversation.is_online && (
                     <span className="position-absolute bottom-0 end-0 p-1 bg-success border border-white rounded-circle"></span>
@@ -3628,6 +4660,16 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
             <div ref={conversationEndRef} />
           </div>
 
+          {/* Typing Indicator */}
+          {isTyping && (
+            <div className="px-4 py-2 text-muted small fst-italic bg-white border-top">
+              <span className="typing-dots me-2">
+                <span>.</span><span>.</span><span>.</span>
+              </span>
+              {activeConversation.first_name} is typing
+            </div>
+          )}
+
           {/* Input Area */}
           <div className="p-3 bg-white border-top">
             <Form onSubmit={handleSendConversationMessage}>
@@ -3636,7 +4678,7 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
                   type="text"
                   placeholder="Type a message..."
                   value={messageDraft}
-                  onChange={(e) => setMessageDraft(e.target.value)}
+                  onChange={(e) => handleTyping(e)}
                   className="rounded-pill bg-light border-0 px-4 py-2"
                   autoFocus
                 />
@@ -3654,6 +4696,41 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
           </div>
         </Offcanvas.Body>
       </Offcanvas>
+
+      {/* Followers/Following Modal */}
+      <Modal show={showFollowModal} onHide={() => setShowFollowModal(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>{followModalType === 'followers' ? 'Followers' : 'Following'}</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {followListLoading ? (
+            <div className="text-center py-4">
+              <Spinner animation="border" />
+            </div>
+          ) : (
+            <div className="list-group list-group-flush">
+              {followList.map((user) => {
+                const isFollowing = (student?.following || []).includes(user.id);
+                return (
+                  <div key={user.id} className="list-group-item d-flex align-items-center gap-3 p-3">
+                    <div className="flex-grow-1">
+                      <div className="fw-semibold">{user.first_name} {user.last_name}</div>
+                      {user.study && <div className="small text-muted">{user.study}</div>}
+                    </div>
+                    {user.online ? <Badge bg="success">Online</Badge> : <small className="text-muted">Offline</small>}
+                  </div>
+                );
+              })}
+              {followList.length === 0 && (
+                <div className="text-center text-muted py-3">No users found</div>
+              )}
+            </div>
+          )}
+        </Modal.Body>
+      </Modal>
+
+      {/* Notification Panel */}
+
 
       <style jsx>{`
         .d-lg-flex {
@@ -3690,6 +4767,19 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
         .hover-danger:hover {
           background-color: #dc3545 !important;
           color: white !important;
+        }
+        .typing-dots span {
+          animation: typing 1.4s infinite ease-in-out both;
+          display: inline-block;
+          margin: 0 1px;
+          font-size: 1.5rem;
+          line-height: 0.5;
+        }
+        .typing-dots span:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dots span:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes typing {
+          0%, 80%, 100% { transform: scale(0); }
+          40% { transform: scale(1); }
         }
       `}</style>
     </>

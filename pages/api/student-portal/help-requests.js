@@ -1,4 +1,4 @@
-import connectDb from '../../../lib/db.js';
+import dbConnect from '../../../lib/dbConnect';
 import HelpRequest from '../../../models/HelpRequest.js';
 import { authenticateStudentFromRequest } from '../../../lib/studentPortalAuth.js';
 
@@ -105,7 +105,7 @@ async function listHelpRequests(viewer, scope) {
 
 export default async function handler(req, res) {
   try {
-    await connectDb();
+    await dbConnect();
     const authResult = await authenticateStudentFromRequest(req, res);
     if (authResult.error) {
       return res.status(authResult.status || 401).json({ error: authResult.error });

@@ -22,7 +22,7 @@ const PostSchema = new Schema(
     }],
     shares: [{
       type: Schema.Types.ObjectId,
-      ref: 'Post'
+      ref: 'Student'
     }],
     shared_from: {
       type: Schema.Types.ObjectId,

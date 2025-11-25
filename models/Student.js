@@ -255,7 +255,23 @@ const StudentSchema = new mongoose.Schema({
   help_offering: {
     type: String,
     trim: true,
-    default: ''
+    maxlength: 200
+  },
+  followers: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Student'
+  }],
+  following: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Student'
+  }],
+  followRequests: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Student'
+  }],
+  profile_picture: {
+    type: String,
+    default: null
   },
   linkedin_url: {
     type: String,
