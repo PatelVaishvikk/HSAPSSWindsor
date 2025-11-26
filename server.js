@@ -78,6 +78,20 @@ app.prepare().then(() => {
       socket.join('feed');
     });
 
+    socket.on('group:join', ({ groupId }) => {
+      if (groupId) {
+        socket.join(`group:${groupId}`);
+        console.log(`Socket ${socket.id} joined group:${groupId}`);
+      }
+    });
+
+    socket.on('group:leave', ({ groupId }) => {
+      if (groupId) {
+        socket.leave(`group:${groupId}`);
+        console.log(`Socket ${socket.id} left group:${groupId}`);
+      }
+    });
+
     socket.on('disconnect', () => {
       console.log('Client disconnected');
     });

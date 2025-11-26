@@ -20,8 +20,10 @@ import { io } from 'socket.io-client';
 import { STUDENT_PORTAL_FIELD_DEFS, STUDENT_PORTAL_FIELD_NAMES } from '../config/studentPortalFields.js';
 import AnalyticsDashboard from '../components/AnalyticsDashboard';
 import { useFeed } from '../hooks/useFeed';
+import StudySyncView from '../components/StudySyncView';
+import GroupsView from '../components/GroupsView';
 
-const DEFAULT_PASSWORD = 'dasnadas';
+const DEFAULT_PASSWORD = 'dasnadas'; // Force rebuild
 
 const passwordHint =
   'Use the password you created. First time here? Choose "Create Account" to register with your phone number.';
@@ -653,6 +655,7 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
     () => [
       { key: 'profile', label: 'My Profile', icon: 'fas fa-id-card' },
       { key: 'community', label: 'Community', icon: 'fas fa-users' },
+      { key: 'study-sync', label: 'Study Sync', icon: 'fas fa-fire' },
       { key: 'help', label: 'Help Board', icon: 'fas fa-hands-helping' },
       { key: 'account', label: 'Account', icon: 'fas fa-lock' }
     ],
@@ -826,7 +829,7 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
   const openConversationWithStudent = useCallback(
     async (target, presetMessage = '') => {
       const base = target?.student || target || {};
-      const targetId = base.id;
+      const targetId = base.id || base._id;
       if (!targetId) {
         return;
       }
@@ -1365,6 +1368,49 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
       conversationEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [conversationMessages, showConversationPanel]);
+
+  // Handle Invite Link
+  useEffect(() => {
+    const handleInvite = async () => {
+      if (!student) return;
+      
+      const urlParams = new URLSearchParams(window.location.search);
+      const inviteCode = urlParams.get('invite');
+      
+      if (inviteCode) {
+        try {
+          const res = await fetch('/api/student-portal/groups/join-via-link', {
+            method: 'POST',
+            headers: { ...portalAuthHeaders, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ inviteCode })
+          });
+          const data = await res.json();
+          
+          if (data.success) {
+            enqueueToast({
+              variant: 'success',
+              title: 'Joined Group',
+              message: data.message
+            });
+            // Clear URL param
+            window.history.replaceState({}, document.title, window.location.pathname);
+            // Switch to groups tab
+            setActivePane('groups');
+          } else {
+            enqueueToast({
+              variant: 'danger',
+              title: 'Join Failed',
+              message: data.message
+            });
+          }
+        } catch (error) {
+          console.error('Error joining via invite:', error);
+        }
+      }
+    };
+
+    handleInvite();
+  }, [student, portalAuthHeaders]);
 
   const handleFieldChange = (name, value) => {
     setFormData((prev) => ({
@@ -3638,16 +3684,45 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
           </ul>
         </Card.Body>
       </Card>
+
+
+      {portalMeta.can_access_admin && (
+        <Card className="border-0 shadow-sm mt-4">
+          <Card.Body>
+            <h5 className="fw-semibold mb-3">Admin Tools</h5>
+            <div className="d-flex flex-column gap-2">
+              <Button
+                variant="outline-primary"
+                className="text-start d-flex align-items-center gap-3"
+                onClick={() => setActivePane('analytics')}
+              >
+                <i className="fas fa-chart-line" style={{ width: 24 }}></i>
+                <span>Analytics Dashboard</span>
+              </Button>
+              {portalMeta.admin_shortcuts.map((shortcut, idx) => (
+                <Button
+                  key={idx}
+                  variant="outline-secondary"
+                  href={shortcut.href}
+                  className="text-start d-flex align-items-center gap-3"
+                >
+                  <i className={`${shortcut.icon} text-primary`} style={{ width: 24 }}></i>
+                  <span>{shortcut.label}</span>
+                </Button>
+              ))}
+            </div>
+          </Card.Body>
+        </Card>
+      )}
     </div>
   );
 
-       return (
+
+  return (
     <>
       <Head>
         <title>Student Portal | HSAPSS Windsor</title>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="true" />
-        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
         <style>{`
           :root {
             --bs-body-bg: var(--color-bg);
@@ -3863,6 +3938,14 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
               <Button 
                 variant="light" 
                 size="sm" 
+                onClick={() => setActivePane('study-sync')}
+                className="me-1"
+              >
+                <i className="fas fa-fire text-danger"></i>
+              </Button>
+              <Button 
+                variant="light" 
+                size="sm" 
                 onClick={() => setShowThemePicker(true)}
               >
                 <i className="fas fa-palette text-muted"></i>
@@ -3935,6 +4018,24 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
                 >
                   <i className={`fas fa-users ${activePane === 'community' ? '' : 'text-muted'}`} style={{ width: 24 }}></i>
                   <span>Community Hub</span>
+                </Button>
+
+                <Button
+                  variant="link"
+                  className={`text-start d-flex align-items-center gap-3 px-3 py-3 rounded-3 border-0 text-decoration-none nav-btn ${activePane === 'study-sync' ? 'active' : ''}`}
+                  onClick={() => setActivePane('study-sync')}
+                >
+                  <i className={`fas fa-fire ${activePane === 'study-sync' ? '' : 'text-muted'}`} style={{ width: 24 }}></i>
+                  <span>Study Sync</span>
+                </Button>
+
+                <Button
+                  variant="link"
+                  className={`text-start d-flex align-items-center gap-3 px-3 py-3 rounded-3 border-0 text-decoration-none nav-btn ${activePane === 'groups' ? 'active' : ''}`}
+                  onClick={() => setActivePane('groups')}
+                >
+                  <i className={`fas fa-comments ${activePane === 'groups' ? '' : 'text-muted'}`} style={{ width: 24 }}></i>
+                  <span>Groups</span>
                 </Button>
 
                 <Button
@@ -4033,8 +4134,8 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
         <div className={`flex-grow-1 ${student ? 'ms-lg-auto' : ''}`} style={{ marginLeft: 0, width: '100%' }}>
           <div className="container-fluid p-0">
             {student && (
-              <div className="d-lg-none p-1 d-flex bg-white border-top position-fixed bottom-0 start-0 end-0 justify-content-between" style={{ zIndex: 900 }}>
-                {['profile', 'community', 'help', 'feed', 'settings'].map(pane => (
+              <div className="d-lg-none p-1 d-flex bg-white border-top position-fixed bottom-0 start-0 end-0 justify-content-between" style={{ zIndex: 1100 }}>
+                {['profile', 'community', 'groups', 'study-sync', 'help', 'feed', 'settings'].map(pane => (
                   <Button
                     key={pane}
                     variant={activePane === pane ? 'primary' : 'light'}
@@ -4043,14 +4144,14 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
                     onClick={() => setActivePane(pane)}
                     style={{ minHeight: '56px', padding: '4px 0' }}
                   >
-                    <i className={`fas fa-${pane === 'profile' ? 'user' : pane === 'community' ? 'users' : pane === 'help' ? 'hands-helping' : pane === 'feed' ? 'rss' : 'cog'}`}></i>
-                    <span style={{ fontSize: '0.65rem' }}>{pane.charAt(0).toUpperCase() + pane.slice(1)}</span>
+                    <i className={`fas fa-${pane === 'profile' ? 'user' : pane === 'community' ? 'users' : pane === 'groups' ? 'comments' : pane === 'study-sync' ? 'fire' : pane === 'help' ? 'hands-helping' : pane === 'feed' ? 'rss' : 'cog'}`}></i>
+                    <span style={{ fontSize: '0.65rem' }}>{pane === 'study-sync' ? 'Sync' : pane.charAt(0).toUpperCase() + pane.slice(1)}</span>
                   </Button>
                 ))}
               </div>
             )}
 
-            <div className={`p-3 p-lg-5 ${activePane === 'feed' ? 'p-0 p-lg-5' : ''}`} style={{ maxWidth: 1200, marginLeft: 'auto', marginRight: 'auto' }}>
+            <div className={`p-3 p-lg-5 ${activePane === 'feed' ? 'p-0 p-lg-5' : ''}`} style={{ maxWidth: 1200, marginLeft: 'auto', marginRight: 'auto', paddingBottom: '100px' }}>
               {/* Content Render */}
               <div className="fade-in-up">
                 {!student ? (
@@ -4285,6 +4386,28 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
                     {activePane === 'community' && (
                       <div className="h-100">
                         {renderCommunityPane()}
+                      </div>
+                    )}
+
+                    {activePane === 'study-sync' && (
+                      <div className="h-100">
+                        <StudySyncView 
+                          student={student} 
+                          portalAuthHeaders={portalAuthHeaders}
+                          onConnect={(targetStudent) => {
+                            setActivePane('community');
+                            openConversationWithStudent(targetStudent);
+                          }}
+                        />
+                      </div>
+                    )}
+
+                    {activePane === 'groups' && (
+                      <div className="h-100">
+                        <GroupsView 
+                          student={student} 
+                          portalAuthHeaders={portalAuthHeaders}
+                        />
                       </div>
                     )}
 
@@ -4693,6 +4816,7 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
                 </Button>
               </div>
             </Form>
+            <div className="d-lg-none" style={{ height: 80 }}></div>
           </div>
         </Offcanvas.Body>
       </Offcanvas>
