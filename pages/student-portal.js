@@ -214,7 +214,7 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
     can_access_admin: false,
     admin_shortcuts: []
   });
-  const [activePane, setActivePane] = useState('profile');
+  const [activePane, setActivePane] = useState('feed');
   const [communityProfiles, setCommunityProfiles] = useState([]);
   const [communityLoading, setCommunityLoading] = useState(false);
   const [toasts, setToasts] = useState([]);
@@ -313,7 +313,21 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
       });
       if (res.ok) {
         const data = await res.json();
-        setNotifications(data.notifications);
+        // Map database notifications to frontend format
+        const mappedNotifications = data.notifications.map(notif => ({
+          id: notif._id,
+          _id: notif._id,
+          title: notif.title,
+          message: notif.message,
+          read: notif.read,
+          timestamp: notif.created_at,
+          type: notif.type,
+          actionType: notif.type, // For follow_request actions
+          userId: notif.data?.userId,
+          userName: notif.data?.userName,
+          sender: notif.sender
+        }));
+        setNotifications(mappedNotifications);
         setUnreadNotificationCount(data.unreadCount);
       }
     } catch (error) {
@@ -383,10 +397,10 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
 
   // Fetch notifications on mount
   useEffect(() => {
-    if (student?.id) {
+    if (student?._id) {
       fetchNotifications();
     }
-  }, [student?.id, fetchNotifications]);
+  }, [student?._id, fetchNotifications]);
 
   // Socket.IO Connection
   useEffect(() => {
@@ -2064,6 +2078,16 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
             return p;
          }));
       }
+    } else if (action === 'request') {
+       // Optimistic UI for Request
+       if (activePane === 'community') {
+         setCommunityProfiles(prev => prev.map(p => {
+            if (p.id === targetId || p._id === targetId) {
+              return { ...p, has_requested_follow: true };
+            }
+            return p;
+         }));
+       }
     } else if (action === 'unfollow') {
       setStudent(prev => ({
         ...prev,
@@ -2073,7 +2097,11 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
       if (activePane === 'community') {
          setCommunityProfiles(prev => prev.map(p => {
             if (p.id === targetId || p._id === targetId) {
-              return { ...p, followers: (p.followers || []).filter(id => id !== student._id) };
+              return { 
+                ...p, 
+                followers: (p.followers || []).filter(id => id !== student._id),
+                has_requested_follow: false
+              };
             }
             return p;
          }));
@@ -2835,14 +2863,31 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
                         {!profile.is_self && (
                           <Button
                             size="sm"
-                            variant={student.following?.includes(profile.id) ? "outline-secondary" : "primary"}
+                            variant={
+                              student.following?.includes(profile.id) 
+                                ? "outline-secondary" 
+                                : profile.has_requested_follow 
+                                  ? "secondary" 
+                                  : "primary"
+                            }
+                            disabled={profile.has_requested_follow}
                             onClick={() => {
                               const isFollowing = student.following?.includes(profile.id);
-                              handleFollow(profile.id, isFollowing ? 'unfollow' : 'follow');
+                              handleFollow(profile.id, isFollowing ? 'unfollow' : 'request');
                             }}
                           >
-                            <i className={`fas fa-${student.following?.includes(profile.id) ? 'user-check' : 'user-plus'} me-2`}></i>
-                            {student.following?.includes(profile.id) ? 'Following' : 'Follow'}
+                            <i className={`fas fa-${
+                              student.following?.includes(profile.id) 
+                                ? 'user-check' 
+                                : profile.has_requested_follow 
+                                  ? 'clock' 
+                                  : 'user-plus'
+                            } me-2`}></i>
+                            {student.following?.includes(profile.id) 
+                              ? 'Following' 
+                              : profile.has_requested_follow 
+                                ? 'Requested' 
+                                : 'Follow'}
                           </Button>
                         )}
                         {!profile.is_self && (
@@ -4642,7 +4687,7 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
                   <p className="mb-2 text-muted small">{notif.message}</p>
                   
                   {/* Action Buttons for Follow Requests */}
-                  {notif.actionType === 'follow_request' && (
+                  {(notif.actionType === 'follow_request' || notif.type === 'follow_request') && !notif.read && (
                     <div className="d-flex gap-2 mt-2">
                       <Button 
                         size="sm" 

@@ -190,6 +190,14 @@ export default async function handler(req, res) {
         id => id.toString() !== viewerId.toString()
       );
 
+      // Also remove from followRequests (cancel request)
+      target.followRequests = target.followRequests.filter(
+        id => id.toString() !== viewerId.toString()
+      );
+      viewer.followRequests = viewer.followRequests.filter(
+        id => id.toString() !== targetObjectId.toString()
+      );
+
       await viewer.save();
       await target.save();
 
