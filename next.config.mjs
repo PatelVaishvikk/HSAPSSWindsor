@@ -13,7 +13,7 @@ const nextConfig = {
         };
         return config;
     },
-    transpilePackages: ['react-data-table-component'],
+
     experimental: {
         esmExternals: true
     }
