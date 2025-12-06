@@ -23,6 +23,10 @@ const GroupSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: 'Student'
     }],
+    join_requests: [{
+      type: Schema.Types.ObjectId,
+      ref: 'Student'
+    }],
     last_message_at: {
       type: Date,
       default: Date.now
@@ -30,6 +34,23 @@ const GroupSchema = new Schema(
     created_at: {
       type: Date,
       default: Date.now
+    },
+    invite_code: {
+      type: String,
+      unique: true,
+      sparse: true
+    },
+    created_by: {
+      type: Schema.Types.ObjectId,
+      ref: 'Student'
+    },
+    icon: {
+      type: String,
+      default: 'users'
+    },
+    is_public: {
+      type: Boolean,
+      default: true
     }
   },
   {

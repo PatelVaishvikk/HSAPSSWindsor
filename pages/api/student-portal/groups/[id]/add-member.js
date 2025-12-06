@@ -51,6 +51,10 @@ export default async function handler(req, res) {
     group.members.push(studentToAdd._id);
     await group.save();
 
+    if (global.io) {
+      global.io.to(`group:${id}`).emit('group:member_updated');
+    }
+
     res.status(200).json({ success: true, message: 'Member added successfully' });
   } catch (error) {
     console.error('Error adding member:', error);

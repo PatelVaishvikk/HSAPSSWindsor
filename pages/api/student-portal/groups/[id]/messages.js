@@ -69,6 +69,32 @@ export default async function handler(req, res) {
     }
   }
 
-  res.setHeader('Allow', ['GET', 'POST']);
+  if (method === 'DELETE') {
+    try {
+      const group = await Group.findById(id);
+      if (!group) {
+        return res.status(404).json({ error: 'Group not found' });
+      }
+
+      const isAdmin = group.admins.some(adminId => adminId.toString() === session.student._id.toString());
+      if (!isAdmin) {
+        return res.status(403).json({ error: 'Only admins can clear chat' });
+      }
+
+      await GroupMessage.deleteMany({ group: id });
+
+      // Emit socket event to clear chat on clients
+      if (global.io) {
+        global.io.to(`group:${id}`).emit('group:chat_cleared');
+      }
+
+      return res.status(200).json({ success: true, message: 'Chat cleared' });
+    } catch (error) {
+      console.error('Error clearing chat:', error);
+      return res.status(500).json({ error: 'Failed to clear chat' });
+    }
+  }
+
+  res.setHeader('Allow', ['GET', 'POST', 'DELETE']);
   res.status(405).end(`Method ${method} Not Allowed`);
 }
