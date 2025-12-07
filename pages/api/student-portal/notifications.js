@@ -50,6 +50,26 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Invalid request' });
     }
 
+    else if (req.method === 'DELETE') {
+      const { clearAllRead } = req.query;
+      
+      // Check query param first for clearAllRead
+      if (clearAllRead === 'true') {
+        await Notification.deleteMany({ recipient: student._id, read: true });
+        return res.status(200).json({ success: true, message: 'Read notifications cleared' });
+      }
+
+      // Handle single notification delete via body or query
+      const notificationId = req.body?.notificationId || req.query.notificationId;
+
+      if (notificationId) {
+        await Notification.findOneAndDelete({ _id: notificationId, recipient: student._id });
+        return res.status(200).json({ success: true });
+      }
+
+      return res.status(400).json({ error: 'Invalid delete request' });
+    }
+    
     else {
       return res.status(405).json({ error: 'Method not allowed' });
     }

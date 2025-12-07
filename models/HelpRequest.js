@@ -43,6 +43,27 @@ const HelpRequestSchema = new Schema({
     type: [String],
     default: []
   },
+  category: {
+    type: String,
+    enum: ['Housing', 'Jobs', 'Rides', 'Academic', 'Food', 'General', 'Legal', 'Events'],
+    default: 'General',
+    index: true
+  },
+  urgency: {
+    type: String,
+    enum: ['Low', 'Medium', 'High'],
+    default: 'Medium',
+    index: true
+  },
+  location: {
+    type: String,
+    trim: true,
+    default: 'Windsor'
+  },
+  is_anonymous: {
+    type: Boolean,
+    default: false
+  },
   status: {
     type: String,
     enum: ['open', 'closed'],

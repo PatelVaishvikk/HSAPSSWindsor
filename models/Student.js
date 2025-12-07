@@ -257,6 +257,10 @@ const StudentSchema = new mongoose.Schema({
     trim: true,
     maxlength: 200
   },
+  reputation_points: {
+    type: Number,
+    default: 0
+  },
   followers: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Student'
