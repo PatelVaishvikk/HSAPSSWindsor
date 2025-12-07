@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo, Fragment } from 'react';
 import Head from 'next/head';
 import {
   Alert,
@@ -22,6 +22,7 @@ import AnalyticsDashboard from '../components/AnalyticsDashboard';
 import { useFeed } from '../hooks/useFeed';
 import StudySyncView from '../components/StudySyncView';
 import GroupsView from '../components/GroupsView';
+import DigitalLibrary from '../components/DigitalLibrary';
 
 const DEFAULT_PASSWORD = 'dasnadas'; // Force rebuild
 
@@ -220,44 +221,62 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
   const [toasts, setToasts] = useState([]);
   const [conversationStarter, setConversationStarter] = useState('');
 
-  const removeToast = (id) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
-  };
   const [communityError, setCommunityError] = useState('');
   const [communitySearch, setCommunitySearch] = useState('');
   const [communityInitialized, setCommunityInitialized] = useState(false);
+
   const [inboxThreads, setInboxThreads] = useState([]);
   const [inboxLoading, setInboxLoading] = useState(false);
   const [inboxError, setInboxError] = useState('');
   const [inboxInitialized, setInboxInitialized] = useState(false);
+
   const [activeConversation, setActiveConversation] = useState(null);
   const [conversationMessages, setConversationMessages] = useState([]);
   const [conversationLoading, setConversationLoading] = useState(false);
   const [conversationError, setConversationError] = useState('');
   const [messageDraft, setMessageDraft] = useState('');
   const [showConversationPanel, setShowConversationPanel] = useState(false);
+
+  const removeToast = (id) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  };
+
+  // Help Board State
   const [helpRequests, setHelpRequests] = useState([]);
-  const [helpScope, setHelpScope] = useState('open');
   const [helpLoading, setHelpLoading] = useState(false);
   const [helpError, setHelpError] = useState('');
   const [helpSuccess, setHelpSuccess] = useState('');
+  const [helpScope, setHelpScope] = useState('open');
+  const [filterCategory, setFilterCategory] = useState('');
+  const [filterLocation, setFilterLocation] = useState('Windsor');
+  const [helpForm, setHelpForm] = useState({
+    title: '',
+    description: '',
+    tags: '',
+    category: '',
+    urgency: 'Medium',
+    location: 'Windsor',
+    is_anonymous: false
+  });
   const [helpSubmitLoading, setHelpSubmitLoading] = useState(false);
-  const [helpForm, setHelpForm] = useState({ title: '', description: '', tags: '' });
   const [responseDrafts, setResponseDrafts] = useState({});
   const [respondingRequestId, setRespondingRequestId] = useState('');
+  
+  // Password State
   const [passwordForm, setPasswordForm] = useState({ current: '', next: '', confirm: '' });
   const [passwordLoading, setPasswordLoading] = useState(false);
-  const [passwordSuccess, setPasswordSuccess] = useState('');
   const [passwordError, setPasswordError] = useState('');
-  
-  // Social Features State
-  const [showFollowModal, setShowFollowModal] = useState(false);
+  const [passwordSuccess, setPasswordSuccess] = useState('');
+
   const [followModalType, setFollowModalType] = useState('followers');
+  const [showFollowModal, setShowFollowModal] = useState(false);
   const [followList, setFollowList] = useState([]);
   const [followListLoading, setFollowListLoading] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [showNotificationPanel, setShowNotificationPanel] = useState(false);
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
+  const [markingAll, setMarkingAll] = useState(false);
+  const [clearingRead, setClearingRead] = useState(false);
   
   // Advanced Theme System - Start with a default to avoid hydration mismatch
   const [theme, setTheme] = useState('cyberpunk');
@@ -272,7 +291,7 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
   const socketRef = useRef(null);
   const activeConversationRef = useRef(null);
   const inboxThreadsRef = useRef([]);
-  const helpScopeRef = useRef('open');
+
   const portalAuthHeadersRef = useRef(null);
   const typingTimeoutRef = useRef(null);
   const [toastQueue, setToastQueue] = useState([]);
@@ -305,6 +324,80 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
     setToastQueue((prev) => prev.filter((toast) => toast.id !== id));
   }, []);
 
+  // Refs for stable callback access
+  const helpScopeRef = useRef(helpScope);
+  const filterCategoryRef = useRef(filterCategory);
+  const filterLocationRef = useRef(filterLocation);
+  const portalAuthHeadersSyncRef = useRef(portalAuthHeadersRef.current);
+
+  // Sync refs with state
+  useEffect(() => {
+    helpScopeRef.current = helpScope;
+    filterCategoryRef.current = filterCategory;
+    filterLocationRef.current = filterLocation;
+    portalAuthHeadersSyncRef.current = portalAuthHeadersRef.current;
+  }, [helpScope, filterCategory, filterLocation]);
+
+  const refreshHelpRequests = useCallback(
+    async (scopeValue, catValue, locValue) => {
+      // Use explicit arguments if provided, otherwise fallback to Refs (current state)
+      // This makes the function robust against argument-less calls while keeping it stable
+       
+      const headers = portalAuthHeadersSyncRef.current || portalAuthHeadersRef.current;
+      if (!headers) {
+        setHelpLoading(false);
+        return;
+      }
+
+      setHelpLoading(true);
+      setHelpError('');
+
+      try {
+        const params = new URLSearchParams();
+        
+        // Resolve values: Argument > Ref (State) > Default
+        const currentScope = scopeValue !== undefined ? scopeValue : (helpScopeRef.current || 'open');
+        params.set('scope', currentScope);
+        
+        if (currentScope === 'open') {
+             const cat = catValue !== undefined ? catValue : filterCategoryRef.current;
+             const loc = locValue !== undefined ? locValue : filterLocationRef.current;
+
+             if (cat) params.set('category', cat);
+             if (loc) params.set('location', loc);
+        }
+
+        const url = `/api/student-portal/help-requests?${params.toString()}`;
+        
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: headers
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.error || 'Unable to load help board right now.');
+        }
+        
+        const requests = Array.isArray(data.requests) ? data.requests : [];
+        setHelpRequests(requests);
+      } catch (error) {
+        console.error('[HELP] Student help board fetch failed:', error);
+        setHelpError(error.message || 'Unable to load help board right now.');
+      } finally {
+        setHelpLoading(false);
+      }
+    },
+    [] // Stable identity - no dependencies
+  );
+  
+  // Trigger refresh when filters change
+  useEffect(() => {
+      if (student?._id) {
+          refreshHelpRequests(helpScope, filterCategory, filterLocation);
+      }
+  }, [filterCategory, filterLocation, helpScope, student?._id, refreshHelpRequests]);
   // Notification helpers
   const fetchNotifications = useCallback(async () => {
     try {
@@ -377,12 +470,17 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
   };
 
   const markAllNotificationsAsRead = async () => {
+    if (markingAll || unreadNotificationCount === 0) return;
+    
+    setMarkingAll(true);
+    
     // Optimistic update
+    const previousUnreadCount = unreadNotificationCount;
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
     setUnreadNotificationCount(0);
 
     try {
-      await fetch('/api/student-portal/notifications', {
+      const resp = await fetch('/api/student-portal/notifications', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -390,8 +488,70 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
         },
         body: JSON.stringify({ markAll: true })
       });
+      
+      if (!resp.ok) throw new Error('Failed to update');
+      
+      enqueueToast({
+        variant: 'success',
+        title: 'Notifications Updated',
+        message: 'All notifications marked as read'
+      });
     } catch (error) {
       console.error('Failed to mark all notifications as read:', error);
+      // Revert if failed
+      setUnreadNotificationCount(previousUnreadCount);
+      fetchNotifications(); // Refetch to be safe
+      
+      enqueueToast({
+        variant: 'danger',
+        title: 'Update Failed',
+        message: 'Could not mark notifications as read'
+      });
+    } finally {
+      setMarkingAll(false);
+    }
+
+  };
+
+  const clearReadNotifications = async () => {
+    if (clearingRead) return;
+    
+    // Check if there are any read notifications to clear
+    const hasRead = notifications.some(n => n.read);
+    if (!hasRead) return;
+
+    setClearingRead(true);
+
+    // Optimistic: Remove read notifications
+    const previousNotifications = [...notifications];
+    setNotifications(prev => prev.filter(n => !n.read));
+
+    try {
+      const resp = await fetch('/api/student-portal/notifications?clearAllRead=true', {
+        method: 'DELETE',
+        headers: {
+          ...(portalAuthHeadersRef.current || {})
+        }
+      });
+      
+      if (!resp.ok) throw new Error('Failed to clear');
+      
+      enqueueToast({
+        variant: 'success',
+        title: 'Notifications Cleared',
+        message: 'Read notifications have been removed'
+      });
+    } catch (error) {
+      console.error('Failed to clear read notifications:', error);
+      // Revert
+      setNotifications(previousNotifications);
+      enqueueToast({
+        variant: 'danger',
+        title: 'Action Failed',
+        message: 'Could not clear notifications'
+      });
+    } finally {
+      setClearingRead(false);
     }
   };
 
@@ -929,44 +1089,7 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
     }
   }, [inboxThreads, openConversationWithStudent]);
 
-  const refreshHelpRequests = useCallback(
-    async (scopeValue) => {
-      const headers = portalAuthHeadersRef.current;
-      if (!headers) {
-        setHelpLoading(false);
-        return;
-      }
 
-      setHelpLoading(true);
-      setHelpError('');
-
-      try {
-        const params = new URLSearchParams();
-        params.set('scope', scopeValue || helpScopeRef.current || 'open');
-        const url = `/api/student-portal/help-requests?${params.toString()}`;
-        
-        const response = await fetch(url, {
-          method: 'GET',
-          headers: headers
-        });
-        
-        const data = await response.json();
-        
-        if (!response.ok) {
-          throw new Error(data.error || 'Unable to load help board right now.');
-        }
-        
-        const requests = Array.isArray(data.requests) ? data.requests : [];
-        setHelpRequests(requests);
-      } catch (error) {
-        console.error('[HELP] Student help board fetch failed:', error);
-        setHelpError(error.message || 'Unable to load help board right now.');
-      } finally {
-        setHelpLoading(false);
-      }
-    },
-    [] // No dependencies - uses refs only
-  );
 
   const handleIncomingMessage = useCallback(
     (payload = {}) => {
@@ -1371,11 +1494,7 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
     refreshInboxThreads
   ]);
 
-  useEffect(() => {
-    if (student && activePane === 'help' && helpRequests.length === 0 && !helpLoading) {
-      refreshHelpRequests('open');
-    }
-  }, [student, activePane, helpRequests.length, helpLoading, refreshHelpRequests]);
+
 
   useEffect(() => {
     if (showConversationPanel && conversationEndRef.current) {
@@ -1527,7 +1646,11 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
         body: JSON.stringify({
           title: trimmedTitle,
           description: helpForm.description,
-          tags: helpForm.tags
+          tags: helpForm.tags,
+          category: helpForm.category,
+          urgency: helpForm.urgency,
+          location: helpForm.location,
+          is_anonymous: helpForm.is_anonymous
         })
       });
       const data = await response.json().catch(() => ({}));
@@ -1537,11 +1660,8 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
 
       setHelpForm({ title: '', description: '', tags: '' });
 
-      if (helpScope === 'open') {
-        setHelpRequests((prev) => [data.request, ...prev]);
-      } else {
-        await refreshHelpRequests(helpScope);
-      }
+      // Fix: Always rely on refreshHelpRequests to avoid duplicates
+      await refreshHelpRequests(helpScope, filterCategory, filterLocation);
 
       setHelpSuccess('Your request has been posted for the community.');
     } catch (error) {
@@ -1554,7 +1674,7 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
 
   const handleHelpScopeChange = async (scopeValue) => {
     setHelpScope(scopeValue);
-    await refreshHelpRequests(scopeValue);
+    await refreshHelpRequests(scopeValue, filterCategory, filterLocation);
   };
 
   const handleResponseDraftChange = (requestId, value) => {
@@ -3207,64 +3327,166 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
         </Alert>
       )}
 
+      {/* Filter Options */}
+      <div className="mb-4">
+        <label className="form-label fw-bold small text-muted text-uppercase mb-2">Filter Requests</label>
+        <div className="d-flex gap-2 overflow-auto pb-2 no-scrollbar align-items-center">
+         <select 
+            value={filterCategory} 
+            onChange={(e) => setFilterCategory(e.target.value)}
+            className="form-select shadow-sm rounded-pill border-0"
+            style={{ width: 'auto', minWidth: '160px', cursor: 'pointer' }}
+         >
+             <option value="">🔮 All Categories</option>
+             {['Housing', 'Jobs', 'Rides', 'Academic', 'Food', 'General', 'Legal', 'Events'].map(c => 
+                <option key={c} value={c}>{c}</option>
+             )}
+         </select>
+         <select 
+            value={filterLocation} 
+            onChange={(e) => setFilterLocation(e.target.value)}
+             className="form-select shadow-sm rounded-pill border-0"
+             style={{ width: 'auto', minWidth: '160px', cursor: 'pointer' }}
+         >
+             <option value="">📍 All Locations</option>
+             {['Windsor', 'Brampton', 'Toronto', 'Waterloo', 'London', 'Ottawa'].map(l => 
+                <option key={l} value={l}>{l}</option>
+             )}
+         </select>
+         {(filterCategory || filterLocation) && (
+            <Button variant="link" className="text-muted text-decoration-none fw-semibold" onClick={() => { setFilterCategory(''); setFilterLocation(''); }}>
+               Clear
+            </Button>
+         )}
+      </div>
+      </div>
+
       <Card className="border-0 shadow-sm mb-4 help-form-card">
         <Card.Body>
           <h6 className="fw-semibold mb-3">
             <i className="fas fa-plus-circle me-2 text-primary"></i>
             Create a help request
           </h6>
-          <Form onSubmit={handleHelpRequestSubmit}>
+            <Form onSubmit={handleHelpRequestSubmit}>
             <div className="row g-3">
-              <div className="col-12 col-lg-6">
-                <Form.Group controlId="help-request-title">
-                  <Form.Label>What do you need help with?</Form.Label>
-                  <Form.Control
-                    type="text"
-                    placeholder="e.g. Interview prep, resume review, finding roommates"
-                    value={helpForm.title}
-                    onChange={(event) => handleHelpFieldChange('title', event.target.value)}
-                    required
-                  />
-                </Form.Group>
+              <div className="col-12">
+                 <Form.Group controlId="help-request-title">
+                   <Form.Label className="fw-semibold">I need help with...</Form.Label>
+                   <Form.Control
+                     type="text"
+                     placeholder="Briefly describe your request (e.g. Need a ride to Pearson)"
+                     value={helpForm.title}
+                     onChange={(event) => handleHelpFieldChange('title', event.target.value)}
+                     required
+                     className="form-control-lg border-0 bg-light"
+                   />
+                 </Form.Group>
               </div>
-              <div className="col-12 col-lg-6">
-                <Form.Group controlId="help-request-tags">
-                  <Form.Label>Topics</Form.Label>
-                  <Form.Control
-                    type="text"
-                    placeholder="Separate keywords with commas"
-                    value={helpForm.tags}
-                    onChange={(event) => handleHelpFieldChange('tags', event.target.value)}
-                  />
-                  <Form.Text className="text-muted small">
-                    Example: jobs, housing, immigration, networking
-                  </Form.Text>
-                </Form.Group>
+
+              {/* Category Selection Chips */}
+              <div className="col-12">
+                 <label className="form-label fw-semibold d-block">Category</label>
+                 <div className="d-flex flex-wrap gap-2">
+                    {['Housing', 'Jobs', 'Rides', 'Academic', 'Food', 'General', 'Legal', 'Events'].map(cat => (
+                       <Badge 
+                          key={cat} 
+                          bg={helpForm.category === cat ? 'primary' : 'light'} 
+                          text={helpForm.category === cat ? 'white' : 'dark'}
+                          className="p-2 cursor-pointer border user-select-none"
+                          onClick={() => handleHelpFieldChange('category', cat)}
+                          style={{ cursor: 'pointer' }}
+                       >
+                          {cat}
+                       </Badge>
+                    ))}
+                 </div>
               </div>
+
+              {/* Urgency & Location */}
+              <div className="col-12 col-md-6">
+                 <label className="form-label fw-semibold">Urgency</label>
+                 <div className="btn-group w-100" role="group">
+                    {['Low', 'Medium', 'High'].map(level => {
+                       let variant = 'outline-secondary';
+                       const isSelected = helpForm.urgency === level;
+                       if (level === 'Low') variant = isSelected ? 'success' : 'outline-success';
+                       if (level === 'Medium') variant = isSelected ? 'warning' : 'outline-warning';
+                       if (level === 'High') variant = isSelected ? 'danger' : 'outline-danger';
+                       
+                       return (
+                         <Fragment key={level}>
+                            <input
+                               type="radio"
+                               className="btn-check"
+                               name="urgency"
+                               id={`urgency-${level}`}
+                               autoComplete="off"
+                               checked={isSelected}
+                               onChange={() => handleHelpFieldChange('urgency', level)}
+                            />
+                            <label className={`btn btn-${variant}`} htmlFor={`urgency-${level}`}>{level}</label>
+                         </Fragment>
+                       ).props.children;
+                    })}
+                 </div>
+              </div>
+
+              <div className="col-12 col-md-6">
+                 <Form.Group controlId="help-request-location">
+                    <Form.Label className="fw-semibold">Location</Form.Label>
+                    <Form.Select 
+                       value={helpForm.location}
+                       onChange={(e) => handleHelpFieldChange('location', e.target.value)}
+                    >
+                       {['Windsor', 'Brampton', 'Toronto', 'Waterloo', 'London', 'Ottawa'].map(l => 
+                          <option key={l} value={l}>{l}</option>
+                       )}
+                    </Form.Select>
+                 </Form.Group>
+              </div>
+
               <div className="col-12">
                 <Form.Group controlId="help-request-description">
-                  <Form.Label>Details</Form.Label>
+                  <Form.Label className="fw-semibold">Details</Form.Label>
                   <Form.Control
                     as="textarea"
                     rows={3}
-                    placeholder="Share more context so the right person can respond."
+                    placeholder="Share more context..."
                     value={helpForm.description}
                     onChange={(event) => handleHelpFieldChange('description', event.target.value)}
+                    className="border-0 bg-light"
                   />
                 </Form.Group>
               </div>
+
+              {/* Anonymity Toggle */}
+              <div className="col-12 d-flex justify-content-between align-items-center">
+                 <Form.Check 
+                    type="switch"
+                    id="anonymous-switch"
+                    label={
+                       <span>
+                          <i className="fas fa-user-secret me-2"></i>
+                          Post Anonymously
+                       </span>
+                    }
+                    checked={helpForm.is_anonymous}
+                    onChange={(e) => handleHelpFieldChange('is_anonymous', e.target.checked)}
+                 />
+              </div>
+
             </div>
-            <div className="d-flex justify-content-end mt-3">
-              <Button type="submit" variant="primary" disabled={helpSubmitLoading}>
+            <div className="d-flex justify-content-end mt-4">
+              <Button type="submit" variant="primary" disabled={helpSubmitLoading} className="px-4 py-2 fw-bold shadow-sm">
                 {helpSubmitLoading ? (
                   <>
                     <Spinner animation="border" size="sm" className="me-2" role="status" />
-                    Posting...
+                    Connecting...
                   </>
                 ) : (
                   <>
-                    <i className="fas fa-paper-plane me-2"></i>
-                    Post Request
+                    <i className="fas fa-project-diagram me-2"></i>
+                    Smart Connect
                   </>
                 )}
               </Button>
@@ -3295,10 +3517,19 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
               <Card.Body>
                 <div className="d-flex flex-column flex-md-row justify-content-between gap-3">
                   <div>
-                    <div className="d-flex align-items-center gap-2 mb-1">
-                      <h6 className="fw-semibold mb-0">{request.title}</h6>
-                      <Badge bg={request.status === 'open' ? 'primary' : 'secondary'}>
-                        {request.status === 'open' ? 'Open' : 'Closed'}
+                    <div className="d-flex align-items-center gap-2 mb-2 flex-wrap">
+                      <Badge bg={
+                        request.urgency === 'High' ? 'danger' : 
+                        request.urgency === 'Medium' ? 'warning' : 'success'
+                      } className="text-uppercase" style={{ fontSize: '0.7rem' }}>
+                        {request.urgency || 'Medium'} Urgency
+                      </Badge>
+                      <Badge bg="dark" className="text-info border border-info">
+                         {request.category || 'General'}
+                      </Badge>
+                      <Badge bg="light" text="dark" className="border">
+                         <i className="fas fa-map-marker-alt me-1 text-danger"></i>
+                         {request.location || 'Windsor'}
                       </Badge>
                       {request.is_owner && (
                         <Badge bg="info" text="dark">
@@ -3306,28 +3537,56 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
                         </Badge>
                       )}
                     </div>
+                    
+                    <h6 className="fw-bold fs-5 mb-2">{request.title}</h6>
+                    
                     {request.student && (
-                      <div className="d-flex flex-column gap-1 mb-2 text-muted small">
-                        <span>
-                          {request.student.first_name} {request.student.last_name}
-                          {request.student.study && ` - ${request.student.study}`}
-                        </span>
-                        <div className="presence-line">
-                          <span
-                            className={`presence-dot ${request.student.online ? 'presence-dot-online' : ''}`}
-                            aria-hidden="true"
-                          ></span>
-                          {formatPresenceText(request.student.online, request.student.last_seen)}
-                        </div>
+                      <div className="d-flex align-items-center gap-2 mb-3">
+                         <div style={{ width: 32, height: 32 }} className="rounded-circle overflow-hidden bg-light border">
+                            {request.is_anonymous ? (
+                               <div className="w-100 h-100 d-flex align-items-center justify-content-center bg-dark text-white">
+                                  <i className="fas fa-user-secret"></i>
+                               </div>
+                            ) : request.student.profile_picture ? (
+                               <img src={request.student.profile_picture} className="w-100 h-100 object-fit-cover" alt="" /> 
+                            ) : (
+                               <div className="w-100 h-100 d-flex align-items-center justify-content-center bg-secondary text-white small fw-bold">
+                                  {buildInitials(request.student.first_name, request.student.last_name)}
+                               </div>
+                            )}
+                         </div>
+                         <div className="lh-1">
+                            <div className="fw-semibold small">
+                               {request.is_anonymous ? 'Secret Student' : `${request.student.first_name} ${request.student.last_name}`}
+                               {!request.is_anonymous && request.student.reputation_points > 10 && (
+                                  <i className="fas fa-star text-warning ms-1" title="Top Helper"></i>
+                               )}
+                            </div>
+                            <div className="text-muted" style={{ fontSize: '0.75rem' }}>
+                               {request.is_anonymous ? 'Anonymous' : (request.student.study || 'Student')}
+                            </div>
+                         </div>
                       </div>
                     )}
+
                     {request.description && (
-                      <p className="text-muted small mb-2">{request.description}</p>
+                      <p className="text-muted small mb-3 bg-light p-3 rounded">{request.description}</p>
                     )}
+                    
+                    {/* Smart Match Simulation */}
+                    {request.match_count > 0 && request.status === 'open' && (
+                       <div className="mb-2">
+                          <Badge bg="success-subtle" text="success-emphasis" className="border border-success-subtle">
+                             <i className="fas fa-bolt me-1"></i>
+                             {request.match_count} potential helpers notified
+                          </Badge>
+                       </div>
+                    )}
+
                     {request.tags?.length > 0 && (
                       <div className="d-flex flex-wrap gap-2 mb-2">
                         {request.tags.map((tag) => (
-                          <span key={`${request.id}-tag-${tag}`} className="badge rounded-pill bg-primary-subtle text-primary-emphasis">
+                          <span key={`${request.id}-tag-${tag}`} className="badge rounded-pill bg-light text-muted border">
                             #{tag}
                           </span>
                         ))}
@@ -4094,6 +4353,15 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
 
                 <Button
                   variant="link"
+                  className={`text-start d-flex align-items-center gap-3 px-3 py-3 rounded-3 border-0 text-decoration-none nav-btn ${activePane === 'library' ? 'active' : ''}`}
+                  onClick={() => setActivePane('library')}
+                >
+                  <i className={`fas fa-book ${activePane === 'library' ? '' : 'text-muted'}`} style={{ width: 24 }}></i>
+                  <span>The Archive</span>
+                </Button>
+
+                <Button
+                  variant="link"
                   className={`text-start d-flex align-items-center gap-3 px-3 py-3 rounded-3 border-0 text-decoration-none nav-btn ${activePane === 'feed' ? 'active' : ''}`}
                   onClick={() => setActivePane('feed')}
                 >
@@ -4180,7 +4448,7 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
           <div className="container-fluid p-0">
             {student && (
               <div className="d-lg-none p-1 d-flex bg-white border-top position-fixed bottom-0 start-0 end-0 justify-content-between" style={{ zIndex: 1100 }}>
-                {['profile', 'community', 'groups', 'study-sync', 'help', 'feed', 'settings'].map(pane => (
+                {['profile', 'community', 'groups', 'study-sync', 'help', 'library', 'feed', 'settings'].map(pane => (
                   <Button
                     key={pane}
                     variant={activePane === pane ? 'primary' : 'light'}
@@ -4189,8 +4457,8 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
                     onClick={() => setActivePane(pane)}
                     style={{ minHeight: '56px', padding: '4px 0' }}
                   >
-                    <i className={`fas fa-${pane === 'profile' ? 'user' : pane === 'community' ? 'users' : pane === 'groups' ? 'comments' : pane === 'study-sync' ? 'fire' : pane === 'help' ? 'hands-helping' : pane === 'feed' ? 'rss' : 'cog'}`}></i>
-                    <span style={{ fontSize: '0.65rem' }}>{pane === 'study-sync' ? 'Sync' : pane.charAt(0).toUpperCase() + pane.slice(1)}</span>
+                    <i className={`fas fa-${pane === 'profile' ? 'user' : pane === 'community' ? 'users' : pane === 'groups' ? 'comments' : pane === 'study-sync' ? 'fire' : pane === 'help' ? 'hands-helping' : pane === 'library' ? 'book' : pane === 'feed' ? 'rss' : 'cog'}`}></i>
+                    <span style={{ fontSize: '0.65rem' }}>{pane === 'study-sync' ? 'Sync' : pane === 'library' ? 'Archive' : pane.charAt(0).toUpperCase() + pane.slice(1)}</span>
                   </Button>
                 ))}
               </div>
@@ -4462,6 +4730,12 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
                       </div>
                     )}
 
+                    {activePane === 'library' && (
+                      <div className="h-100">
+                        <DigitalLibrary currentUser={student} portalAuthHeaders={portalAuthHeadersRef.current} />
+                      </div>
+                    )}
+
                     {activePane === 'feed' && (
                       <div className="h-100">
                         {renderFeedPane()}
@@ -4720,16 +4994,45 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
             </ListGroup>
           )}
         </Offcanvas.Body>
-        {notifications.length > 0 && (
-          <div className="p-3 border-top bg-light">
-            <Button 
-              variant="outline-primary" 
-              size="sm" 
-              className="w-100"
-              onClick={markAllNotificationsAsRead}
-            >
-              Mark all as read
-            </Button>
+        {(unreadNotificationCount > 0 || notifications.some(n => n.read)) && (
+          <div className="p-3 border-top bg-light d-flex flex-column gap-2">
+            {unreadNotificationCount > 0 && (
+              <Button 
+                variant="outline-primary" 
+                size="sm" 
+                className="w-100"
+                onClick={markAllNotificationsAsRead}
+                disabled={markingAll}
+              >
+                {markingAll ? (
+                  <>
+                    <Spinner size="sm" animation="border" className="me-2" />
+                    Marking as read...
+                  </>
+                ) : (
+                  'Mark all as read'
+                )}
+              </Button>
+            )}
+            
+            {notifications.some(n => n.read) && (
+              <Button 
+                variant="outline-secondary" 
+                size="sm" 
+                className="w-100"
+                onClick={clearReadNotifications}
+                disabled={clearingRead}
+              >
+                 {clearingRead ? (
+                  <>
+                    <Spinner size="sm" animation="border" className="me-2" />
+                    Clearing...
+                  </>
+                ) : (
+                  'Clear read notifications'
+                )}
+              </Button>
+            )}
           </div>
         )}
       </Offcanvas>
