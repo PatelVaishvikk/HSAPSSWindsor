@@ -76,35 +76,180 @@ npm start
 
 ```
 HSAPSSWindsor/
-├── components/          # React components
+├── components/              # React components
+│   ├── AINetworkingPanel.js
 │   ├── AnalyticsDashboard.js
+│   ├── BirthdayReminder.js
+│   ├── Chart.js
+│   ├── ChatBot.js
+│   ├── ChatWidget.js
+│   ├── DarkModeToggle.js
 │   ├── DashboardStats.js
-│   ├── GroupsView.js
-│   ├── StudySyncView.js
 │   ├── DigitalLibrary.js
-│   └── ...
-├── config/             # Configuration files
-├── data/               # Static data files
-├── hooks/              # Custom React hooks
-├── lib/                # Utility libraries
-│   ├── analytics-engine.js
-│   └── studentPortalAuth.js
-├── models/             # MongoDB models
-│   ├── Student.js
+│   ├── GroupsView.js
+│   ├── Modal.js
+│   ├── Navbar.js
+│   ├── OpportunityFeed.js
+│   ├── RecentCalls.js
+│   ├── SkillVerificationWidget.js
+│   └── StudySyncView.js
+│
+├── config/                  # Configuration files
+│   ├── db.js               # Database configuration
+│   └── studentPortalFields.js
+│
+├── data/                    # Static data files
+│   └── librarySeed.js      # Library seed data
+│
+├── hooks/                   # Custom React hooks
+│   └── useFeed.js          # Feed management hook
+│
+├── lib/                     # Utility libraries
+│   ├── adminAuth.js        # Admin authentication
+│   ├── adminPage.js
+│   ├── adminRoute.js
+│   ├── ai-engine.js        # AI functionality engine
+│   ├── analytics-engine.js # Analytics processing
+│   ├── db.js               # Database utilities
+│   ├── dbConnect.js        # MongoDB connection
+│   ├── portalAdmin.js
+│   ├── portalSession.js    # Session management
+│   ├── studentPortalAuth.js # Student authentication
+│   └── studentPortalUtils.js
+│
+├── models/                  # MongoDB Mongoose models
+│   ├── Achievement.js
 │   ├── Attendance.js
 │   ├── CallLog.js
+│   ├── Comment.js
+│   ├── CommunityMessage.js
+│   ├── GroceryItem.js
 │   ├── Group.js
-│   └── ...
-├── pages/              # Next.js pages
-│   ├── api/           # API routes
-│   ├── admin/         # Admin pages
-│   ├── student-portal.js
-│   ├── attendance.js
-│   ├── call-logs.js
-│   └── ...
-├── public/            # Static assets
-├── styles/            # CSS styles
-└── middleware.js      # Next.js middleware
+│   ├── GroupMessage.js
+│   ├── HelpRequest.js
+│   ├── LearningPath.js
+│   ├── Notification.js
+│   ├── Opportunity.js
+│   ├── Portfolio.js
+│   ├── Post.js
+│   ├── Resource.js
+│   ├── SabhaGrocery.js
+│   ├── Skill.js
+│   ├── Student.js
+│   ├── StudyProfile.js
+│   └── Workspace.js
+│
+├── pages/                   # Next.js pages and routing
+│   ├── admin/              # Admin dashboard pages
+│   │   ├── dashboard.js
+│   │   └── login.js
+│   │
+│   ├── api/                # API routes
+│   │   ├── admin/         # Admin API endpoints
+│   │   │   ├── login.js
+│   │   │   ├── logout.js
+│   │   │   └── session.js
+│   │   │
+│   │   ├── ai/            # AI-related endpoints
+│   │   │   ├── conversation-starter.js
+│   │   │   └── networking.js
+│   │   │
+│   │   ├── analytics/     # Analytics endpoints
+│   │   │   └── personal.js
+│   │   │
+│   │   ├── attendance/    # Attendance management
+│   │   │   └── dates.js
+│   │   │
+│   │   ├── notifications/ # Notification system
+│   │   │   └── birthdays.js
+│   │   │
+│   │   ├── opportunities/ # Opportunity management
+│   │   │   ├── [oppId]/   # Dynamic opportunity routes
+│   │   │   └── index.js
+│   │   │
+│   │   ├── student-portal/ # Student portal APIs
+│   │   │   ├── groups/
+│   │   │   │   ├── [id]/
+│   │   │   │   ├── index.js
+│   │   │   │   └── join-via-link.js
+│   │   │   ├── resources/
+│   │   │   │   └── seed.js
+│   │   │   ├── study-sync/
+│   │   │   │   ├── matches.js
+│   │   │   │   └── profile.js
+│   │   │   ├── community.js
+│   │   │   ├── follow.js
+│   │   │   ├── followers.js
+│   │   │   ├── help-requests.js
+│   │   │   ├── login.js
+│   │   │   ├── logout.js
+│   │   │   ├── messages.js
+│   │   │   ├── notifications.js
+│   │   │   ├── password.js
+│   │   │   ├── post-actions.js
+│   │   │   ├── posts.js
+│   │   │   ├── register.js
+│   │   │   ├── update.js
+│   │   │   └── upload-profile-picture.js
+│   │   │
+│   │   ├── students/      # Student CRUD operations
+│   │   │   └── [id].js    # Dynamic student routes
+│   │   │
+│   │   ├── attendance.js
+│   │   ├── call-logs.js
+│   │   ├── chat.js
+│   │   ├── dashboard-stats.js
+│   │   ├── grocery.js
+│   │   ├── sabha-grocery.js
+│   │   ├── students.js
+│   │   └── whatsapp.js
+│   │
+│   ├── 404.js              # Custom 404 page
+│   ├── _app.js             # Next.js app wrapper
+│   ├── _document.js        # Custom document
+│   ├── add-student.js      # Add student page
+│   ├── add-yuvak.js        # Add yuvak page
+│   ├── attendance.js       # Attendance tracking
+│   ├── call-logs.js        # Call logs management
+│   ├── chat.js
+│   ├── full-student-list.js
+│   ├── grocery.js          # Grocery management
+│   ├── index.js            # Home page
+│   ├── login.js            # Login page
+│   ├── moved-out-students.js
+│   ├── student-portal.js   # Main student portal
+│   └── students-table.js   # Student table view
+│
+├── public/                  # Static assets
+│   ├── images/             # Image assets
+│   │   ├── favicon.png.jpg
+│   │   └── loader.gif
+│   ├── profile-pics/       # Student profile pictures
+│   ├── styles/             # Public stylesheets (HTML files)
+│   ├── hs.jpg
+│   ├── windsor.jpg
+│   ├── add-yuvak.html
+│   ├── call-logs-table.html
+│   ├── round.html
+│   ├── students-table.html
+│   ├── test-login.html
+│   └── *.svg               # SVG icons (file.svg, globe.svg, next.svg, vercel.svg, window.svg)
+│
+├── styles/                  # CSS stylesheets
+│   ├── Attendance.module.css
+│   ├── global.css
+│   ├── globals.css
+│   └── professional-theme.css
+│
+├── middleware.js            # Next.js middleware
+├── server.js               # Custom Express server with Socket.IO
+├── next.config.mjs         # Next.js configuration
+├── tailwind.config.mjs     # Tailwind CSS configuration
+├── postcss.config.mjs      # PostCSS configuration
+├── eslint.config.mjs       # ESLint configuration
+├── jsconfig.json           # JavaScript configuration
+├── package.json            # Dependencies and scripts
+└── .gitignore              # Git ignore rules
 ```
 
 ## 🛠️ Tech Stack
