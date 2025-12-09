@@ -1,0 +1,18 @@
+{
+    "watch": [
+        "server.js",
+        "pages",
+        "lib",
+        "models",
+        "components",
+        "config"
+    ],
+    "ignore": [
+        ".next",
+        "node_modules",
+        "public",
+        "*.log"
+    ],
+    "ext": "js,mjs,json",
+    "exec": "node server.js"
+}

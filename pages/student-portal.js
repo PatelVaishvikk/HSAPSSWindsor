@@ -122,9 +122,9 @@ const buildInitials = (first = '', last = '') => {
 const renderAvatar = (profile) => {
   if (profile?.profile_picture) {
     return (
-      <img 
-        src={profile.profile_picture} 
-        alt={`${profile.first_name} ${profile.last_name}`} 
+      <img
+        src={profile.profile_picture}
+        alt={`${profile.first_name} ${profile.last_name}`}
         className="w-100 h-100 rounded-circle object-fit-cover"
       />
     );
@@ -189,7 +189,7 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
   const [registerConfirm, setRegisterConfirm] = useState('');
   const [authMode, setAuthMode] = useState('login');
   const [student, setStudent] = useState(initialStudent || null);
-  
+
   const [formData, setFormData] = useState(() => {
     const base = buildInitialFormState();
     if (initialStudent) {
@@ -261,7 +261,7 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
   const [helpSubmitLoading, setHelpSubmitLoading] = useState(false);
   const [responseDrafts, setResponseDrafts] = useState({});
   const [respondingRequestId, setRespondingRequestId] = useState('');
-  
+
   // Password State
   const [passwordForm, setPasswordForm] = useState({ current: '', next: '', confirm: '' });
   const [passwordLoading, setPasswordLoading] = useState(false);
@@ -277,12 +277,12 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
   const [markingAll, setMarkingAll] = useState(false);
   const [clearingRead, setClearingRead] = useState(false);
-  
+
   // Advanced Theme System - Start with a default to avoid hydration mismatch
   const [theme, setTheme] = useState('cyberpunk');
   const [showThemePicker, setShowThemePicker] = useState(false);
   const [themeLoaded, setThemeLoaded] = useState(false);
-  
+
   // Follow Requests State
   const [followRequests, setFollowRequests] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
@@ -342,7 +342,7 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
     async (scopeValue, catValue, locValue) => {
       // Use explicit arguments if provided, otherwise fallback to Refs (current state)
       // This makes the function robust against argument-less calls while keeping it stable
-       
+
       const headers = portalAuthHeadersSyncRef.current || portalAuthHeadersRef.current;
       if (!headers) {
         setHelpLoading(false);
@@ -354,32 +354,32 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
 
       try {
         const params = new URLSearchParams();
-        
+
         // Resolve values: Argument > Ref (State) > Default
         const currentScope = scopeValue !== undefined ? scopeValue : (helpScopeRef.current || 'open');
         params.set('scope', currentScope);
-        
-        if (currentScope === 'open') {
-             const cat = catValue !== undefined ? catValue : filterCategoryRef.current;
-             const loc = locValue !== undefined ? locValue : filterLocationRef.current;
 
-             if (cat) params.set('category', cat);
-             if (loc) params.set('location', loc);
+        if (currentScope === 'open') {
+          const cat = catValue !== undefined ? catValue : filterCategoryRef.current;
+          const loc = locValue !== undefined ? locValue : filterLocationRef.current;
+
+          if (cat) params.set('category', cat);
+          if (loc) params.set('location', loc);
         }
 
         const url = `/api/student-portal/help-requests?${params.toString()}`;
-        
+
         const response = await fetch(url, {
           method: 'GET',
           headers: headers
         });
-        
+
         const data = await response.json();
-        
+
         if (!response.ok) {
           throw new Error(data.error || 'Unable to load help board right now.');
         }
-        
+
         const requests = Array.isArray(data.requests) ? data.requests : [];
         setHelpRequests(requests);
       } catch (error) {
@@ -391,12 +391,12 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
     },
     [] // Stable identity - no dependencies
   );
-  
+
   // Trigger refresh when filters change
   useEffect(() => {
-      if (student?._id) {
-          refreshHelpRequests(helpScope, filterCategory, filterLocation);
-      }
+    if (student?._id) {
+      refreshHelpRequests(helpScope, filterCategory, filterLocation);
+    }
   }, [filterCategory, filterLocation, helpScope, student?._id, refreshHelpRequests]);
   // Notification helpers
   const fetchNotifications = useCallback(async () => {
@@ -437,10 +437,10 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
       timestamp: new Date().toISOString(),
       ...notification
     };
-    
+
     setNotifications((prev) => [newNotif, ...prev].slice(0, 50));
     setUnreadNotificationCount((prev) => prev + 1);
-    
+
     enqueueToast({
       variant: notification.variant || 'info',
       title: notification.title,
@@ -471,9 +471,9 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
 
   const markAllNotificationsAsRead = async () => {
     if (markingAll || unreadNotificationCount === 0) return;
-    
+
     setMarkingAll(true);
-    
+
     // Optimistic update
     const previousUnreadCount = unreadNotificationCount;
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
@@ -488,9 +488,9 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
         },
         body: JSON.stringify({ markAll: true })
       });
-      
+
       if (!resp.ok) throw new Error('Failed to update');
-      
+
       enqueueToast({
         variant: 'success',
         title: 'Notifications Updated',
@@ -501,7 +501,7 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
       // Revert if failed
       setUnreadNotificationCount(previousUnreadCount);
       fetchNotifications(); // Refetch to be safe
-      
+
       enqueueToast({
         variant: 'danger',
         title: 'Update Failed',
@@ -515,7 +515,7 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
 
   const clearReadNotifications = async () => {
     if (clearingRead) return;
-    
+
     // Check if there are any read notifications to clear
     const hasRead = notifications.some(n => n.read);
     if (!hasRead) return;
@@ -533,9 +533,9 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
           ...(portalAuthHeadersRef.current || {})
         }
       });
-      
+
       if (!resp.ok) throw new Error('Failed to clear');
-      
+
       enqueueToast({
         variant: 'success',
         title: 'Notifications Cleared',
@@ -591,8 +591,8 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
     socket.on('follow_update', (data) => {
       if (data.targetId === student?.id || data.followerId === student?.id) {
         // Refresh student data to get latest counts
-        fetch('/api/student-portal/profile', { 
-          headers: portalAuthHeadersRef.current || {} 
+        fetch('/api/student-portal/profile', {
+          headers: portalAuthHeadersRef.current || {}
         })
           .then(res => res.json())
           .then(data => {
@@ -612,7 +612,7 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
         userId: data.userId,
         userName: data.userName
       });
-      
+
       // Update follow requests list
       setFollowRequests(prev => [...prev, data.userId]);
     });
@@ -624,10 +624,10 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
         message: data.message,
         variant: 'success'
       });
-      
+
       // Refresh student data
-      fetch('/api/student-portal/profile', { 
-        headers: portalAuthHeadersRef.current || {} 
+      fetch('/api/student-portal/profile', {
+        headers: portalAuthHeadersRef.current || {}
       })
         .then(res => res.json())
         .then(data => {
@@ -668,65 +668,79 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
       cyberpunk: {
         bg: '#09090b',
         surface: '#18181b',
-        primary: '#d946ef', // Fuchsia 500
-        secondary: '#8b5cf6', // Violet 500
-        accent: '#22c55e', // Green 500
+        primary: '#d946ef',
+        secondary: '#8b5cf6',
+        accent: '#22c55e',
         text: '#fafafa',
-        textSecondary: '#a1a1aa'
+        textSecondary: '#a1a1aa',
+        slot: '#3f3f46', // Zinc 700
+        border: '#3f3f46' // Zinc 700
       },
       ocean: {
         bg: '#0f172a',
         surface: '#1e293b',
-        primary: '#38bdf8', // Sky 400
-        secondary: '#818cf8', // Indigo 400
-        accent: '#2dd4bf', // Teal 400
+        primary: '#38bdf8',
+        secondary: '#818cf8',
+        accent: '#2dd4bf',
         text: '#f8fafc',
-        textSecondary: '#94a3b8'
+        textSecondary: '#94a3b8',
+        slot: '#334155', // Slate 700
+        border: '#334155' // Slate 700
       },
       sunset: {
-        bg: '#2a1b2d', // Deep purple-brown
+        bg: '#2a1b2d',
         surface: '#452c48',
-        primary: '#fb923c', // Orange 400
-        secondary: '#f472b6', // Pink 400
-        accent: '#facc15', // Yellow 400
+        primary: '#fb923c',
+        secondary: '#f472b6',
+        accent: '#facc15',
         text: '#fff1f2',
-        textSecondary: '#fda4af'
+        textSecondary: '#fda4af',
+        slot: '#581c87', // Violet 900
+        border: '#581c87' // Violet 900
       },
       forest: {
-        bg: '#052e16', // Green 950
-        surface: '#064e3b', // Green 900
-        primary: '#4ade80', // Green 400
-        secondary: '#a3e635', // Lime 400
-        accent: '#22d3ee', // Cyan 400
-        text: '#ffffff', // Pure white for max contrast
-        textSecondary: '#bbf7d0' // Green 200 (lighter/brighter than before)
+        bg: '#052e16',
+        surface: '#064e3b',
+        primary: '#4ade80',
+        secondary: '#a3e635',
+        accent: '#22d3ee',
+        text: '#ffffff',
+        textSecondary: '#bbf7d0',
+        slot: '#14532d', // Green 900
+        border: '#14532d' // Green 900
       },
       aurora: {
-        bg: '#020617', // Slate 950
-        surface: '#0f172a', // Slate 900
-        primary: '#a855f7', // Purple 500
-        secondary: '#ec4899', // Pink 500
-        accent: '#14b8a6', // Teal 500
+        bg: '#020617',
+        surface: '#0f172a',
+        primary: '#a855f7',
+        secondary: '#ec4899',
+        accent: '#14b8a6',
         text: '#f8fafc',
-        textSecondary: '#cbd5e1'
+        textSecondary: '#cbd5e1',
+        slot: '#374151', // Gray 700
+        border: '#374151' // Gray 700
       },
       light: {
-        bg: '#f8fafc', // Slate 50
+        bg: '#f8fafc',
         surface: '#ffffff',
-        primary: '#2563eb', // Blue 600
-        secondary: '#4f46e5', // Indigo 600
-        accent: '#059669', // Emerald 600
-        text: '#0f172a', // Slate 900
-        textSecondary: '#64748b' // Slate 500
+        primary: '#2563eb',
+        secondary: '#4f46e5',
+        accent: '#059669',
+        text: '#0f172a',
+        textSecondary: '#64748b',
+        slot: '#cbd5e1', // Slate 300
+        border: '#e2e8f0' // Slate 200
       },
       dark: {
         bg: '#000000',
         surface: '#121212',
-        primary: '#3b82f6', // Blue 500
-        secondary: '#a855f7', // Purple 500
-        accent: '#10b981', // Emerald 500
+        primary: '#3b82f6',
+        secondary: '#a855f7',
+        accent: '#10b981',
         text: '#ffffff',
-        textSecondary: '#a3a3a3'
+        textSecondary: '#a3a3a3',
+        slot: '#404040', // Neutral 700
+        border: '#404040' // Neutral 700
       }
     };
 
@@ -734,18 +748,34 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
     Object.entries(selectedTheme).forEach(([key, value]) => {
       document.documentElement.style.setProperty(`--color-${key}`, value);
     });
-    
+
     // Update Bootstrap Variables
     document.documentElement.style.setProperty('--bs-primary', selectedTheme.primary);
     document.documentElement.style.setProperty('--bs-body-bg', selectedTheme.bg);
     document.documentElement.style.setProperty('--bs-body-color', selectedTheme.text);
     document.documentElement.style.setProperty('--bs-link-color', selectedTheme.primary);
     document.documentElement.style.setProperty('--bs-link-hover-color', selectedTheme.secondary);
-    
+
+    // Sync with global variables for compatibility
+    document.documentElement.style.setProperty('--text-main', selectedTheme.text);
+    document.documentElement.style.setProperty('--text-secondary', selectedTheme.textSecondary);
+    document.documentElement.style.setProperty('--text-muted', selectedTheme.textSecondary);
+    document.documentElement.style.setProperty('--bs-secondary', selectedTheme.textSecondary);
+    document.documentElement.style.setProperty('--bs-secondary-color', selectedTheme.textSecondary);
+
+    // Sync background variables
+    document.documentElement.style.setProperty('--bg-body', selectedTheme.bg);
+    document.documentElement.style.setProperty('--bg-surface', selectedTheme.surface);
+    document.documentElement.style.setProperty('--bg-slot', selectedTheme.slot || '#3f3f46');
+
+    // Sync border variables
+    document.documentElement.style.setProperty('--border-color', selectedTheme.border || '#e5e7eb');
+    document.documentElement.style.setProperty('--bs-border-color', selectedTheme.border || '#e5e7eb');
+
     // Also set body background
     document.body.style.background = selectedTheme.bg;
     document.body.style.color = selectedTheme.text;
-    
+
     // Save to localStorage
     localStorage.setItem('portalTheme', theme);
   }, [theme]);
@@ -1012,17 +1042,17 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
       setConversationMessages([]);
       setConversationError('');
       setMessageDraft(presetMessage);
-    setActiveConversation({
-      id: targetId,
-      first_name: base.first_name || '',
-      last_name: base.last_name || '',
-      study: base.study || '',
-      community_headline: base.community_headline || '',
-      available_to_help: Boolean(base.available_to_help),
-      help_offering: base.help_offering || '',
-      online: Boolean(base.online),
-      last_seen: base.last_seen || null
-    });
+      setActiveConversation({
+        id: targetId,
+        first_name: base.first_name || '',
+        last_name: base.last_name || '',
+        study: base.study || '',
+        community_headline: base.community_headline || '',
+        available_to_help: Boolean(base.available_to_help),
+        help_offering: base.help_offering || '',
+        online: Boolean(base.online),
+        last_seen: base.last_seen || null
+      });
 
       if (!portalAuthHeaders) {
         setConversationError('Session expired. Please log in again.');
@@ -1050,17 +1080,17 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
         }
 
         if (data.partner) {
-        setActiveConversation({
-          id: data.partner.id,
-          first_name: data.partner.first_name || '',
-          last_name: data.partner.last_name || '',
-          study: data.partner.study || '',
-          community_headline: data.partner.community_headline || '',
-          available_to_help: Boolean(data.partner.available_to_help),
-          help_offering: data.partner.help_offering || '',
-          online: Boolean(data.partner.online),
-          last_seen: data.partner.last_seen || null
-        });
+          setActiveConversation({
+            id: data.partner.id,
+            first_name: data.partner.first_name || '',
+            last_name: data.partner.last_name || '',
+            study: data.partner.study || '',
+            community_headline: data.partner.community_headline || '',
+            available_to_help: Boolean(data.partner.available_to_help),
+            help_offering: data.partner.help_offering || '',
+            online: Boolean(data.partner.online),
+            last_seen: data.partner.last_seen || null
+          });
         }
 
         setConversationMessages(Array.isArray(data.conversation) ? data.conversation : []);
@@ -1107,10 +1137,10 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
         setActiveConversation((prev) =>
           prev
             ? {
-                ...prev,
-                online: senderId !== viewerId ? true : prev.online,
-                last_seen: new Date().toISOString()
-              }
+              ...prev,
+              online: senderId !== viewerId ? true : prev.online,
+              last_seen: new Date().toISOString()
+            }
             : prev
         );
       }
@@ -1157,10 +1187,10 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
         setActiveConversation((prev) =>
           prev
             ? {
-                ...prev,
-                online: false,
-                last_seen: new Date().toISOString()
-              }
+              ...prev,
+              online: false,
+              last_seen: new Date().toISOString()
+            }
             : prev
         );
       }
@@ -1173,7 +1203,7 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
     (payload = {}) => {
       const request = payload.request;
       const viewerId = student?._id ? student._id.toString() : '';
-      
+
       if (!request) {
         return;
       }
@@ -1192,7 +1222,7 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
             return [request, ...prev];
           });
         }
-        
+
         // Show toast if it's from someone else
         if (ownerId && ownerId !== viewerId) {
           enqueueToast({
@@ -1208,7 +1238,7 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
         setHelpRequests((prev) =>
           prev.map((item) => (item.id === request.id ? request : item))
         );
-        
+
         // Show toast if it's your request
         if (ownerId && ownerId === viewerId) {
           enqueueToast({
@@ -1392,9 +1422,9 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
       setActiveConversation((prev) =>
         prev
           ? {
-              ...prev,
-              last_seen: new Date().toISOString()
-            }
+            ...prev,
+            last_seen: new Date().toISOString()
+          }
           : prev
       );
     } catch (error) {
@@ -1411,7 +1441,7 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
 
     console.log('[CHAT] Clearing conversation with:', activeConversation.id);
     setConversationError('');
-    
+
     // Immediate feedback
     enqueueToast({
       variant: 'primary',
@@ -1432,13 +1462,13 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
 
       console.log('[CHAT] Conversation cleared successfully');
       setConversationMessages([]);
-      
+
       enqueueToast({
         variant: 'success',
         title: 'Conversation cleared',
         message: `History with ${activeConversation.first_name || 'this student'} has been cleared.`
       });
-      
+
       setMessageDraft('');
       refreshInboxThreads();
     } catch (error) {
@@ -1506,10 +1536,10 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
   useEffect(() => {
     const handleInvite = async () => {
       if (!student) return;
-      
+
       const urlParams = new URLSearchParams(window.location.search);
       const inviteCode = urlParams.get('invite');
-      
+
       if (inviteCode) {
         try {
           const res = await fetch('/api/student-portal/groups/join-via-link', {
@@ -1518,7 +1548,7 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
             body: JSON.stringify({ inviteCode })
           });
           const data = await res.json();
-          
+
           if (data.success) {
             enqueueToast({
               variant: 'success',
@@ -2009,13 +2039,13 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
         has_custom_password: true,
         used_default_password: false
       }));
-  } catch (error) {
-    console.error('Portal password update failed:', error);
-    setPasswordError(error.message || 'Unable to update password right now.');
-  } finally {
-    setPasswordLoading(false);
-  }
-};
+    } catch (error) {
+      console.error('Portal password update failed:', error);
+      setPasswordError(error.message || 'Unable to update password right now.');
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
 
   const switchAuthMode = (mode) => {
     setAuthMode(mode);
@@ -2061,7 +2091,7 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
         })
       });
       console.log('[CLIENT] Fetch completed, response status:', response.status);
-      
+
       clearTimeout(safetyTimeout);
 
       const data = await response.json().catch(() => ({}));
@@ -2083,18 +2113,18 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
       setStudent(studentData);
       setFormData(normalizedForm);
       setPortalMeta(meta);
-      
+
       // Reset auth fields
       setLoginPhone('');
       setLoginPassword(meta.used_default_password ? '' : DEFAULT_PASSWORD);
       setSessionPassword(loginPassword); // Store for session usage
-      
+
       // Reset other states
       setAuthMode('login');
       setActivePane('profile');
       setCommunityInitialized(false);
       setInboxInitialized(false);
-      
+
       setSuccessMessage(
         'Welcome back! Update your details below and save your changes when you are done.'
       );
@@ -2155,13 +2185,13 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
     setFollowModalType(type);
     setShowFollowModal(true);
     setFollowListLoading(true);
-    
+
     try {
       const response = await fetch(
         `/api/student-portal/followers?type=${type}&userId=${student._id}`,
         { headers: portalAuthHeaders || {} }
       );
-      
+
       if (response.ok) {
         const data = await response.json();
         setFollowList(data[type] || []);
@@ -2180,7 +2210,7 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
   const handleFollow = async (targetId, action) => {
     // 1. Optimistic UI Update (Instant Feedback)
     const previousStudent = { ...student }; // Backup for rollback
-    
+
     if (action === 'follow') {
       setStudent(prev => ({
         ...prev,
@@ -2188,43 +2218,43 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
       }));
       // Update community profiles instantly if visible
       if (activePane === 'community') {
-         setCommunityProfiles(prev => prev.map(p => {
-            if (p.id === targetId || p._id === targetId) {
-              const currentFollowers = p.followers || [];
-              // Avoid duplicates
-              if (currentFollowers.includes(student._id)) return p;
-              return { ...p, followers: [...currentFollowers, student._id] };
-            }
-            return p;
-         }));
+        setCommunityProfiles(prev => prev.map(p => {
+          if (p.id === targetId || p._id === targetId) {
+            const currentFollowers = p.followers || [];
+            // Avoid duplicates
+            if (currentFollowers.includes(student._id)) return p;
+            return { ...p, followers: [...currentFollowers, student._id] };
+          }
+          return p;
+        }));
       }
     } else if (action === 'request') {
-       // Optimistic UI for Request
-       if (activePane === 'community') {
-         setCommunityProfiles(prev => prev.map(p => {
-            if (p.id === targetId || p._id === targetId) {
-              return { ...p, has_requested_follow: true };
-            }
-            return p;
-         }));
-       }
+      // Optimistic UI for Request
+      if (activePane === 'community') {
+        setCommunityProfiles(prev => prev.map(p => {
+          if (p.id === targetId || p._id === targetId) {
+            return { ...p, has_requested_follow: true };
+          }
+          return p;
+        }));
+      }
     } else if (action === 'unfollow') {
       setStudent(prev => ({
         ...prev,
         following: (prev.following || []).filter(id => id !== targetId)
       }));
-       // Update community profiles instantly if visible
+      // Update community profiles instantly if visible
       if (activePane === 'community') {
-         setCommunityProfiles(prev => prev.map(p => {
-            if (p.id === targetId || p._id === targetId) {
-              return { 
-                ...p, 
-                followers: (p.followers || []).filter(id => id !== student._id),
-                has_requested_follow: false
-              };
-            }
-            return p;
-         }));
+        setCommunityProfiles(prev => prev.map(p => {
+          if (p.id === targetId || p._id === targetId) {
+            return {
+              ...p,
+              followers: (p.followers || []).filter(id => id !== student._id),
+              has_requested_follow: false
+            };
+          }
+          return p;
+        }));
       }
     }
 
@@ -2244,16 +2274,16 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
       }
 
       const data = await response.json();
-      
+
       // 3. Handle specific server responses if needed (e.g., request vs follow)
       if (action === 'request') {
-         enqueueToast({
-            variant: 'success',
-            title: 'Request Sent!',
-            message: 'Your follow request has been sent'
-          });
+        enqueueToast({
+          variant: 'success',
+          title: 'Request Sent!',
+          message: 'Your follow request has been sent'
+        });
       } else if (action === 'accept') {
-          // ... existing accept logic ...
+        // ... existing accept logic ...
       }
 
     } catch (error) {
@@ -2261,7 +2291,7 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
       // 4. Rollback on Error
       setStudent(previousStudent);
       if (activePane === 'community') {
-          refreshCommunityProfiles(communitySearch); // Re-fetch to be safe
+        refreshCommunityProfiles(communitySearch); // Re-fetch to be safe
       }
       enqueueToast({
         variant: 'danger',
@@ -2984,10 +3014,10 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
                           <Button
                             size="sm"
                             variant={
-                              student.following?.includes(profile.id) 
-                                ? "outline-secondary" 
-                                : profile.has_requested_follow 
-                                  ? "secondary" 
+                              student.following?.includes(profile.id)
+                                ? "outline-secondary"
+                                : profile.has_requested_follow
+                                  ? "secondary"
                                   : "primary"
                             }
                             disabled={profile.has_requested_follow}
@@ -2996,17 +3026,16 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
                               handleFollow(profile.id, isFollowing ? 'unfollow' : 'request');
                             }}
                           >
-                            <i className={`fas fa-${
-                              student.following?.includes(profile.id) 
-                                ? 'user-check' 
-                                : profile.has_requested_follow 
-                                  ? 'clock' 
-                                  : 'user-plus'
-                            } me-2`}></i>
-                            {student.following?.includes(profile.id) 
-                              ? 'Following' 
-                              : profile.has_requested_follow 
-                                ? 'Requested' 
+                            <i className={`fas fa-${student.following?.includes(profile.id)
+                              ? 'user-check'
+                              : profile.has_requested_follow
+                                ? 'clock'
+                                : 'user-plus'
+                              } me-2`}></i>
+                            {student.following?.includes(profile.id)
+                              ? 'Following'
+                              : profile.has_requested_follow
+                                ? 'Requested'
                                 : 'Follow'}
                           </Button>
                         )}
@@ -3331,118 +3360,117 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
       <div className="mb-4">
         <label className="form-label fw-bold small text-muted text-uppercase mb-2">Filter Requests</label>
         <div className="d-flex gap-2 overflow-auto pb-2 no-scrollbar align-items-center">
-         <select 
-            value={filterCategory} 
+          <select
+            value={filterCategory}
             onChange={(e) => setFilterCategory(e.target.value)}
-            className="form-select shadow-sm rounded-pill border-0"
-            style={{ width: 'auto', minWidth: '160px', cursor: 'pointer' }}
-         >
-             <option value="">🔮 All Categories</option>
-             {['Housing', 'Jobs', 'Rides', 'Academic', 'Food', 'General', 'Legal', 'Events'].map(c => 
-                <option key={c} value={c}>{c}</option>
-             )}
-         </select>
-         <select 
-            value={filterLocation} 
+            className="form-select shadow-sm rounded-pill border-0 ps-3 pe-5"
+            style={{ width: 'auto', minWidth: '180px', cursor: 'pointer' }}
+          >
+            <option value="">🔮 All Categories</option>
+            {['Housing', 'Jobs', 'Rides', 'Academic', 'Food', 'General', 'Legal', 'Events'].map(c =>
+              <option key={c} value={c}>{c}</option>
+            )}
+          </select>
+          <select
+            value={filterLocation}
             onChange={(e) => setFilterLocation(e.target.value)}
-             className="form-select shadow-sm rounded-pill border-0"
-             style={{ width: 'auto', minWidth: '160px', cursor: 'pointer' }}
-         >
-             <option value="">📍 All Locations</option>
-             {['Windsor', 'Brampton', 'Toronto', 'Waterloo', 'London', 'Ottawa'].map(l => 
-                <option key={l} value={l}>{l}</option>
-             )}
-         </select>
-         {(filterCategory || filterLocation) && (
+            className="form-select shadow-sm rounded-pill border-0 ps-3 pe-5"
+            style={{ width: 'auto', minWidth: '180px', cursor: 'pointer' }}
+          >
+            <option value="">📍 All Locations</option>
+            {['Windsor', 'Brampton', 'Toronto', 'Waterloo', 'London', 'Ottawa'].map(l =>
+              <option key={l} value={l}>{l}</option>
+            )}
+          </select>
+          {(filterCategory || filterLocation) && (
             <Button variant="link" className="text-muted text-decoration-none fw-semibold" onClick={() => { setFilterCategory(''); setFilterLocation(''); }}>
-               Clear
+              Clear
             </Button>
-         )}
-      </div>
+          )}
+        </div>
       </div>
 
-      <Card className="border-0 shadow-sm mb-4 help-form-card">
+      <Card className="border-0 shadow-sm mb-4 help-form-card bg-surface">
         <Card.Body>
           <h6 className="fw-semibold mb-3">
             <i className="fas fa-plus-circle me-2 text-primary"></i>
             Create a help request
           </h6>
-            <Form onSubmit={handleHelpRequestSubmit}>
+          <Form onSubmit={handleHelpRequestSubmit}>
             <div className="row g-3">
               <div className="col-12">
-                 <Form.Group controlId="help-request-title">
-                   <Form.Label className="fw-semibold">I need help with...</Form.Label>
-                   <Form.Control
-                     type="text"
-                     placeholder="Briefly describe your request (e.g. Need a ride to Pearson)"
-                     value={helpForm.title}
-                     onChange={(event) => handleHelpFieldChange('title', event.target.value)}
-                     required
-                     className="form-control-lg border-0 bg-light"
-                   />
-                 </Form.Group>
+                <Form.Group controlId="help-request-title">
+                  <Form.Label className="fw-semibold">I need help with...</Form.Label>
+                  <Form.Control
+                    type="text"
+                    placeholder="Briefly describe your request (e.g. Need a ride to Pearson)"
+                    value={helpForm.title}
+                    onChange={(event) => handleHelpFieldChange('title', event.target.value)}
+                    required
+                    className="form-control-lg border-0 bg-body text-main"
+                  />
+                </Form.Group>
               </div>
 
               {/* Category Selection Chips */}
               <div className="col-12">
-                 <label className="form-label fw-semibold d-block">Category</label>
-                 <div className="d-flex flex-wrap gap-2">
-                    {['Housing', 'Jobs', 'Rides', 'Academic', 'Food', 'General', 'Legal', 'Events'].map(cat => (
-                       <Badge 
-                          key={cat} 
-                          bg={helpForm.category === cat ? 'primary' : 'light'} 
-                          text={helpForm.category === cat ? 'white' : 'dark'}
-                          className="p-2 cursor-pointer border user-select-none"
-                          onClick={() => handleHelpFieldChange('category', cat)}
-                          style={{ cursor: 'pointer' }}
-                       >
-                          {cat}
-                       </Badge>
-                    ))}
-                 </div>
+                <label className="form-label fw-semibold d-block">Category</label>
+                <div className="d-flex flex-wrap gap-2">
+                  {['Housing', 'Jobs', 'Rides', 'Academic', 'Food', 'General', 'Legal', 'Events'].map(cat => (
+                    <Badge
+                      key={cat}
+                      bg={helpForm.category === cat ? 'primary' : null}
+                      className={`p-2 cursor-pointer border user-select-none ${helpForm.category === cat ? 'text-white' : 'bg-surface text-main'}`}
+                      onClick={() => handleHelpFieldChange('category', cat)}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      {cat}
+                    </Badge>
+                  ))}
+                </div>
               </div>
 
               {/* Urgency & Location */}
               <div className="col-12 col-md-6">
-                 <label className="form-label fw-semibold">Urgency</label>
-                 <div className="btn-group w-100" role="group">
-                    {['Low', 'Medium', 'High'].map(level => {
-                       let variant = 'outline-secondary';
-                       const isSelected = helpForm.urgency === level;
-                       if (level === 'Low') variant = isSelected ? 'success' : 'outline-success';
-                       if (level === 'Medium') variant = isSelected ? 'warning' : 'outline-warning';
-                       if (level === 'High') variant = isSelected ? 'danger' : 'outline-danger';
-                       
-                       return (
-                         <Fragment key={level}>
-                            <input
-                               type="radio"
-                               className="btn-check"
-                               name="urgency"
-                               id={`urgency-${level}`}
-                               autoComplete="off"
-                               checked={isSelected}
-                               onChange={() => handleHelpFieldChange('urgency', level)}
-                            />
-                            <label className={`btn btn-${variant}`} htmlFor={`urgency-${level}`}>{level}</label>
-                         </Fragment>
-                       ).props.children;
-                    })}
-                 </div>
+                <label className="form-label fw-semibold">Urgency</label>
+                <div className="btn-group w-100" role="group">
+                  {['Low', 'Medium', 'High'].map(level => {
+                    let variant = 'outline-secondary';
+                    const isSelected = helpForm.urgency === level;
+                    if (level === 'Low') variant = isSelected ? 'success' : 'outline-success';
+                    if (level === 'Medium') variant = isSelected ? 'warning' : 'outline-warning';
+                    if (level === 'High') variant = isSelected ? 'danger' : 'outline-danger';
+
+                    return (
+                      <Fragment key={level}>
+                        <input
+                          type="radio"
+                          className="btn-check"
+                          name="urgency"
+                          id={`urgency-${level}`}
+                          autoComplete="off"
+                          checked={isSelected}
+                          onChange={() => handleHelpFieldChange('urgency', level)}
+                        />
+                        <label className={`btn btn-${variant}`} htmlFor={`urgency-${level}`}>{level}</label>
+                      </Fragment>
+                    ).props.children;
+                  })}
+                </div>
               </div>
 
               <div className="col-12 col-md-6">
-                 <Form.Group controlId="help-request-location">
-                    <Form.Label className="fw-semibold">Location</Form.Label>
-                    <Form.Select 
-                       value={helpForm.location}
-                       onChange={(e) => handleHelpFieldChange('location', e.target.value)}
-                    >
-                       {['Windsor', 'Brampton', 'Toronto', 'Waterloo', 'London', 'Ottawa'].map(l => 
-                          <option key={l} value={l}>{l}</option>
-                       )}
-                    </Form.Select>
-                 </Form.Group>
+                <Form.Group controlId="help-request-location">
+                  <Form.Label className="fw-semibold">Location</Form.Label>
+                  <Form.Select
+                    value={helpForm.location}
+                    onChange={(e) => handleHelpFieldChange('location', e.target.value)}
+                  >
+                    {['Windsor', 'Brampton', 'Toronto', 'Waterloo', 'London', 'Ottawa'].map(l =>
+                      <option key={l} value={l}>{l}</option>
+                    )}
+                  </Form.Select>
+                </Form.Group>
               </div>
 
               <div className="col-12">
@@ -3454,25 +3482,25 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
                     placeholder="Share more context..."
                     value={helpForm.description}
                     onChange={(event) => handleHelpFieldChange('description', event.target.value)}
-                    className="border-0 bg-light"
+                    className="border-0 bg-body text-main"
                   />
                 </Form.Group>
               </div>
 
               {/* Anonymity Toggle */}
               <div className="col-12 d-flex justify-content-between align-items-center">
-                 <Form.Check 
-                    type="switch"
-                    id="anonymous-switch"
-                    label={
-                       <span>
-                          <i className="fas fa-user-secret me-2"></i>
-                          Post Anonymously
-                       </span>
-                    }
-                    checked={helpForm.is_anonymous}
-                    onChange={(e) => handleHelpFieldChange('is_anonymous', e.target.checked)}
-                 />
+                <Form.Check
+                  type="switch"
+                  id="anonymous-switch"
+                  label={
+                    <span>
+                      <i className="fas fa-user-secret me-2"></i>
+                      Post Anonymously
+                    </span>
+                  }
+                  checked={helpForm.is_anonymous}
+                  onChange={(e) => handleHelpFieldChange('is_anonymous', e.target.checked)}
+                />
               </div>
 
             </div>
@@ -3519,17 +3547,17 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
                   <div>
                     <div className="d-flex align-items-center gap-2 mb-2 flex-wrap">
                       <Badge bg={
-                        request.urgency === 'High' ? 'danger' : 
-                        request.urgency === 'Medium' ? 'warning' : 'success'
+                        request.urgency === 'High' ? 'danger' :
+                          request.urgency === 'Medium' ? 'warning' : 'success'
                       } className="text-uppercase" style={{ fontSize: '0.7rem' }}>
                         {request.urgency || 'Medium'} Urgency
                       </Badge>
                       <Badge bg="dark" className="text-info border border-info">
-                         {request.category || 'General'}
+                        {request.category || 'General'}
                       </Badge>
-                      <Badge bg="light" text="dark" className="border">
-                         <i className="fas fa-map-marker-alt me-1 text-danger"></i>
-                         {request.location || 'Windsor'}
+                      <Badge className="border bg-surface text-main">
+                        <i className="fas fa-map-marker-alt me-1 text-danger"></i>
+                        {request.location || 'Windsor'}
                       </Badge>
                       {request.is_owner && (
                         <Badge bg="info" text="dark">
@@ -3537,56 +3565,56 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
                         </Badge>
                       )}
                     </div>
-                    
+
                     <h6 className="fw-bold fs-5 mb-2">{request.title}</h6>
-                    
+
                     {request.student && (
                       <div className="d-flex align-items-center gap-2 mb-3">
-                         <div style={{ width: 32, height: 32 }} className="rounded-circle overflow-hidden bg-light border">
-                            {request.is_anonymous ? (
-                               <div className="w-100 h-100 d-flex align-items-center justify-content-center bg-dark text-white">
-                                  <i className="fas fa-user-secret"></i>
-                               </div>
-                            ) : request.student.profile_picture ? (
-                               <img src={request.student.profile_picture} className="w-100 h-100 object-fit-cover" alt="" /> 
-                            ) : (
-                               <div className="w-100 h-100 d-flex align-items-center justify-content-center bg-secondary text-white small fw-bold">
-                                  {buildInitials(request.student.first_name, request.student.last_name)}
-                               </div>
+                        <div style={{ width: 32, height: 32 }} className="rounded-circle overflow-hidden bg-light border">
+                          {request.is_anonymous ? (
+                            <div className="w-100 h-100 d-flex align-items-center justify-content-center bg-dark text-white">
+                              <i className="fas fa-user-secret"></i>
+                            </div>
+                          ) : request.student.profile_picture ? (
+                            <img src={request.student.profile_picture} className="w-100 h-100 object-fit-cover" alt="" />
+                          ) : (
+                            <div className="w-100 h-100 d-flex align-items-center justify-content-center bg-secondary text-white small fw-bold">
+                              {buildInitials(request.student.first_name, request.student.last_name)}
+                            </div>
+                          )}
+                        </div>
+                        <div className="lh-1">
+                          <div className="fw-semibold small">
+                            {request.is_anonymous ? 'Secret Student' : `${request.student.first_name} ${request.student.last_name}`}
+                            {!request.is_anonymous && request.student.reputation_points > 10 && (
+                              <i className="fas fa-star text-warning ms-1" title="Top Helper"></i>
                             )}
-                         </div>
-                         <div className="lh-1">
-                            <div className="fw-semibold small">
-                               {request.is_anonymous ? 'Secret Student' : `${request.student.first_name} ${request.student.last_name}`}
-                               {!request.is_anonymous && request.student.reputation_points > 10 && (
-                                  <i className="fas fa-star text-warning ms-1" title="Top Helper"></i>
-                               )}
-                            </div>
-                            <div className="text-muted" style={{ fontSize: '0.75rem' }}>
-                               {request.is_anonymous ? 'Anonymous' : (request.student.study || 'Student')}
-                            </div>
-                         </div>
+                          </div>
+                          <div className="text-muted" style={{ fontSize: '0.75rem' }}>
+                            {request.is_anonymous ? 'Anonymous' : (request.student.study || 'Student')}
+                          </div>
+                        </div>
                       </div>
                     )}
 
                     {request.description && (
-                      <p className="text-muted small mb-3 bg-light p-3 rounded">{request.description}</p>
+                      <p className="text-muted small mb-3 bg-body p-3 rounded">{request.description}</p>
                     )}
-                    
+
                     {/* Smart Match Simulation */}
                     {request.match_count > 0 && request.status === 'open' && (
-                       <div className="mb-2">
-                          <Badge bg="success-subtle" text="success-emphasis" className="border border-success-subtle">
-                             <i className="fas fa-bolt me-1"></i>
-                             {request.match_count} potential helpers notified
-                          </Badge>
-                       </div>
+                      <div className="mb-2">
+                        <Badge bg="success-subtle" text="success-emphasis" className="border border-success-subtle">
+                          <i className="fas fa-bolt me-1"></i>
+                          {request.match_count} potential helpers notified
+                        </Badge>
+                      </div>
                     )}
 
                     {request.tags?.length > 0 && (
                       <div className="d-flex flex-wrap gap-2 mb-2">
                         {request.tags.map((tag) => (
-                          <span key={`${request.id}-tag-${tag}`} className="badge rounded-pill bg-light text-muted border">
+                          <span key={`${request.id}-tag-${tag}`} className="badge rounded-pill bg-surface text-muted border">
                             #{tag}
                           </span>
                         ))}
@@ -3767,7 +3795,7 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
 
   const handleTyping = (e) => {
     setMessageDraft(e.target.value);
-    
+
     if (!socketRef.current || !activeConversation) return;
 
     socketRef.current.emit('typing', { recipientId: activeConversation.id });
@@ -3802,10 +3830,10 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
                 onChange={async (e) => {
                   const file = e.target.files[0];
                   if (!file) return;
-                  
+
                   const formData = new FormData();
                   formData.append('profilePicture', file);
-                  
+
                   try {
                     const res = await fetch('/api/student-portal/upload-profile-picture', {
                       method: 'POST',
@@ -3826,10 +3854,10 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
               <i className="fas fa-camera text-primary small"></i>
             </label>
           </div>
-          
+
           <h5 className="fw-bold mb-1">{student.first_name} {student.last_name}</h5>
           <p className="text-muted small mb-3">{student.study || 'Student'}</p>
-          
+
           <div className="d-flex justify-content-center gap-4 border-top pt-3">
             <div className="text-center cursor-pointer" onClick={() => handleShowFollowModal('followers')} style={{ cursor: 'pointer' }}>
               <div className="fw-bold fs-5">{student.followers?.length || 0}</div>
@@ -3932,7 +3960,7 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
           <p className="text-muted small mb-4">
             Choose from 7 stunning themes to personalize your portal experience
           </p>
-          
+
           <Button
             variant="outline-primary"
             onClick={() => setShowThemePicker(true)}
@@ -3947,17 +3975,17 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
             <i className="fas fa-palette me-2"></i>
             Change Theme
           </Button>
-          
+
           <div className="mt-3 text-center">
             <small className="text-muted">
               Current: <strong style={{ color: 'var(--color-primary)' }}>
                 {theme === 'cyberpunk' ? 'Cyberpunk' :
-                 theme === 'ocean' ? 'Ocean Depths' :
-                 theme === 'sunset' ? 'Desert Sunset' :
-                 theme === 'forest' ? 'Forest Whisper' :
-                 theme === 'aurora' ? 'Northern Lights' :
-                 theme === 'light' ? 'Clean Light' :
-                 'Midnight Dark'}
+                  theme === 'ocean' ? 'Ocean Depths' :
+                    theme === 'sunset' ? 'Desert Sunset' :
+                      theme === 'forest' ? 'Forest Whisper' :
+                        theme === 'aurora' ? 'Northern Lights' :
+                          theme === 'light' ? 'Clean Light' :
+                            'Midnight Dark'}
               </strong>
             </small>
           </div>
@@ -4239,24 +4267,24 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
           </div>
           {student && (
             <div className="d-flex gap-2">
-              <Button 
-                variant="light" 
-                size="sm" 
+              <Button
+                variant="light"
+                size="sm"
                 onClick={() => setActivePane('study-sync')}
                 className="me-1"
               >
                 <i className="fas fa-fire text-danger"></i>
               </Button>
-              <Button 
-                variant="light" 
-                size="sm" 
+              <Button
+                variant="light"
+                size="sm"
                 onClick={() => setShowThemePicker(true)}
               >
                 <i className="fas fa-palette text-muted"></i>
               </Button>
-              <Button 
-                variant="light" 
-                size="sm" 
+              <Button
+                variant="light"
+                size="sm"
                 className="position-relative"
                 onClick={() => setShowNotificationPanel(!showNotificationPanel)}
               >
@@ -4291,9 +4319,9 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
                       <small className="text-muted">Student Portal</small>
                     </div>
                   </div>
-                  <Button 
-                    variant="light" 
-                    size="sm" 
+                  <Button
+                    variant="light"
+                    size="sm"
                     className="rounded-circle"
                     onClick={() => setShowThemePicker(true)}
                     title="Change Theme"
@@ -4303,142 +4331,142 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
                 </div>
               </div>
 
-            {/* Scrollable Navigation */}
-            <div className="flex-grow-1 overflow-y-auto custom-scrollbar px-3 py-2" style={{ minHeight: 0 }}>
-              <div className="d-flex flex-column gap-2">
-                <Button
-                  variant="link"
-                  className={`text-start d-flex align-items-center gap-3 px-3 py-3 rounded-3 border-0 text-decoration-none nav-btn ${activePane === 'profile' ? 'active' : ''}`}
-                  onClick={() => setActivePane('profile')}
-                >
-                  <i className={`fas fa-user-circle ${activePane === 'profile' ? '' : 'text-muted'}`} style={{ width: 24 }}></i>
-                  <span>My Profile</span>
-                </Button>
+              {/* Scrollable Navigation */}
+              <div className="flex-grow-1 overflow-y-auto custom-scrollbar px-3 py-2" style={{ minHeight: 0 }}>
+                <div className="d-flex flex-column gap-2">
+                  <Button
+                    variant="link"
+                    className={`text-start d-flex align-items-center gap-3 px-3 py-3 rounded-3 border-0 text-decoration-none nav-btn ${activePane === 'profile' ? 'active' : ''}`}
+                    onClick={() => setActivePane('profile')}
+                  >
+                    <i className={`fas fa-user-circle ${activePane === 'profile' ? '' : 'text-muted'}`} style={{ width: 24 }}></i>
+                    <span>My Profile</span>
+                  </Button>
 
-                <Button
-                  variant="link"
-                  className={`text-start d-flex align-items-center gap-3 px-3 py-3 rounded-3 border-0 text-decoration-none nav-btn ${activePane === 'community' ? 'active' : ''}`}
-                  onClick={() => setActivePane('community')}
-                >
-                  <i className={`fas fa-users ${activePane === 'community' ? '' : 'text-muted'}`} style={{ width: 24 }}></i>
-                  <span>Community Hub</span>
-                </Button>
+                  <Button
+                    variant="link"
+                    className={`text-start d-flex align-items-center gap-3 px-3 py-3 rounded-3 border-0 text-decoration-none nav-btn ${activePane === 'community' ? 'active' : ''}`}
+                    onClick={() => setActivePane('community')}
+                  >
+                    <i className={`fas fa-users ${activePane === 'community' ? '' : 'text-muted'}`} style={{ width: 24 }}></i>
+                    <span>Community Hub</span>
+                  </Button>
 
-                <Button
-                  variant="link"
-                  className={`text-start d-flex align-items-center gap-3 px-3 py-3 rounded-3 border-0 text-decoration-none nav-btn ${activePane === 'study-sync' ? 'active' : ''}`}
-                  onClick={() => setActivePane('study-sync')}
-                >
-                  <i className={`fas fa-fire ${activePane === 'study-sync' ? '' : 'text-muted'}`} style={{ width: 24 }}></i>
-                  <span>Study Sync</span>
-                </Button>
+                  <Button
+                    variant="link"
+                    className={`text-start d-flex align-items-center gap-3 px-3 py-3 rounded-3 border-0 text-decoration-none nav-btn ${activePane === 'study-sync' ? 'active' : ''}`}
+                    onClick={() => setActivePane('study-sync')}
+                  >
+                    <i className={`fas fa-fire ${activePane === 'study-sync' ? '' : 'text-muted'}`} style={{ width: 24 }}></i>
+                    <span>Study Sync</span>
+                  </Button>
 
-                <Button
-                  variant="link"
-                  className={`text-start d-flex align-items-center gap-3 px-3 py-3 rounded-3 border-0 text-decoration-none nav-btn ${activePane === 'groups' ? 'active' : ''}`}
-                  onClick={() => setActivePane('groups')}
-                >
-                  <i className={`fas fa-comments ${activePane === 'groups' ? '' : 'text-muted'}`} style={{ width: 24 }}></i>
-                  <span>Groups</span>
-                </Button>
+                  <Button
+                    variant="link"
+                    className={`text-start d-flex align-items-center gap-3 px-3 py-3 rounded-3 border-0 text-decoration-none nav-btn ${activePane === 'groups' ? 'active' : ''}`}
+                    onClick={() => setActivePane('groups')}
+                  >
+                    <i className={`fas fa-comments ${activePane === 'groups' ? '' : 'text-muted'}`} style={{ width: 24 }}></i>
+                    <span>Groups</span>
+                  </Button>
 
-                <Button
-                  variant="link"
-                  className={`text-start d-flex align-items-center gap-3 px-3 py-3 rounded-3 border-0 text-decoration-none nav-btn ${activePane === 'help' ? 'active' : ''}`}
-                  onClick={() => setActivePane('help')}
-                >
-                  <i className={`fas fa-hands-helping ${activePane === 'help' ? '' : 'text-muted'}`} style={{ width: 24 }}></i>
-                  <span>Help Board</span>
-                </Button>
+                  <Button
+                    variant="link"
+                    className={`text-start d-flex align-items-center gap-3 px-3 py-3 rounded-3 border-0 text-decoration-none nav-btn ${activePane === 'help' ? 'active' : ''}`}
+                    onClick={() => setActivePane('help')}
+                  >
+                    <i className={`fas fa-hands-helping ${activePane === 'help' ? '' : 'text-muted'}`} style={{ width: 24 }}></i>
+                    <span>Help Board</span>
+                  </Button>
 
-                <Button
-                  variant="link"
-                  className={`text-start d-flex align-items-center gap-3 px-3 py-3 rounded-3 border-0 text-decoration-none nav-btn ${activePane === 'library' ? 'active' : ''}`}
-                  onClick={() => setActivePane('library')}
-                >
-                  <i className={`fas fa-book ${activePane === 'library' ? '' : 'text-muted'}`} style={{ width: 24 }}></i>
-                  <span>The Archive</span>
-                </Button>
+                  <Button
+                    variant="link"
+                    className={`text-start d-flex align-items-center gap-3 px-3 py-3 rounded-3 border-0 text-decoration-none nav-btn ${activePane === 'library' ? 'active' : ''}`}
+                    onClick={() => setActivePane('library')}
+                  >
+                    <i className={`fas fa-book ${activePane === 'library' ? '' : 'text-muted'}`} style={{ width: 24 }}></i>
+                    <span>The Archive</span>
+                  </Button>
 
-                <Button
-                  variant="link"
-                  className={`text-start d-flex align-items-center gap-3 px-3 py-3 rounded-3 border-0 text-decoration-none nav-btn ${activePane === 'feed' ? 'active' : ''}`}
-                  onClick={() => setActivePane('feed')}
-                >
-                  <i className={`fas fa-rss ${activePane === 'feed' ? '' : 'text-muted'}`} style={{ width: 24 }}></i>
-                  <span>Feed</span>
-                </Button>
+                  <Button
+                    variant="link"
+                    className={`text-start d-flex align-items-center gap-3 px-3 py-3 rounded-3 border-0 text-decoration-none nav-btn ${activePane === 'feed' ? 'active' : ''}`}
+                    onClick={() => setActivePane('feed')}
+                  >
+                    <i className={`fas fa-rss ${activePane === 'feed' ? '' : 'text-muted'}`} style={{ width: 24 }}></i>
+                    <span>Feed</span>
+                  </Button>
 
-                <Button
-                  variant="link"
-                  className={`text-start d-flex align-items-center gap-3 px-3 py-3 rounded-3 border-0 text-decoration-none nav-btn ${showNotificationPanel ? 'active' : ''}`}
-                  onClick={() => setShowNotificationPanel(!showNotificationPanel)}
-                >
-                  <div className="position-relative">
-                    <i className={`fas fa-bell ${showNotificationPanel ? '' : 'text-muted'}`} style={{ width: 24 }}></i>
-                    {unreadNotificationCount > 0 && (
-                      <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style={{ fontSize: '0.6rem' }}>
-                        {unreadNotificationCount}
-                      </span>
-                    )}
-                  </div>
-                  <span>Notifications</span>
-                </Button>
+                  <Button
+                    variant="link"
+                    className={`text-start d-flex align-items-center gap-3 px-3 py-3 rounded-3 border-0 text-decoration-none nav-btn ${showNotificationPanel ? 'active' : ''}`}
+                    onClick={() => setShowNotificationPanel(!showNotificationPanel)}
+                  >
+                    <div className="position-relative">
+                      <i className={`fas fa-bell ${showNotificationPanel ? '' : 'text-muted'}`} style={{ width: 24 }}></i>
+                      {unreadNotificationCount > 0 && (
+                        <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style={{ fontSize: '0.6rem' }}>
+                          {unreadNotificationCount}
+                        </span>
+                      )}
+                    </div>
+                    <span>Notifications</span>
+                  </Button>
 
-                <Button
-                  variant="link"
-                  className={`text-start d-flex align-items-center gap-3 px-3 py-3 rounded-3 border-0 text-decoration-none nav-btn ${activePane === 'settings' ? 'active' : ''}`}
-                  onClick={() => setActivePane('settings')}
-                >
-                  <i className={`fas fa-cog ${activePane === 'settings' ? '' : 'text-muted'}`} style={{ width: 24 }}></i>
-                  <span>Settings</span>
-                </Button>
+                  <Button
+                    variant="link"
+                    className={`text-start d-flex align-items-center gap-3 px-3 py-3 rounded-3 border-0 text-decoration-none nav-btn ${activePane === 'settings' ? 'active' : ''}`}
+                    onClick={() => setActivePane('settings')}
+                  >
+                    <i className={`fas fa-cog ${activePane === 'settings' ? '' : 'text-muted'}`} style={{ width: 24 }}></i>
+                    <span>Settings</span>
+                  </Button>
 
-                {portalMeta.can_access_admin && (
-                  <div className="mt-4">
-                    <Button
-                      variant="link"
-                      className={`text-start d-flex align-items-center gap-3 px-3 py-3 rounded-3 border-0 text-decoration-none nav-btn ${activePane === 'analytics' ? 'active' : ''}`}
-                      onClick={() => setActivePane('analytics')}
-                    >
-                      <i className={`fas fa-chart-line ${activePane === 'analytics' ? '' : 'text-muted'}`} style={{ width: 24 }}></i>
-                      <span>Analytics</span>
-                    </Button>
-                    <div className="text-uppercase text-muted fw-bold small px-3 mb-2 mt-3" style={{ fontSize: '0.75rem', letterSpacing: '0.05em' }}>Admin Tools</div>
-                    {portalMeta.admin_shortcuts.map((shortcut, idx) => (
+                  {portalMeta.can_access_admin && (
+                    <div className="mt-4">
                       <Button
-                        key={idx}
-                        variant="light"
-                        href={shortcut.href}
-                        className="text-start d-flex align-items-center gap-3 px-3 py-2 rounded-3 border-0 bg-transparent w-100 text-dark mb-1 nav-btn"
+                        variant="link"
+                        className={`text-start d-flex align-items-center gap-3 px-3 py-3 rounded-3 border-0 text-decoration-none nav-btn ${activePane === 'analytics' ? 'active' : ''}`}
+                        onClick={() => setActivePane('analytics')}
                       >
-                        <i className={`${shortcut.icon} text-primary`} style={{ width: 24 }}></i>
-                        <span>{shortcut.label}</span>
+                        <i className={`fas fa-chart-line ${activePane === 'analytics' ? '' : 'text-muted'}`} style={{ width: 24 }}></i>
+                        <span>Analytics</span>
                       </Button>
-                    ))}
-                  </div>
-                )}
+                      <div className="text-uppercase text-muted fw-bold small px-3 mb-2 mt-3" style={{ fontSize: '0.75rem', letterSpacing: '0.05em' }}>Admin Tools</div>
+                      {portalMeta.admin_shortcuts.map((shortcut, idx) => (
+                        <Button
+                          key={idx}
+                          variant="light"
+                          href={shortcut.href}
+                          className="text-start d-flex align-items-center gap-3 px-3 py-2 rounded-3 border-0 bg-transparent w-100 text-dark mb-1 nav-btn"
+                        >
+                          <i className={`${shortcut.icon} text-primary`} style={{ width: 24 }}></i>
+                          <span>{shortcut.label}</span>
+                        </Button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
 
-            {/* Footer */}
-            <div className="p-4 pt-3 border-top flex-shrink-0 bg-white">
-              <div className="d-flex align-items-center gap-3 px-2 mb-3">
-                <div className="bg-light rounded-circle d-flex align-items-center justify-content-center text-primary fw-bold" style={{ width: 40, height: 40 }}>
-                  {buildInitials(student?.first_name, student?.last_name)}
+              {/* Footer */}
+              <div className="p-4 pt-3 border-top flex-shrink-0 bg-surface">
+                <div className="d-flex align-items-center gap-3 px-2 mb-3">
+                  <div className="bg-body rounded-circle d-flex align-items-center justify-content-center text-primary fw-bold" style={{ width: 40, height: 40 }}>
+                    {buildInitials(student?.first_name, student?.last_name)}
+                  </div>
+                  <div className="overflow-hidden">
+                    <div className="fw-bold text-truncate text-main">{student?.first_name}</div>
+                    <div className="small text-muted text-truncate">{student?.phone}</div>
+                  </div>
                 </div>
-                <div className="overflow-hidden">
-                  <div className="fw-bold text-truncate text-dark">{student?.first_name}</div>
-                  <div className="small text-muted text-truncate">{student?.phone}</div>
-                </div>
+                <Button variant="light" className="w-100 border-0 text-danger bg-danger bg-opacity-10 hover-danger" onClick={handleLogout}>
+                  <i className="fas fa-sign-out-alt me-2"></i>
+                  Sign Out
+                </Button>
               </div>
-              <Button variant="light" className="w-100 border-0 text-danger bg-danger bg-opacity-10 hover-danger" onClick={handleLogout}>
-                <i className="fas fa-sign-out-alt me-2"></i>
-                Sign Out
-              </Button>
+              <div className="pb-5"></div>
             </div>
-            <div className="pb-5"></div>
-          </div>
           )}
         </div>
 
@@ -4447,7 +4475,7 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
         <div className={`flex-grow-1 ${student ? 'ms-lg-auto' : ''}`} style={{ marginLeft: 0, width: '100%' }}>
           <div className="container-fluid p-0">
             {student && (
-              <div className="d-lg-none p-1 d-flex bg-white border-top position-fixed bottom-0 start-0 end-0 justify-content-between" style={{ zIndex: 1100 }}>
+              <div className="d-lg-none p-1 d-flex bg-surface border-top position-fixed bottom-0 start-0 end-0 justify-content-between" style={{ zIndex: 1100 }}>
                 {['profile', 'community', 'groups', 'study-sync', 'help', 'library', 'feed', 'settings'].map(pane => (
                   <Button
                     key={pane}
@@ -4468,156 +4496,156 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
               {/* Content Render */}
               <div className="fade-in-up">
                 {!student ? (
-                   <div className="row justify-content-center align-items-center min-vh-100" style={{ minHeight: '80vh' }}>
-                     <div className="col-lg-10">
-                       <div className="row align-items-center g-5">
-                         <div className="col-lg-5 order-lg-2">
-                            <div className="text-center text-lg-start mb-4 mb-lg-0">
-                              <div className="d-inline-flex align-items-center justify-content-center bg-white p-3 rounded-4 shadow-sm mb-4">
-                                <i className="fas fa-graduation-cap fa-3x text-primary"></i>
+                  <div className="row justify-content-center align-items-center min-vh-100" style={{ minHeight: '80vh' }}>
+                    <div className="col-lg-10">
+                      <div className="row align-items-center g-5">
+                        <div className="col-lg-5 order-lg-2">
+                          <div className="text-center text-lg-start mb-4 mb-lg-0">
+                            <div className="d-inline-flex align-items-center justify-content-center bg-white p-3 rounded-4 shadow-sm mb-4">
+                              <i className="fas fa-graduation-cap fa-3x text-primary"></i>
+                            </div>
+                            <h1 className="fw-bold display-5 mb-3 text-dark">HSAPSS Windsor</h1>
+                            <p className="lead text-muted mb-4">
+                              A single space for every Windsor yuvak's journey. Connect, grow, and support each other.
+                            </p>
+                            <div className="d-flex flex-column gap-3">
+                              <div className="d-flex align-items-center gap-3">
+                                <div className="bg-success bg-opacity-10 text-success rounded-circle d-flex align-items-center justify-content-center" style={{ width: 32, height: 32 }}>
+                                  <i className="fas fa-check fa-sm"></i>
+                                </div>
+                                <span className="text-muted">Update once, stay connected forever</span>
                               </div>
-                              <h1 className="fw-bold display-5 mb-3 text-dark">HSAPSS Windsor</h1>
-                              <p className="lead text-muted mb-4">
-                                A single space for every Windsor yuvak's journey. Connect, grow, and support each other.
-                              </p>
-                              <div className="d-flex flex-column gap-3">
-                                <div className="d-flex align-items-center gap-3">
-                                  <div className="bg-success bg-opacity-10 text-success rounded-circle d-flex align-items-center justify-content-center" style={{ width: 32, height: 32 }}>
-                                    <i className="fas fa-check fa-sm"></i>
-                                  </div>
-                                  <span className="text-muted">Update once, stay connected forever</span>
+                              <div className="d-flex align-items-center gap-3">
+                                <div className="bg-success bg-opacity-10 text-success rounded-circle d-flex align-items-center justify-content-center" style={{ width: 32, height: 32 }}>
+                                  <i className="fas fa-check fa-sm"></i>
                                 </div>
-                                <div className="d-flex align-items-center gap-3">
-                                  <div className="bg-success bg-opacity-10 text-success rounded-circle d-flex align-items-center justify-content-center" style={{ width: 32, height: 32 }}>
-                                    <i className="fas fa-check fa-sm"></i>
-                                  </div>
-                                  <span className="text-muted">Find tailored help and resources</span>
+                                <span className="text-muted">Find tailored help and resources</span>
+                              </div>
+                              <div className="d-flex align-items-center gap-3">
+                                <div className="bg-success bg-opacity-10 text-success rounded-circle d-flex align-items-center justify-content-center" style={{ width: 32, height: 32 }}>
+                                  <i className="fas fa-check fa-sm"></i>
                                 </div>
-                                <div className="d-flex align-items-center gap-3">
-                                  <div className="bg-success bg-opacity-10 text-success rounded-circle d-flex align-items-center justify-content-center" style={{ width: 32, height: 32 }}>
-                                    <i className="fas fa-check fa-sm"></i>
-                                  </div>
-                                  <span className="text-muted">Mentor incoming students</span>
-                                </div>
+                                <span className="text-muted">Mentor incoming students</span>
                               </div>
                             </div>
-                         </div>
-                         <div className="col-lg-7 order-lg-1">
-                           <div className="card-modern p-4 p-lg-5">
-                             <div className="d-flex justify-content-between align-items-center mb-4">
-                               <h3 className="fw-bold mb-0">
-                                 {authMode === 'login' ? 'Welcome Back' : 'Create Account'}
-                               </h3>
-                               <Button
+                          </div>
+                        </div>
+                        <div className="col-lg-7 order-lg-1">
+                          <div className="card-modern p-4 p-lg-5">
+                            <div className="d-flex justify-content-between align-items-center mb-4">
+                              <h3 className="fw-bold mb-0">
+                                {authMode === 'login' ? 'Welcome Back' : 'Create Account'}
+                              </h3>
+                              <Button
                                 variant="light"
                                 size="sm"
                                 className="text-primary fw-semibold"
                                 onClick={() => switchAuthMode(authMode === 'login' ? 'register' : 'login')}
-                               >
-                                 {authMode === 'login' ? 'Create Account' : 'Sign In'}
-                               </Button>
-                             </div>
-                             
-                             {errorMessage && (
-                               <Alert variant="danger" className="border-0 bg-danger bg-opacity-10 text-danger mb-4">
-                                 <i className="fas fa-exclamation-circle me-2"></i>
-                                 {errorMessage}
-                               </Alert>
-                             )}
+                              >
+                                {authMode === 'login' ? 'Create Account' : 'Sign In'}
+                              </Button>
+                            </div>
 
-                             {successMessage && (
-                               <Alert variant="success" className="border-0 bg-success bg-opacity-10 text-success mb-4">
-                                 <i className="fas fa-check-circle me-2"></i>
-                                 {successMessage}
-                               </Alert>
-                             )}
+                            {errorMessage && (
+                              <Alert variant="danger" className="border-0 bg-danger bg-opacity-10 text-danger mb-4">
+                                <i className="fas fa-exclamation-circle me-2"></i>
+                                {errorMessage}
+                              </Alert>
+                            )}
 
-                             {authMode === 'login' ? (
-                               <Form onSubmit={handleLogin}>
-                                 <Form.Group className="mb-3" controlId="login-phone">
-                                   <Form.Label className="fw-semibold small text-muted text-uppercase">Phone Number</Form.Label>
-                                   <Form.Control
-                                     type="tel"
-                                     size="lg"
-                                     placeholder="Enter your phone number"
-                                     value={loginPhone}
-                                     onChange={(e) => setLoginPhone(e.target.value)}
-                                     required
-                                     className="bg-light border-0"
-                                   />
-                                 </Form.Group>
-                                 <Form.Group className="mb-4" controlId="login-password">
-                                   <Form.Label className="fw-semibold small text-muted text-uppercase">Password</Form.Label>
-                                   <Form.Control
-                                     type="password"
-                                     size="lg"
-                                     placeholder="Enter your password"
-                                     value={loginPassword}
-                                     onChange={(e) => setLoginPassword(e.target.value)}
-                                     required
-                                     className="bg-light border-0"
-                                   />
-                                 </Form.Group>
-                                 <Button type="submit" variant="primary" size="lg" className="w-100 fw-bold" disabled={loginLoading}>
-                                   {loginLoading ? <Spinner size="sm" animation="border" /> : 'Sign In'}
-                                 </Button>
-                               </Form>
-                             ) : (
-                               <Form onSubmit={handleRegister}>
-                                 <Form.Group className="mb-3" controlId="register-phone">
-                                   <Form.Label className="fw-semibold small text-muted text-uppercase">Phone Number</Form.Label>
-                                   <Form.Control
-                                     type="tel"
-                                     size="lg"
-                                     placeholder="Enter your phone number"
-                                     value={registerPhone}
-                                     onChange={(e) => setRegisterPhone(e.target.value)}
-                                     required
-                                     className="bg-light border-0"
-                                   />
-                                 </Form.Group>
-                                 <div className="row g-3 mb-4">
-                                   <div className="col-md-6">
-                                      <Form.Group controlId="register-password">
-                                        <Form.Label className="fw-semibold small text-muted text-uppercase">Password</Form.Label>
-                                        <Form.Control
-                                          type="password"
-                                          size="lg"
-                                          placeholder="8+ chars"
-                                          value={registerPassword}
-                                          onChange={(e) => setRegisterPassword(e.target.value)}
-                                          required
-                                          minLength={8}
-                                          className="bg-light border-0"
-                                        />
-                                      </Form.Group>
-                                   </div>
-                                   <div className="col-md-6">
-                                      <Form.Group controlId="register-confirm">
-                                        <Form.Label className="fw-semibold small text-muted text-uppercase">Confirm</Form.Label>
-                                        <Form.Control
-                                          type="password"
-                                          size="lg"
-                                          placeholder="Repeat password"
-                                          value={registerConfirm}
-                                          onChange={(e) => setRegisterConfirm(e.target.value)}
-                                          required
-                                          minLength={8}
-                                          className="bg-light border-0"
-                                        />
-                                      </Form.Group>
-                                   </div>
-                                 </div>
-                                 <Button type="submit" variant="primary" size="lg" className="w-100 fw-bold" disabled={registerLoading}>
-                                   {registerLoading ? <Spinner size="sm" animation="border" /> : 'Create Account'}
-                                 </Button>
-                               </Form>
-                             )}
-                           </div>
-                         </div>
-                       </div>
-                     </div>
-                   </div>
+                            {successMessage && (
+                              <Alert variant="success" className="border-0 bg-success bg-opacity-10 text-success mb-4">
+                                <i className="fas fa-check-circle me-2"></i>
+                                {successMessage}
+                              </Alert>
+                            )}
+
+                            {authMode === 'login' ? (
+                              <Form onSubmit={handleLogin}>
+                                <Form.Group className="mb-3" controlId="login-phone">
+                                  <Form.Label className="fw-semibold small text-muted text-uppercase">Phone Number</Form.Label>
+                                  <Form.Control
+                                    type="tel"
+                                    size="lg"
+                                    placeholder="Enter your phone number"
+                                    value={loginPhone}
+                                    onChange={(e) => setLoginPhone(e.target.value)}
+                                    required
+                                    className="bg-light border-0"
+                                  />
+                                </Form.Group>
+                                <Form.Group className="mb-4" controlId="login-password">
+                                  <Form.Label className="fw-semibold small text-muted text-uppercase">Password</Form.Label>
+                                  <Form.Control
+                                    type="password"
+                                    size="lg"
+                                    placeholder="Enter your password"
+                                    value={loginPassword}
+                                    onChange={(e) => setLoginPassword(e.target.value)}
+                                    required
+                                    className="bg-light border-0"
+                                  />
+                                </Form.Group>
+                                <Button type="submit" variant="primary" size="lg" className="w-100 fw-bold" disabled={loginLoading}>
+                                  {loginLoading ? <Spinner size="sm" animation="border" /> : 'Sign In'}
+                                </Button>
+                              </Form>
+                            ) : (
+                              <Form onSubmit={handleRegister}>
+                                <Form.Group className="mb-3" controlId="register-phone">
+                                  <Form.Label className="fw-semibold small text-muted text-uppercase">Phone Number</Form.Label>
+                                  <Form.Control
+                                    type="tel"
+                                    size="lg"
+                                    placeholder="Enter your phone number"
+                                    value={registerPhone}
+                                    onChange={(e) => setRegisterPhone(e.target.value)}
+                                    required
+                                    className="bg-light border-0"
+                                  />
+                                </Form.Group>
+                                <div className="row g-3 mb-4">
+                                  <div className="col-md-6">
+                                    <Form.Group controlId="register-password">
+                                      <Form.Label className="fw-semibold small text-muted text-uppercase">Password</Form.Label>
+                                      <Form.Control
+                                        type="password"
+                                        size="lg"
+                                        placeholder="8+ chars"
+                                        value={registerPassword}
+                                        onChange={(e) => setRegisterPassword(e.target.value)}
+                                        required
+                                        minLength={8}
+                                        className="bg-light border-0"
+                                      />
+                                    </Form.Group>
+                                  </div>
+                                  <div className="col-md-6">
+                                    <Form.Group controlId="register-confirm">
+                                      <Form.Label className="fw-semibold small text-muted text-uppercase">Confirm</Form.Label>
+                                      <Form.Control
+                                        type="password"
+                                        size="lg"
+                                        placeholder="Repeat password"
+                                        value={registerConfirm}
+                                        onChange={(e) => setRegisterConfirm(e.target.value)}
+                                        required
+                                        minLength={8}
+                                        className="bg-light border-0"
+                                      />
+                                    </Form.Group>
+                                  </div>
+                                </div>
+                                <Button type="submit" variant="primary" size="lg" className="w-100 fw-bold" disabled={registerLoading}>
+                                  {registerLoading ? <Spinner size="sm" animation="border" /> : 'Create Account'}
+                                </Button>
+                              </Form>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 ) : showThankYou ? (
                   <div className="text-center py-5">
                     <div className="mb-4">
@@ -4651,7 +4679,7 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
                             {updateLoading && <Spinner animation="border" variant="primary" size="sm" />}
                           </div>
                         </div>
-                        
+
                         <div className="col-lg-8">
                           <Form onSubmit={handleUpdate} className="student-portal-form" noValidate>
                             <div className="d-flex flex-column gap-4">
@@ -4704,8 +4732,8 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
 
                     {activePane === 'study-sync' && (
                       <div className="h-100">
-                        <StudySyncView 
-                          student={student} 
+                        <StudySyncView
+                          student={student}
                           portalAuthHeaders={portalAuthHeaders}
                           onConnect={(targetStudent) => {
                             setActivePane('community');
@@ -4717,8 +4745,8 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
 
                     {activePane === 'groups' && (
                       <div className="h-100">
-                        <GroupsView 
-                          student={student} 
+                        <GroupsView
+                          student={student}
                           portalAuthHeaders={portalAuthHeaders}
                         />
                       </div>
@@ -4744,15 +4772,15 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
 
                     {activePane === 'settings' && (
                       <div className="row justify-content-center">
-                         <div className="col-lg-6">
-                           <div className="d-flex align-items-center justify-content-between mb-4">
-                             <div>
-                               <h2 className="fw-bold mb-1 text-dark">Settings</h2>
-                               <p className="text-muted mb-0">Manage your account and preferences.</p>
-                             </div>
-                           </div>
-                           {renderAccountPane()}
-                         </div>
+                        <div className="col-lg-6">
+                          <div className="d-flex align-items-center justify-content-between mb-4">
+                            <div>
+                              <h2 className="fw-bold mb-1 text-dark">Settings</h2>
+                              <p className="text-muted mb-0">Manage your account and preferences.</p>
+                            </div>
+                          </div>
+                          {renderAccountPane()}
+                        </div>
                       </div>
                     )}
 
@@ -4828,7 +4856,7 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
               <i className="fas fa-palette" style={{ fontSize: '1.75rem', color: 'var(--color-primary)' }}></i>
               <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', margin: 0, color: 'var(--color-text)' }}>Choose Your Theme</h2>
             </div>
-            
+
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
@@ -4844,7 +4872,7 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
                 { id: 'dark', name: 'Midnight', primary: '#bb86fc', secondary: '#03dac6', accent: '#cf6679' }
               ].map((themeOption) => {
                 const isActive = theme === themeOption.id;
-                
+
                 return (
                   <button
                     key={themeOption.id}
@@ -4880,12 +4908,12 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
                   >
                     <div style={{ fontSize: '2rem' }}>
                       {themeOption.id === 'cyberpunk' ? '⚡' :
-                       themeOption.id === 'ocean' ? '🌊' :
-                       themeOption.id === 'sunset' ? '🌅' :
-                       themeOption.id === 'forest' ? '🌲' :
-                       themeOption.id === 'aurora' ? '⭐' :
-                       themeOption.id === 'light' ? '☀️' :
-                       '🌙'}
+                        themeOption.id === 'ocean' ? '🌊' :
+                          themeOption.id === 'sunset' ? '🌅' :
+                            themeOption.id === 'forest' ? '🌲' :
+                              themeOption.id === 'aurora' ? '⭐' :
+                                themeOption.id === 'light' ? '☀️' :
+                                  '🌙'}
                     </div>
                     <span style={{
                       fontSize: '0.875rem',
@@ -4920,13 +4948,13 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
       )}
 
       {/* Notification Panel */}
-      <Offcanvas 
-        show={showNotificationPanel} 
-        onHide={() => setShowNotificationPanel(false)} 
+      <Offcanvas
+        show={showNotificationPanel}
+        onHide={() => setShowNotificationPanel(false)}
         placement="end"
-        className="border-0 shadow-lg"
+        className="border-0 shadow-lg bg-surface text-main"
       >
-        <Offcanvas.Header closeButton className="border-bottom">
+        <Offcanvas.Header closeButton className="border-bottom bg-surface text-main">
           <Offcanvas.Title className="fw-bold">
             Notifications
             {unreadNotificationCount > 0 && (
@@ -4945,13 +4973,13 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
           ) : (
             <ListGroup variant="flush">
               {notifications.map((notif) => (
-                <ListGroup.Item 
-                  key={notif.id} 
-                  className={`p-3 border-bottom ${!notif.read ? 'bg-light' : ''}`}
+                <ListGroup.Item
+                  key={notif.id}
+                  className={`p-3 border-bottom bg-surface text-main ${!notif.read ? 'bg-body' : ''}`}
                   action
                 >
                   <div className="d-flex justify-content-between align-items-start mb-1">
-                    <strong className={!notif.read ? 'text-primary' : 'text-dark'}>
+                    <strong className={!notif.read ? 'text-primary' : 'text-main'}>
                       {notif.title}
                     </strong>
                     <small className="text-muted">
@@ -4959,13 +4987,13 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
                     </small>
                   </div>
                   <p className="mb-2 text-muted small">{notif.message}</p>
-                  
+
                   {/* Action Buttons for Follow Requests */}
                   {(notif.actionType === 'follow_request' || notif.type === 'follow_request') && !notif.read && (
                     <div className="d-flex gap-2 mt-2">
-                      <Button 
-                        size="sm" 
-                        variant="primary" 
+                      <Button
+                        size="sm"
+                        variant="primary"
                         className="flex-grow-1"
                         onClick={(e) => {
                           e.stopPropagation();
@@ -4975,9 +5003,9 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
                       >
                         Accept
                       </Button>
-                      <Button 
-                        size="sm" 
-                        variant="outline-secondary" 
+                      <Button
+                        size="sm"
+                        variant="outline-secondary"
                         className="flex-grow-1"
                         onClick={(e) => {
                           e.stopPropagation();
@@ -4995,11 +5023,11 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
           )}
         </Offcanvas.Body>
         {(unreadNotificationCount > 0 || notifications.some(n => n.read)) && (
-          <div className="p-3 border-top bg-light d-flex flex-column gap-2">
+          <div className="p-3 border-top bg-surface d-flex flex-column gap-2">
             {unreadNotificationCount > 0 && (
-              <Button 
-                variant="outline-primary" 
-                size="sm" 
+              <Button
+                variant="outline-primary"
+                size="sm"
                 className="w-100"
                 onClick={markAllNotificationsAsRead}
                 disabled={markingAll}
@@ -5014,16 +5042,16 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
                 )}
               </Button>
             )}
-            
+
             {notifications.some(n => n.read) && (
-              <Button 
-                variant="outline-secondary" 
-                size="sm" 
+              <Button
+                variant="outline-secondary"
+                size="sm"
                 className="w-100"
                 onClick={clearReadNotifications}
                 disabled={clearingRead}
               >
-                 {clearingRead ? (
+                {clearingRead ? (
                   <>
                     <Spinner size="sm" animation="border" className="me-2" />
                     Clearing...
@@ -5038,9 +5066,9 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
       </Offcanvas>
 
       {/* Offcanvas Components */}
-      <Offcanvas 
-        show={showConversationPanel} 
-        onHide={handleCloseConversation} 
+      <Offcanvas
+        show={showConversationPanel}
+        onHide={handleCloseConversation}
         placement="end"
         className="conversation-offcanvas border-0 shadow-lg"
         backdrop={true}
@@ -5097,9 +5125,9 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
                 <p>No messages yet.</p>
                 <p className="small">Start the conversation by saying hello!</p>
                 {conversationStarter && (
-                  <Button 
-                    variant="outline-primary" 
-                    size="sm" 
+                  <Button
+                    variant="outline-primary"
+                    size="sm"
                     className="mt-2 rounded-pill"
                     onClick={() => setMessageDraft(conversationStarter)}
                   >
@@ -5153,9 +5181,9 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
                   className="rounded-pill bg-light border-0 px-4 py-2"
                   autoFocus
                 />
-                <Button 
-                  type="submit" 
-                  variant="primary" 
+                <Button
+                  type="submit"
+                  variant="primary"
                   className="rounded-circle d-flex align-items-center justify-content-center shadow-sm"
                   style={{ width: 46, height: 46 }}
                   disabled={!messageDraft.trim()}
@@ -5286,7 +5314,7 @@ export async function getServerSideProps(context) {
     } else {
       console.log('[SSR] Session object is null/undefined');
     }
-    
+
     if (isLoginRoute) {
       return {
         props: {}

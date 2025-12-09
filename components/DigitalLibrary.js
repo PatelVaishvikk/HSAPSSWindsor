@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Button, Badge, Row, Col, Modal, Form, InputGroup, Nav, Spinner } from 'react-bootstrap';
-import { 
-  Book, Upload, Search, Star, 
-  Monitor, Database, Music, Sparkles, 
+import {
+  Book, Upload, Search, Star,
+  Monitor, Database, Music, Sparkles,
   BookOpen, Eye, PlayCircle, Youtube, Film, Trash2, RefreshCw
 } from 'lucide-react';
 
@@ -20,7 +20,7 @@ export default function DigitalLibrary({ currentUser }) {
   const [showReader, setShowReader] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
-  
+
   const [libraryItems, setLibraryItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [savedItemIds, setSavedItemIds] = useState(new Set());
@@ -29,7 +29,7 @@ export default function DigitalLibrary({ currentUser }) {
   // 1. Fetch from Database
   useEffect(() => {
     fetchResources();
-    
+
     // Load local saves
     const saved = localStorage.getItem('library_saved_ids');
     if (saved) setSavedItemIds(new Set(JSON.parse(saved)));
@@ -51,7 +51,7 @@ export default function DigitalLibrary({ currentUser }) {
   };
 
   // 2. Upload (Link Only)
-  const [uploadType, setUploadType] = useState('pdf'); 
+  const [uploadType, setUploadType] = useState('pdf');
   const [uploadData, setUploadData] = useState({
     title: '',
     author: '',
@@ -73,20 +73,20 @@ export default function DigitalLibrary({ currentUser }) {
     if (!uploadData.url) return;
 
     setIsSubmitting(true);
-    
+
     let finalUrl = uploadData.url;
     let thumbnail = null;
     let youtubeId = null;
 
     if (uploadType === 'video') {
-       youtubeId = getYoutubeId(finalUrl);
-       if (!youtubeId) {
-         alert('Invalid YouTube URL');
-         setIsSubmitting(false);
-         return;
-       }
-       finalUrl = `https://www.youtube.com/embed/${youtubeId}`;
-       thumbnail = `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`;
+      youtubeId = getYoutubeId(finalUrl);
+      if (!youtubeId) {
+        alert('Invalid YouTube URL');
+        setIsSubmitting(false);
+        return;
+      }
+      finalUrl = `https://www.youtube.com/embed/${youtubeId}`;
+      thumbnail = `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`;
     }
 
     const newItem = {
@@ -146,8 +146,8 @@ export default function DigitalLibrary({ currentUser }) {
 
   // 4. Reset / Seed (GitHub -> DB)
   const handleSeed = async () => {
-    if(!confirm("Load 'Official' books from code into the database? This puts them in the shared library.")) return;
-    
+    if (!confirm("Load 'Official' books from code into the database? This puts them in the shared library.")) return;
+
     try {
       const res = await fetch('/api/student-portal/resources/seed', { method: 'POST' });
       const data = await res.json();
@@ -174,12 +174,12 @@ export default function DigitalLibrary({ currentUser }) {
   const canDelete = (item) => {
     const currentUserId = currentUser?._id || currentUser?.email;
     const adminPhones = ['5199927920']; // Hardcoded Admin for now
-    
+
     // 1. Owner can delete
     if (item.uploader_id === currentUserId) return true;
-    
+
     // 2. Admin can delete EVERYTHING (including Seed items)
-    if (currentUser?.phone && adminPhones.includes(currentUser.phone.replace(/\D/g,''))) return true;
+    if (currentUser?.phone && adminPhones.includes(currentUser.phone.replace(/\D/g, ''))) return true;
 
     return false;
   };
@@ -193,8 +193,8 @@ export default function DigitalLibrary({ currentUser }) {
       if (item.category !== activeTab) return false;
     }
 
-    const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          (item.tags && item.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase())));
+    const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (item.tags && item.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase())));
     return matchesSearch;
   });
 
@@ -209,12 +209,12 @@ export default function DigitalLibrary({ currentUser }) {
   ];
 
   return (
-    <div className="digital-library h-100 d-flex flex-column bg-white rounded-4 shadow-sm overflow-hidden">
+    <div className="digital-library h-100 d-flex flex-column bg-surface rounded-4 shadow-sm overflow-hidden">
       {/* Header */}
-      <div className="p-4 bg-light border-bottom">
+      <div className="p-4 bg-surface border-bottom">
         <div className="d-flex justify-content-between align-items-center mb-4">
           <div>
-            <h2 className="fw-bold mb-1 text-dark" style={{ letterSpacing: '-0.5px' }}>
+            <h2 className="fw-bold mb-1 text-main" style={{ letterSpacing: '-0.5px' }}>
               <BookOpen className="text-primary me-2 mb-1" size={32} />
               The Archive
             </h2>
@@ -223,17 +223,16 @@ export default function DigitalLibrary({ currentUser }) {
             </p>
           </div>
           <div className="d-flex gap-2">
-            <Button 
-              variant="outline-dark" 
-              className="rounded-pill px-3 shadow-sm d-flex align-items-center gap-2"
+            <Button
+              className="rounded-pill px-3 shadow-sm d-flex align-items-center gap-2 bg-transparent border text-main"
               onClick={handleSeed}
               title="Pull Official Books from GitHub code"
             >
               <RefreshCw size={16} />
               <span className="d-none d-sm-inline">Sync Official</span>
             </Button>
-            <Button 
-              variant="dark" 
+            <Button
+              variant="dark"
               className="rounded-pill px-4 shadow-sm d-flex align-items-center gap-2"
               onClick={() => setShowUploadModal(true)}
             >
@@ -248,10 +247,10 @@ export default function DigitalLibrary({ currentUser }) {
           <Nav variant="pills" className="gap-2 overflow-auto flex-nowrap pb-2 pb-md-0 hide-scrollbar">
             {categories.map(cat => (
               <Nav.Item key={cat.id}>
-                <Nav.Link 
+                <Nav.Link
                   active={activeTab === cat.id}
                   onClick={() => setActiveTab(cat.id)}
-                  className={`rounded-pill d-flex align-items-center gap-2 px-3 ${activeTab === cat.id ? 'bg-primary text-white' : 'bg-white text-muted border'}`}
+                  className={`rounded-pill d-flex align-items-center gap-2 px-3 ${activeTab === cat.id ? 'bg-primary text-white' : 'bg-surface text-muted border'}`}
                   style={{ whiteSpace: 'nowrap' }}
                 >
                   {cat.icon}
@@ -261,13 +260,13 @@ export default function DigitalLibrary({ currentUser }) {
             ))}
           </Nav>
 
-          <InputGroup style={{ maxWidth: '300px' }}>
-            <InputGroup.Text className="bg-white border-end-0">
-              <Search size={18} className="text-muted" />
+          <InputGroup style={{ maxWidth: '300px' }} className="shadow-sm rounded-pill overflow-hidden">
+            <InputGroup.Text className="bg-body border-0 ps-3 pe-2">
+              <Search size={18} className="text-primary" />
             </InputGroup.Text>
-            <Form.Control 
-              placeholder="Search..." 
-              className="border-start-0 ps-0 shadow-none"
+            <Form.Control
+              placeholder="Search..."
+              className="border-0 shadow-none bg-body text-main ps-1"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -276,7 +275,7 @@ export default function DigitalLibrary({ currentUser }) {
       </div>
 
       {/* Grid */}
-      <div className="flex-grow-1 p-4 overflow-auto custom-scrollbar" style={{ backgroundColor: '#f8f9fa' }}>
+      <div className="flex-grow-1 p-4 overflow-auto custom-scrollbar" style={{ backgroundColor: 'var(--bg-body)' }}>
         {loading ? (
           <div className="text-center py-5">
             <Spinner animation="border" variant="primary" />
@@ -284,23 +283,23 @@ export default function DigitalLibrary({ currentUser }) {
           </div>
         ) : filteredItems.length === 0 ? (
           <div className="text-center py-5 opacity-50">
-             <Book size={48} className="mb-3" />
-             <h5>Library is Empty</h5>
-             <p>Click "Sync Official" to load the starter books!</p>
+            <Book size={48} className="mb-3" />
+            <h5>Library is Empty</h5>
+            <p>Click "Sync Official" to load the starter books!</p>
           </div>
         ) : (
           <Row className="g-4">
             {filteredItems.map(item => (
               <Col xs={12} sm={6} md={4} xl={3} key={item._id}>
-                <Card 
-                  className="h-100 border-0 shadow-sm book-card hover-lift overflow-hidden" 
+                <Card
+                  className="h-100 border-0 shadow-sm book-card hover-lift overflow-hidden bg-surface"
                   onClick={() => { setSelectedItem(item); setShowReader(true); }}
                   style={{ cursor: 'pointer', transition: 'all 0.3s ease' }}
                 >
-                  <div 
+                  <div
                     className="book-cover position-relative p-4 d-flex flex-column justify-content-between"
-                    style={{ 
-                      height: '240px', 
+                    style={{
+                      height: '240px',
                       background: item.type === 'video' ? `url(${item.thumbnail}) center/cover` : item.cover_color,
                       color: 'white',
                       position: 'relative'
@@ -308,16 +307,16 @@ export default function DigitalLibrary({ currentUser }) {
                   >
                     <div className="position-absolute top-0 start-0 w-100 h-100 bg-gradient-to-t from-black to-transparent opacity-60" style={{ pointerEvents: 'none' }} />
                     {item.type === 'video' && <div className="position-absolute top-0 start-0 w-100 h-100 bg-dark opacity-50" />}
-                    
+
                     <div className="d-flex justify-content-between align-items-start position-relative w-100" style={{ zIndex: 3 }}>
-                      <Badge bg="white" text="dark" className="opacity-90 shadow-sm text-truncate px-2">
+                      <Badge className="bg-surface text-main opacity-90 shadow-sm text-truncate px-2">
                         {item.category === 'data_science' ? 'Data Sci' : item.category.replace('_', ' ').toUpperCase()}
                       </Badge>
                       <div className="d-flex gap-2">
-                         {canDelete(item) && (
-                          <Button 
-                            variant="danger" size="sm" 
-                            className="p-1 rounded-circle bg-danger border-0 opacity-75 hover-opacity-100" 
+                        {canDelete(item) && (
+                          <Button
+                            variant="danger" size="sm"
+                            className="p-1 rounded-circle bg-danger border-0 opacity-75 hover-opacity-100"
                             onClick={(e) => handleDelete(e, item)}
                           >
                             <Trash2 size={14} className="text-white" />
@@ -330,9 +329,9 @@ export default function DigitalLibrary({ currentUser }) {
                     </div>
 
                     {item.type === 'video' && (
-                       <div className="position-absolute top-50 start-50 translate-middle text-white z-2">
-                         <PlayCircle size={56} className="opacity-90 drop-shadow" />
-                       </div>
+                      <div className="position-absolute top-50 start-50 translate-middle text-white z-2">
+                        <PlayCircle size={56} className="opacity-90 drop-shadow" />
+                      </div>
                     )}
 
                     <div className="position-relative mt-auto" style={{ zIndex: 3 }}>
@@ -343,10 +342,10 @@ export default function DigitalLibrary({ currentUser }) {
                     </div>
                   </div>
                   <Card.Body className="p-3">
-                     <div className="d-flex justify-content-between text-muted small">
-                         <span>{item.type === 'video' ? 'Video' : 'PDF Link'}</span>
-                         <span>By {item.uploaded_by}</span>
-                     </div>
+                    <div className="d-flex justify-content-between text-muted small">
+                      <span>{item.type === 'video' ? 'Video' : 'PDF Link'}</span>
+                      <span>By {item.uploaded_by}</span>
+                    </div>
                   </Card.Body>
                 </Card>
               </Col>
@@ -361,41 +360,41 @@ export default function DigitalLibrary({ currentUser }) {
           <Modal.Title className="fw-bold">Share a Resource</Modal.Title>
         </Modal.Header>
         <Modal.Body className="p-4">
-          <Nav variant="tabs" className="mb-4" activeKey={uploadType} onSelect={(k) => { setUploadType(k); setUploadData({...uploadData, url: ''}); }}>
-            <Nav.Item><Nav.Link eventKey="pdf" className="gap-2"><Book size={18}/> PDF Link</Nav.Link></Nav.Item>
-            <Nav.Item><Nav.Link eventKey="video" className="gap-2"><Youtube size={18}/> Video Link</Nav.Link></Nav.Item>
+          <Nav variant="tabs" className="mb-4" activeKey={uploadType} onSelect={(k) => { setUploadType(k); setUploadData({ ...uploadData, url: '' }); }}>
+            <Nav.Item><Nav.Link eventKey="pdf" className="gap-2"><Book size={18} /> PDF Link</Nav.Link></Nav.Item>
+            <Nav.Item><Nav.Link eventKey="video" className="gap-2"><Youtube size={18} /> Video Link</Nav.Link></Nav.Item>
           </Nav>
 
           <Form onSubmit={handleUploadSubmit}>
             <Form.Group className="mb-3">
               <Form.Label>Resource URL {uploadType === 'pdf' ? '(Google Drive, Dropbox, etc.)' : '(YouTube)'}</Form.Label>
-              <Form.Control 
-                required 
+              <Form.Control
+                required
                 type="url"
                 placeholder={uploadType === 'video' ? "https://youtube.com/..." : "https://drive.google.com/..."}
                 value={uploadData.url}
-                onChange={e => setUploadData({...uploadData, url: e.target.value})}
+                onChange={e => setUploadData({ ...uploadData, url: e.target.value })}
               />
             </Form.Group>
-            
+
             <Row>
-                <Col><Form.Group className="mb-3"><Form.Label>Title</Form.Label><Form.Control required value={uploadData.title} onChange={e => setUploadData({...uploadData, title: e.target.value})} /></Form.Group></Col>
-                <Col><Form.Group className="mb-3"><Form.Label>Category</Form.Label>
-                  <Form.Select value={uploadData.category} onChange={e => setUploadData({...uploadData, category: e.target.value})}>
-                     <option value="it">IT & CS</option>
-                     <option value="data_science">Data Science</option>
-                     <option value="music">Music</option>
-                     <option value="spiritual">Spiritual</option>
-                     <option value="cinema">Cinema</option>
-                  </Form.Select>
-                </Form.Group></Col>
+              <Col><Form.Group className="mb-3"><Form.Label>Title</Form.Label><Form.Control required value={uploadData.title} onChange={e => setUploadData({ ...uploadData, title: e.target.value })} /></Form.Group></Col>
+              <Col><Form.Group className="mb-3"><Form.Label>Category</Form.Label>
+                <Form.Select value={uploadData.category} onChange={e => setUploadData({ ...uploadData, category: e.target.value })}>
+                  <option value="it">IT & CS</option>
+                  <option value="data_science">Data Science</option>
+                  <option value="music">Music</option>
+                  <option value="spiritual">Spiritual</option>
+                  <option value="cinema">Cinema</option>
+                </Form.Select>
+              </Form.Group></Col>
             </Row>
 
             <div className="d-flex justify-content-end gap-2 mt-4">
-               <Button variant="light" onClick={() => setShowUploadModal(false)}>Cancel</Button>
-               <Button variant="primary" type="submit" disabled={isSubmitting}>
-                 {isSubmitting ? 'Sharing...' : 'Share Now'}
-               </Button>
+              <Button variant="light" onClick={() => setShowUploadModal(false)}>Cancel</Button>
+              <Button variant="primary" type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Sharing...' : 'Share Now'}
+              </Button>
             </div>
           </Form>
         </Modal.Body>
@@ -405,21 +404,21 @@ export default function DigitalLibrary({ currentUser }) {
       <Modal show={showReader} onHide={() => setShowReader(false)} fullscreen>
         <Modal.Header closeButton className="bg-dark text-white border-bottom border-secondary">
           <h5 className="mb-0">{selectedItem?.title}</h5>
-           <Button variant="outline-light" size="sm" className="ms-3" href={selectedItem?.url} target="_blank">
-             Open Original Link <Upload size={14} className="ms-1" />
-           </Button>
+          <Button variant="outline-light" size="sm" className="ms-3" href={selectedItem?.url} target="_blank">
+            Open Original Link <Upload size={14} className="ms-1" />
+          </Button>
         </Modal.Header>
         <Modal.Body className="p-0 bg-black d-flex align-items-center justify-content-center">
-            {selectedItem?.type === 'video' ? (
-                <iframe width="100%" height="100%" src={`${selectedItem.url}?autoplay=1`} frameBorder="0" allowFullScreen />
-            ) : (
-                <div className="text-center text-white">
-                    <Book size={64} className="mb-3 text-muted" />
-                    <h3>External Resource</h3>
-                    <p>This is a link to an external PDF/Document.</p>
-                    <Button variant="primary" size="lg" href={selectedItem?.url} target="_blank">View Document</Button>
-                </div>
-            )}
+          {selectedItem?.type === 'video' ? (
+            <iframe width="100%" height="100%" src={`${selectedItem.url}?autoplay=1`} frameBorder="0" allowFullScreen />
+          ) : (
+            <div className="text-center text-white">
+              <Book size={64} className="mb-3 text-muted" />
+              <h3>External Resource</h3>
+              <p>This is a link to an external PDF/Document.</p>
+              <Button variant="primary" size="lg" href={selectedItem?.url} target="_blank">View Document</Button>
+            </div>
+          )}
         </Modal.Body>
       </Modal>
 
