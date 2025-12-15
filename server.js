@@ -12,6 +12,7 @@ import connectDb from './lib/db.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.join(__dirname, '.env.local') });
+dotenv.config();
 
 // Ensure MongoDB URI is provided
 if (!process.env.MONGODB_URI) {

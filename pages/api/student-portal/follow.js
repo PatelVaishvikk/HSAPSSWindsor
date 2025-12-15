@@ -72,7 +72,7 @@ export default async function handler(req, res) {
 
       // Notify target
       if (io) {
-        io.to(targetId).emit('notification', {
+        io.to(`student:${targetId}`).emit('notification', {
           title: 'New Follower',
           message: `${viewerName} started following you`,
           variant: 'success',
@@ -80,10 +80,11 @@ export default async function handler(req, res) {
           timestamp: new Date()
         });
         
-        io.to(targetId).emit('follow_update', {
+        io.to(`student:${targetId}`).emit('follow_update', {
           followerId: viewerId,
           targetId: targetId,
-          action: 'follow'
+          action: 'follow',
+          followerName: viewerName // Useful for UI
         });
       }
 

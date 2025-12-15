@@ -23,6 +23,8 @@ import { useFeed } from '../hooks/useFeed';
 import StudySyncView from '../components/StudySyncView';
 import GroupsView from '../components/GroupsView';
 import DigitalLibrary from '../components/DigitalLibrary';
+import Feed from '../components/community/Feed';
+import CustomToastContainer from '../components/ui/ToastContainer';
 
 const DEFAULT_PASSWORD = 'dasnadas'; // Force rebuild
 
@@ -238,7 +240,7 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
   const [showConversationPanel, setShowConversationPanel] = useState(false);
 
   const removeToast = (id) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
+    setToastQueue((prev) => prev.filter((t) => t.id !== id));
   };
 
   // Help Board State
@@ -283,6 +285,9 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
   const [showThemePicker, setShowThemePicker] = useState(false);
   const [themeLoaded, setThemeLoaded] = useState(false);
 
+  // Activity History Toggle
+  const [showActivityHistory, setShowActivityHistory] = useState(false);
+
   // Follow Requests State
   const [followRequests, setFollowRequests] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
@@ -298,6 +303,7 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
   const [profilePreview, setProfilePreview] = useState(null);
   const [showProfilePreview, setShowProfilePreview] = useState(false);
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
 
 
 
@@ -859,6 +865,7 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
     () => [
       { key: 'profile', label: 'My Profile', icon: 'fas fa-id-card' },
       { key: 'community', label: 'Community', icon: 'fas fa-users' },
+      { key: 'feed', label: 'Community Feed', icon: 'fas fa-rss' },
       { key: 'study-sync', label: 'Study Sync', icon: 'fas fa-fire' },
       { key: 'help', label: 'Help Board', icon: 'fas fa-hands-helping' },
       { key: 'account', label: 'Account', icon: 'fas fa-lock' }
@@ -1342,6 +1349,64 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
       }
     });
 
+    socket.on('follow_update', (data) => {
+      console.log('[CHAT] Follow update received:', data);
+      setStudent(prev => {
+        if (!prev) return prev;
+        
+        let newStudent = { ...prev };
+
+        // 1. Someone followed me
+        if (data.action === 'follow' && String(data.targetId) === String(prev._id)) {
+           if (!newStudent.followers) newStudent.followers = [];
+           if (!newStudent.followers.includes(data.followerId)) {
+             newStudent.followers = [...newStudent.followers, data.followerId];
+           }
+           
+           // Update Modal List if open
+           if (showFollowModal && followModalType === 'followers') {
+              setFollowList(currentList => {
+                 if (currentList.some(u => u.id === data.followerId || u._id === data.followerId)) return currentList;
+                 // We need the user object. Since we only have ID and Name, we can construct a basic one or fetch.
+                 // Constructing basic one for immediate feedback
+                 return [{
+                   id: data.followerId, 
+                   first_name: data.followerName || 'New Follower', 
+                   last_name: '',
+                   profile_picture: data.followerPic || '' // If available
+                 }, ...currentList];
+              });
+           }
+        }
+        
+        // 2. Someone unfollowed me
+        if (data.type === 'lost_follower' && data.userId) {
+           if (newStudent.followers) {
+             newStudent.followers = newStudent.followers.filter(id => id !== data.userId);
+           }
+           
+           // Update Modal List if open
+           if (showFollowModal && followModalType === 'followers') {
+              setFollowList(currentList => currentList.filter(u => u.id !== data.userId && u._id !== data.userId));
+           }
+        }
+
+        // 3. I unfollowed someone (sync)
+        if (data.type === 'unfollow' && data.targetId) {
+             if (newStudent.following) {
+               newStudent.following = newStudent.following.filter(id => id !== data.targetId);
+             }
+             
+             // Update Modal List if open
+             if (showFollowModal && followModalType === 'following') {
+                setFollowList(currentList => currentList.filter(u => u.id !== data.targetId && u._id !== data.targetId));
+             }
+        }
+        
+        return newStudent;
+      });
+    });
+
     refreshInboxThreads();
     refreshHelpRequests(); // Now safe to call - uses refs, won't cause infinite loop
 
@@ -1353,12 +1418,13 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
       socket.off('post:new');
       socket.off('post:like');
       socket.off('post:comment');
+      socket.off('follow_update');
       socket.disconnect();
       socketRef.current = null;
       console.log('[CHAT] Socket disconnected on cleanup');
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [student?._id, handleIncomingMessage, handleConversationEvent, handleRealtimeHelpUpdate, refreshInboxThreads]);
+  }, [student?._id, handleIncomingMessage, handleConversationEvent, handleRealtimeHelpUpdate, refreshInboxThreads, showFollowModal, followModalType]);
 
 
   // Load feed when feed pane is active - Handled by useFeed hook
@@ -1505,7 +1571,7 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
   }, []);
 
   useEffect(() => {
-    if (student && activePane === 'community') {
+    if (student && (activePane === 'community' || activePane === 'feed')) {
       if (!communityInitialized && !communityLoading) {
         refreshCommunityProfiles();
       }
@@ -1842,16 +1908,17 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
       return {
         ...currentData,
         posts: currentData.posts.map((post) => {
-          if (post.id === postId) {
-            const newIsLiked = !post.is_liked;
-            return {
-              ...post,
-              is_liked: newIsLiked,
-              likes: newIsLiked ? (post.likes || 0) + 1 : Math.max(0, (post.likes || 0) - 1)
-            };
-          }
-          return post;
-        })
+        const pId = post._id || post.id;
+        if (pId === postId) {
+          const newIsLiked = !post.is_liked;
+          return {
+            ...post,
+            is_liked: newIsLiked,
+            likes: newIsLiked ? (post.likes || 0) + 1 : Math.max(0, (post.likes || 0) - 1)
+          };
+        }
+        return post;
+      })
       };
     }, { revalidate: false });
 
@@ -1898,11 +1965,18 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
     }
   };
 
+  const [commentSubmitting, setCommentSubmitting] = useState({});
+
   const handleCommentSubmit = async (postId) => {
+    if (commentSubmitting[postId]) return;
+    
     const content = commentDrafts[postId]?.trim();
     if (!content) {
       return;
     }
+
+    setCommentSubmitting(prev => ({ ...prev, [postId]: true }));
+
     try {
       const response = await fetch('/api/student-portal/post-actions?action=comment', {
         method: 'POST',
@@ -1925,6 +1999,8 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
       mutateFeed();
     } catch (error) {
       console.error('Comment submission failed:', error);
+    } finally {
+      setCommentSubmitting(prev => ({ ...prev, [postId]: false }));
     }
   };
 
@@ -2270,7 +2346,9 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update follow status');
+        const errorText = await response.text();
+        console.error('Follow API Error:', response.status, errorText);
+        throw new Error(errorText || 'Failed to update follow status');
       }
 
       const data = await response.json();
@@ -3098,223 +3176,59 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
     </div>
   );
 
-  const renderFeedPane = () => (
-    <div className="feed-pane mobile-feed-container">
-      <div className="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
-        <div>
-          <h5 className="fw-semibold mb-1">Community Feed</h5>
-          <p className="text-muted small mb-0">
-            Share updates, thoughts, and connect with the community.
-          </p>
-        </div>
-      </div>
+  const renderFeedPane = () => {
+    // Ensure we have profiles for suggestions (fallback if empty)
+    const suggestedUsers = communityProfiles.length > 0 ? communityProfiles : [];
 
-      {feedError && (
-        <Alert variant="danger" className="mb-4">
-          {feedError}
-        </Alert>
-      )}
-
-      {/* Post Creation Form */}
-      <Card className="border-0 shadow-sm mb-4">
-        <Card.Body>
-          <h6 className="fw-semibold mb-3">
-            <i className="fas fa-edit me-2 text-primary"></i>
-            Create a Post
-          </h6>
-          <Form onSubmit={handlePostSubmit}>
-            <Form.Group className="mb-3">
-              <Form.Control
-                as="textarea"
-                rows={3}
-                placeholder="What's on your mind?"
-                value={postForm.content}
-                onChange={(e) => setPostForm({ content: e.target.value })}
-                required
-              />
-            </Form.Group>
-            <div className="d-flex justify-content-end">
-              <Button type="submit" variant="primary" disabled={postSubmitting || !postForm.content.trim()}>
-                {postSubmitting ? (
-                  <>
-                    <Spinner animation="border" size="sm" className="me-2" role="status" />
-                    Posting...
-                  </>
-                ) : (
-                  <>
-                    <i className="fas fa-paper-plane me-2"></i>
-                    Post
-                  </>
-                )}
-              </Button>
-            </div>
-          </Form>
-        </Card.Body>
-      </Card>
-
-      {/* Feed */}
-      {feedLoading && feedPosts.length === 0 ? (
-        <div className="text-center py-5">
-          <Spinner animation="border" role="status" className="text-primary" />
-          <p className="text-muted small mt-3 mb-0">Loading feed...</p>
-        </div>
-      ) : feedPosts.length === 0 ? (
-        <div className="text-center py-5">
-          <div className="empty-state-icon mb-3">
-            <i className="fas fa-rss"></i>
+    return (
+      <div className="feed-pane mobile-feed-container h-100">
+        <div className="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
+          <div>
+            <h5 className="fw-semibold mb-1">Community Feed</h5>
+            <p className="text-muted small mb-0">
+              Share updates, thoughts, and connect with the community.
+            </p>
           </div>
-          <h6 className="fw-semibold mb-2">No posts yet</h6>
-          <p className="text-muted small mb-0">
-            Be the first to share something with the community!
-          </p>
         </div>
-      ) : (
-        <div className="d-flex flex-column gap-3">
-          {feedPosts.map((post) => (
-            <Card key={post.id} className="border-0 shadow-sm post-card feed-card">
-              <Card.Body>
-                {/* Post Header */}
-                <div className="d-flex justify-content-between align-items-start mb-3 feed-header">
-                  <div className="d-flex gap-3 flex-grow-1">
-                    <div className="conversation-avatar conversation-avatar-sm flex-shrink-0">
-                      {renderAvatar(post.author)}
-                    </div>
-                    <div className="flex-grow-1">
-                      <h6 className="fw-bold mb-0">
-                        {post.author?.first_name} {post.author?.last_name}
-                      </h6>
-                      {post.author?.study && (
-                        <p className="text-muted small mb-0">{post.author.study}</p>
-                      )}
-                      <p className="text-muted small mb-0">
-                        {formatConversationTimestamp(post.created_at)}
-                      </p>
-                    </div>
-                  </div>
-                  {post.is_owner && (
-                    <Dropdown align="end">
-                      <Dropdown.Toggle variant="link" className="text-muted border-0 p-0 no-arrow">
-                        <i className="fas fa-ellipsis-v"></i>
-                      </Dropdown.Toggle>
-                      <Dropdown.Menu>
-                        <Dropdown.Item onClick={() => handleDeletePost(post.id)} className="text-danger">
-                          <i className="fas fa-trash-alt me-2"></i>
-                          Delete Post
-                        </Dropdown.Item>
-                      </Dropdown.Menu>
-                    </Dropdown>
-                  )}
-                </div>
 
-                {/* Post Content */}
-                {post.shared_from && (
-                  <div className="mb-2">
-                    <Badge bg="info" text="dark" className="mb-2">
-                      <i className="fas fa-retweet me-1"></i>
-                      Shared
-                    </Badge>
-                  </div>
-                )}
-                <p className="mb-3 feed-content">{post.content}</p>
+        {feedError && (
+          <Alert variant="danger" className="mb-4">
+            {feedError}
+          </Alert>
+        )}
 
-                {/* Shared Post */}
-                {post.shared_from && (
-                  <Card className="border mb-3 bg-light">
-                    <Card.Body className="p-3">
-                      <div className="small fw-semibold mb-1">
-                        {post.shared_from.author?.first_name} {post.shared_from.author?.last_name}
-                      </div>
-                      <p className="small mb-0">{post.shared_from.content}</p>
-                    </Card.Body>
-                  </Card>
-                )}
+        <Feed
+            posts={feedPosts}
+            users={suggestedUsers}
+            currentUser={student}
+            onLikePost={handleLikePost}
+            onFollowUser={(id, action) => handleFollow(id, action || 'follow')}
+            onMessageUser={(user) => {
+                setActiveConversation({ 
+                    id: user._id, 
+                    first_name: user.first_name, 
+                    last_name: user.last_name, 
+                    profile_picture: user.profile_picture 
+                });
+                setActivePane('inbox');
+            }}
+            onCreatePost={handlePostSubmit}
+            postContent={postForm.content}
+            onPostContentChange={(content) => setPostForm({ ...postForm, content })}
+            isSubmitting={postSubmitting}
+            onToggleComments={handleLoadComments}
+            onSharePost={handleSharePost}
+            showComments={showComments}
+            postComments={postComments}
+            commentDrafts={commentDrafts}
+            onCommentChange={(postId, val) => setCommentDrafts(prev => ({ ...prev, [postId]: val }))}
+            onCommentSubmit={handleCommentSubmit}
+        />
+      </div>
+    );
+  };
 
-                {/* Post Actions */}
-                <div className="border-top pt-2 mt-2 feed-footer">
-                  <div className="d-flex gap-3 mb-2 feed-actions">
-                    <Button
-                      variant="link"
-                      size="sm"
-                      className={`text-decoration-none d-flex align-items-center gap-1 ${post.is_liked ? 'text-danger' : 'text-muted'}`}
-                      onClick={() => handleLikePost(post.id)}
-                    >
-                      <i className={`${post.is_liked ? 'fas' : 'far'} fa-heart`}></i>
-                      <span>{post.likes || 0}</span>
-                    </Button>
-                    <Button
-                      variant="link"
-                      size="sm"
-                      className="text-decoration-none text-muted d-flex align-items-center gap-1"
-                      onClick={() => handleLoadComments(post.id)}
-                    >
-                      <i className="far fa-comment"></i>
-                      <span>{post.comments || 0}</span>
-                    </Button>
-                    <Button
-                      variant="link"
-                      size="sm"
-                      className="text-decoration-none text-muted d-flex align-items-center gap-1"
-                      onClick={() => handleSharePost(post.id)}
-                    >
-                      <i className="fas fa-retweet"></i>
-                      <span>Share</span>
-                    </Button>
-                  </div>
 
-                  {/* Comments Section */}
-                  {showComments[post.id] && (
-                    <div className="border-top pt-3 mt-2">
-                      {postComments[post.id]?.length > 0 && (
-                        <div className="mb-3">
-                          {postComments[post.id].map((comment) => (
-                            <div key={comment.id} className="d-flex gap-2 mb-2">
-                              <div className="conversation-avatar conversation-avatar-xs flex-shrink-0">
-                                {renderAvatar(comment.author)}
-                              </div>
-                              <div className="flex-grow-1 bg-light p-2 rounded">
-                                <div className="fw-semibold small">
-                                  {comment.author?.first_name} {comment.author?.last_name}
-                                </div>
-                                <div className="small">{comment.content}</div>
-                                <div className="text-muted" style={{ fontSize: '0.7rem' }}>
-                                  {formatConversationTimestamp(comment.created_at)}
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                      <Form
-                        onSubmit={(e) => {
-                          e.preventDefault();
-                          handleCommentSubmit(post.id);
-                        }}
-                      >
-                        <div className="d-flex gap-2">
-                          <Form.Control
-                            type="text"
-                            size="sm"
-                            placeholder="Write a comment..."
-                            value={commentDrafts[post.id] || ''}
-                            onChange={(e) =>
-                              setCommentDrafts((prev) => ({ ...prev, [post.id]: e.target.value }))
-                            }
-                          />
-                          <Button type="submit" variant="primary" size="sm">
-                            <i className="fas fa-paper-plane"></i>
-                          </Button>
-                        </div>
-                      </Form>
-                    </div>
-                  )}
-                </div>
-              </Card.Body>
-            </Card>
-          ))}
-        </div>
-      )}
-    </div>
-  );
 
   const renderHelpPane = () => (
     <div className="help-pane">
@@ -3807,70 +3721,8 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
     }, 1000);
   };
 
-  const renderAccountPane = () => (
-    <div className="account-pane">
-      {/* Profile Picture & Followers */}
-      <Card className="border-0 shadow-sm mb-4">
-        <Card.Body className="text-center">
-          <div className="position-relative d-inline-block mb-3">
-            <div className="rounded-circle overflow-hidden border border-3 border-white shadow-sm" style={{ width: 100, height: 100 }}>
-              {student.profile_picture ? (
-                <img src={student.profile_picture} alt="Profile" className="w-100 h-100 object-fit-cover" />
-              ) : (
-                <div className="w-100 h-100 bg-light d-flex align-items-center justify-content-center text-primary fw-bold fs-2">
-                  {buildInitials(student.first_name, student.last_name)}
-                </div>
-              )}
-            </div>
-            <label className="position-absolute bottom-0 end-0 bg-white rounded-circle shadow-sm p-2 cursor-pointer hover-scale" style={{ width: 32, height: 32, cursor: 'pointer' }}>
-              <input
-                type="file"
-                className="d-none"
-                accept="image/*"
-                onChange={async (e) => {
-                  const file = e.target.files[0];
-                  if (!file) return;
-
-                  const formData = new FormData();
-                  formData.append('profilePicture', file);
-
-                  try {
-                    const res = await fetch('/api/student-portal/upload-profile-picture', {
-                      method: 'POST',
-                      headers: portalAuthHeaders || {},
-                      body: formData
-                    });
-                    const data = await res.json();
-                    if (data.success) {
-                      setStudent(prev => ({ ...prev, profile_picture: data.profile_picture }));
-                      enqueueToast({ variant: 'success', title: 'Success', message: 'Profile picture updated!' });
-                    }
-                  } catch (err) {
-                    console.error(err);
-                    enqueueToast({ variant: 'danger', title: 'Error', message: 'Failed to upload picture' });
-                  }
-                }}
-              />
-              <i className="fas fa-camera text-primary small"></i>
-            </label>
-          </div>
-
-          <h5 className="fw-bold mb-1">{student.first_name} {student.last_name}</h5>
-          <p className="text-muted small mb-3">{student.study || 'Student'}</p>
-
-          <div className="d-flex justify-content-center gap-4 border-top pt-3">
-            <div className="text-center cursor-pointer" onClick={() => handleShowFollowModal('followers')} style={{ cursor: 'pointer' }}>
-              <div className="fw-bold fs-5">{student.followers?.length || 0}</div>
-              <div className="small text-muted">Followers</div>
-            </div>
-            <div className="text-center cursor-pointer" onClick={() => handleShowFollowModal('following')} style={{ cursor: 'pointer' }}>
-              <div className="fw-bold fs-5">{student.following?.length || 0}</div>
-              <div className="small text-muted">Following</div>
-            </div>
-          </div>
-        </Card.Body>
-      </Card>
-
+  const renderSecuritySettings = () => (
+    <>
       <Card className="border-0 shadow-sm mb-4">
         <Card.Body>
           <h5 className="fw-semibold mb-3">Account Security</h5>
@@ -3991,8 +3843,74 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
           </div>
         </Card.Body>
       </Card>
+    </>
+  );
 
-      <Card className="border-0 shadow-sm">
+  const renderAccountPane = () => (
+    <div className="account-pane">
+      {/* Profile Picture & Followers */}
+      <Card className="border-0 shadow-sm mb-4">
+        <Card.Body className="text-center">
+          <div className="position-relative d-inline-block mb-3">
+            <div className="rounded-circle overflow-hidden border border-3 border-white shadow-sm" style={{ width: 100, height: 100 }}>
+              {student.profile_picture ? (
+                <img src={student.profile_picture} alt="Profile" className="w-100 h-100 object-fit-cover" />
+              ) : (
+                <div className="w-100 h-100 bg-light d-flex align-items-center justify-content-center text-primary fw-bold fs-2">
+                  {buildInitials(student.first_name, student.last_name)}
+                </div>
+              )}
+            </div>
+            <label className="position-absolute bottom-0 end-0 bg-white rounded-circle shadow-sm p-2 cursor-pointer hover-scale" style={{ width: 32, height: 32, cursor: 'pointer' }}>
+              <input
+                type="file"
+                className="d-none"
+                accept="image/*"
+                onChange={async (e) => {
+                  const file = e.target.files[0];
+                  if (!file) return;
+
+                  const formData = new FormData();
+                  formData.append('profilePicture', file);
+
+                  try {
+                    const res = await fetch('/api/student-portal/upload-profile-picture', {
+                      method: 'POST',
+                      headers: portalAuthHeaders || {},
+                      body: formData
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                      setStudent(prev => ({ ...prev, profile_picture: data.profile_picture }));
+                      enqueueToast({ variant: 'success', title: 'Success', message: 'Profile picture updated!' });
+                    }
+                  } catch (err) {
+                    console.error(err);
+                    enqueueToast({ variant: 'danger', title: 'Error', message: 'Failed to upload picture' });
+                  }
+                }}
+              />
+              <i className="fas fa-camera text-primary small"></i>
+            </label>
+          </div>
+
+          <h5 className="fw-bold mb-1">{student.first_name} {student.last_name}</h5>
+          <p className="text-muted small mb-3">{student.study || 'Student'}</p>
+
+          <div className="d-flex justify-content-center gap-4 border-top pt-3">
+            <div className="text-center cursor-pointer" onClick={() => handleShowFollowModal('followers')} style={{ cursor: 'pointer' }}>
+              <div className="fw-bold fs-5">{student.followers?.length || 0}</div>
+              <div className="small text-muted">Followers</div>
+            </div>
+            <div className="text-center cursor-pointer" onClick={() => handleShowFollowModal('following')} style={{ cursor: 'pointer' }}>
+              <div className="fw-bold fs-5">{student.following?.length || 0}</div>
+              <div className="small text-muted">Following</div>
+            </div>
+          </div>
+        </Card.Body>
+      </Card>
+
+      <Card className="border-0 shadow-sm mb-4">
         <Card.Body>
           <h6 className="fw-semibold mb-2">Session summary</h6>
           <ul className="list-unstyled small mb-0">
@@ -4016,7 +3934,6 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
           </ul>
         </Card.Body>
       </Card>
-
 
       {portalMeta.can_access_admin && (
         <Card className="border-0 shadow-sm mt-4">
@@ -4253,6 +4170,19 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
               margin: 0.5rem !important;
             }
           }
+            .modal-dialog {
+              margin: 0.5rem !important;
+            }
+          }
+
+          /* Desktop Sticky Sidebar */
+          @media (min-width: 992px) {
+            .desktop-sticky {
+              position: sticky;
+              top: 20px;
+              z-index: 1000;
+            }
+          }
         `}</style>
       </Head>
 
@@ -4285,7 +4215,7 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
               <Button
                 variant="light"
                 size="sm"
-                className="position-relative"
+                className="position-relative me-3"
                 onClick={() => setShowNotificationPanel(!showNotificationPanel)}
               >
                 <i className={`fas fa-bell ${showNotificationPanel ? 'text-primary' : 'text-muted'}`}></i>
@@ -4674,50 +4604,138 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
                           <div className="d-flex align-items-center justify-content-between mb-4">
                             <div>
                               <h2 className="fw-bold mb-1 text-dark">My Profile</h2>
-                              <p className="text-muted mb-0">Manage your personal information and preferences.</p>
+                              <p className="text-muted mb-0">
+                                {isEditingProfile
+                                  ? 'Update your personal details below.'
+                                  : 'View your profile and activity history.'}
+                              </p>
                             </div>
-                            {updateLoading && <Spinner animation="border" variant="primary" size="sm" />}
+                            <div className="d-flex align-items-center gap-2">
+                              {updateLoading && <Spinner animation="border" variant="primary" size="sm" />}
+                              <Button
+                                variant={isEditingProfile ? 'outline-secondary' : 'primary'}
+                                onClick={() => {
+                                   setIsEditingProfile(!isEditingProfile);
+                                   // Reset activity history view when switching modes
+                                   if (!isEditingProfile) setShowActivityHistory(false); 
+                                }}
+                                disabled={updateLoading}
+                                size="sm"
+                              >
+                                {isEditingProfile ? (
+                                  <>
+                                    <i className="fas fa-times me-2"></i>Cancel Edit
+                                  </>
+                                ) : (
+                                  <>
+                                    <i className="fas fa-pen me-2"></i>Edit Profile
+                                  </>
+                                )}
+                              </Button>
+                            </div>
                           </div>
                         </div>
 
                         <div className="col-lg-8">
-                          <Form onSubmit={handleUpdate} className="student-portal-form" noValidate>
-                            <div className="d-flex flex-column gap-4">
-                              {portalSections.map((section) => (
-                                <div key={section.key} className="card-modern p-4">
-                                  <div className="d-flex align-items-center gap-3 mb-4 border-bottom pb-3">
-                                    <div className="bg-primary bg-opacity-10 text-primary rounded-3 d-flex align-items-center justify-content-center" style={{ width: 40, height: 40 }}>
-                                      <i className={section.icon}></i>
-                                    </div>
-                                    <div>
-                                      <h5 className="fw-bold mb-0 text-dark">{section.title}</h5>
-                                      <small className="text-muted">{section.subtitle}</small>
-                                    </div>
-                                  </div>
-                                  <div className="row g-4">
-                                    {section.fields.map((fieldName) => {
-                                      if (!workingPlan && (fieldName === 'employment_company' || fieldName === 'employment_role')) return null;
-                                      const fieldConfig = FIELD_CONFIG_MAP.get(fieldName);
-                                      if (!fieldConfig) return null;
-                                      return (
-                                        <div key={fieldName} className={getFieldColumnClass(fieldConfig)}>
-                                          {renderFormControl(fieldConfig)}
+                          {isEditingProfile ? (
+                            <>
+                              <Form onSubmit={handleUpdate} className="student-portal-form mb-4" noValidate>
+                                <div className="d-flex flex-column gap-4">
+                                  {portalSections.map((section) => (
+                                    <div key={section.key} className="card-modern p-4">
+                                      <div className="d-flex align-items-center gap-3 mb-4 border-bottom pb-3">
+                                        <div className="bg-primary bg-opacity-10 text-primary rounded-3 d-flex align-items-center justify-content-center" style={{ width: 40, height: 40 }}>
+                                          <i className={section.icon}></i>
                                         </div>
-                                      );
-                                    })}
-                                  </div>
+                                        <div>
+                                          <h5 className="fw-bold mb-0 text-dark">{section.title}</h5>
+                                          <small className="text-muted">{section.subtitle}</small>
+                                        </div>
+                                      </div>
+                                      <div className="row g-4">
+                                        {section.fields.map((fieldName) => {
+                                          if (!workingPlan && (fieldName === 'employment_company' || fieldName === 'employment_role')) return null;
+                                          const fieldConfig = FIELD_CONFIG_MAP.get(fieldName);
+                                          if (!fieldConfig) return null;
+                                          return (
+                                            <div key={fieldName} className={getFieldColumnClass(fieldConfig)}>
+                                              {renderFormControl(fieldConfig)}
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
+                                    </div>
+                                  ))}
                                 </div>
-                              ))}
+                                <div className="d-flex justify-content-end mt-4 pt-3 border-top">
+                                  <Button type="submit" variant="primary" size="lg" disabled={updateLoading} className="px-5 shadow-sm">
+                                    {updateLoading ? <Spinner animation="border" size="sm" /> : 'Save Changes'}
+                                  </Button>
+                                </div>
+                              </Form>
+                              
+                              {/* Security Settings - Only in Edit Mode */}
+                              {renderSecuritySettings()}
+                            </>
+                          ) : (
+                            <div className="d-flex flex-column gap-4">
+                               {/* View Activity History Button */}
+                               <div className="d-grid mb-2">
+                                  <Button 
+                                    variant="outline-primary" 
+                                    size="lg" 
+                                    className="d-flex align-items-center justify-content-center gap-2 py-3"
+                                    onClick={() => setShowActivityHistory(!showActivityHistory)}
+                                  >
+                                    <i className={`fas ${showActivityHistory ? 'fa-chevron-up' : 'fa-history'}`}></i>
+                                    {showActivityHistory ? 'Hide Activity History' : 'View Activity History'}
+                                  </Button>
+                               </div>
+
+                               {showActivityHistory && (
+                                   <div className="card-modern p-4 animate__animated animate__fadeIn">
+                                      <h5 className="fw-bold mb-4">Activity History</h5>
+                                      {feedPosts?.filter(p => String(p.author?._id || p.author?.id) === String(student?._id || student?.id)).length > 0 ? (
+                                          <Feed
+                                             posts={feedPosts.filter(p => String(p.author?._id || p.author?.id) === String(student?._id || student?.id))}
+                                             users={[]}
+                                             currentUser={student}
+                                             onLikePost={handleLikePost}
+                                             onFollowUser={handleFollow}
+                                             onMessageUser={(user) => {
+                                                 setActivePane('community');
+                                                 openConversationWithStudent(user);
+                                             }}
+                                             onCreatePost={null}
+                                             postContent=""
+                                             onPostContentChange={() => {}}
+                                             isSubmitting={false}
+                                             onToggleComments={handleLoadComments}
+                                             onSharePost={handleSharePost}
+                                             showComments={showComments}
+                                             postComments={postComments}
+                                             commentDrafts={commentDrafts}
+                                             onCommentChange={(postId, val) => setCommentDrafts(prev => ({ ...prev, [postId]: val }))}
+                                             onCommentSubmit={handleCommentSubmit}
+                                          />
+                                      ) : (
+                                          <div className="text-center text-muted py-5">
+                                              <div className="mb-3">
+                                                  <i className="fas fa-history fa-2x opacity-50"></i>
+                                              </div>
+                                              <p>No activity yet. Share your first post in the Feed!</p>
+                                              <Button variant="outline-primary" size="sm" onClick={() => setActivePane('feed')}>
+                                                  Go to Feed
+                                              </Button>
+                                          </div>
+                                      )}
+                                   </div>
+                               )}
                             </div>
-                            <div className="d-flex justify-content-end mt-4 pt-3 border-top">
-                              <Button type="submit" variant="primary" size="lg" disabled={updateLoading} className="px-5 shadow-sm">
-                                {updateLoading ? <Spinner animation="border" size="sm" /> : 'Save Changes'}
-                              </Button>
-                            </div>
-                          </Form>
+                          )}
                         </div>
                         <div className="col-lg-4">
-                          <div className="sticky-top" style={{ top: 20 }}>
+                          <div className="desktop-sticky" style={{ top: 20 }}>
                             {renderAccountPane()}
                           </div>
                         </div>
@@ -4752,6 +4770,12 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
                       </div>
                     )}
 
+                    {activePane === 'feed' && (
+                      <div className="h-100">
+                        {renderFeedPane()}
+                      </div>
+                    )}
+
                     {activePane === 'help' && (
                       <div className="h-100">
                         {renderHelpPane()}
@@ -4764,11 +4788,7 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
                       </div>
                     )}
 
-                    {activePane === 'feed' && (
-                      <div className="h-100">
-                        {renderFeedPane()}
-                      </div>
-                    )}
+
 
                     {activePane === 'settings' && (
                       <div className="row justify-content-center">
@@ -5231,6 +5251,8 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
 
       {/* Notification Panel */}
 
+
+      <CustomToastContainer notifications={toastQueue} removeNotification={removeToast} />
 
       <style jsx>{`
         .d-lg-flex {

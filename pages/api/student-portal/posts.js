@@ -108,8 +108,9 @@ export default async function handler(req, res) {
       case 'POST': {
         const { content, shared_from } = req.body || {};
         const cleanContent = sanitizeString(content);
+        const cleanSharedFrom = sanitizeString(shared_from);
 
-        if (!cleanContent && !shared_from) {
+        if (!cleanContent && !cleanSharedFrom) {
           return res.status(400).json({ error: 'Post content or shared post is required' });
         }
 
@@ -118,17 +119,35 @@ export default async function handler(req, res) {
           content: cleanContent.slice(0, 2000)
         };
 
-        if (shared_from) {
-          const originalPost = await Post.findById(shared_from);
+        if (cleanSharedFrom) {
+          let originalPost = await Post.findById(cleanSharedFrom);
           if (!originalPost) {
             return res.status(404).json({ error: 'Original post not found' });
           }
-          postData.shared_from = shared_from;
-          // Add to original post's shares array
+
+          // Prevent chain sharing: if sharing a share, share the ROOT post
+          if (originalPost.shared_from) {
+              const rootPost = await Post.findById(originalPost.shared_from);
+              if (rootPost) {
+                  originalPost = rootPost;
+                  postData.shared_from = rootPost._id;
+              } else {
+                  // Fallback if root is gone
+                  postData.shared_from = cleanSharedFrom;
+              }
+          } else {
+              postData.shared_from = cleanSharedFrom;
+          }
+          
+          // Add to original post's shares array safely
           if (!originalPost.shares) {
             originalPost.shares = [];
           }
-          if (!originalPost.shares.includes(viewer._id)) {
+          const alreadyShared = originalPost.shares.some(id => 
+            id.toString() === viewer._id.toString()
+          );
+          
+          if (!alreadyShared) {
             originalPost.shares.push(viewer._id);
             await originalPost.save();
           }

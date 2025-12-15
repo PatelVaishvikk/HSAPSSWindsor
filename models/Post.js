@@ -13,7 +13,6 @@ const PostSchema = new Schema(
     content: {
       type: String,
       trim: true,
-      required: true,
       maxlength: 2000
     },
     likes: [{

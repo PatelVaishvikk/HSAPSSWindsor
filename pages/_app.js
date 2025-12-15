@@ -15,10 +15,10 @@ const BirthdayReminder = dynamic(
 );
 
 const MyApp = ({ Component, pageProps }) => {
-    useEffect(() => {
-        // Import bootstrap JS on client-side using dynamic import
-        import('bootstrap/dist/js/bootstrap.bundle.min.js');
-    }, []);
+    // React Bootstrap does not require bootstrap.js
+    // useEffect(() => {
+    //     import('bootstrap/dist/js/bootstrap.bundle.min.js');
+    // }, []);
 
     return (
         <>
