@@ -22,19 +22,35 @@ export default async function handler(req, res) {
           { is_public: { $exists: false } }
         ]
       })
+
         .sort({ last_message_at: -1 })
         .populate('members', 'first_name last_name profile_picture mail_id')
-        .populate('admins', '_id') // Just need IDs to check membership
+        .populate('admins', '_id')
+        .populate('created_by', 'mandal_name')
         .lean();
 
+      // Filter by Scope
+      const { scope = 'all' } = req.query;
+      console.log('[API DEBUG] Groups fetch. Scope:', scope, 'Student Mandal:', session.student.mandal_name);
+      
+      let filteredGroups = groups;
+      
+      if (scope === 'my_mandal') {
+          if (session.student.mandal_name) {
+             filteredGroups = groups.filter(g => g.created_by?.mandal_name === session.student.mandal_name);
+          } else {
+             filteredGroups = [];
+          }
+      } else if (scope === 'other_mandals') {
+          if (session.student.mandal_name) {
+             filteredGroups = groups.filter(g => g.created_by?.mandal_name !== session.student.mandal_name);
+          }
+      }
+
       // Add member count and check if current user is a member
-      const groupsWithMeta = groups.map(group => {
+      const groupsWithMeta = filteredGroups.map(group => {
         const isMember = group.members.some(m => m && m._id && m._id.toString() === session.student._id.toString());
         const hasRequested = group.join_requests && group.join_requests.some(r => r.toString() === session.student._id.toString());
-        
-        if (group.name === 'Test Group' || hasRequested) { // Log for specific cases to reduce noise
-             console.log(`[GET GROUPS] Group: ${group.name}, User: ${session.student._id}, isMember: ${isMember}, hasRequested: ${hasRequested}`);
-        }
 
         return {
           ...group,

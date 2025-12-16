@@ -78,6 +78,8 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: `Method ${req.method} not allowed` });
   }
 
+  res.setHeader('Cache-Control', 'no-store, max-age=0');
+
   try {
     await connectDb();
 
@@ -97,6 +99,49 @@ export default async function handler(req, res) {
     };
 
     const conditions = [baseFilter];
+    const { scope = 'all' } = req.query;
+
+    console.log('[API DEBUG] Community fetch. Scope:', scope, 'Viewer Mandal:', viewer.mandal_name);
+    
+    if (scope === 'my_mandal') {
+        if (viewer.mandal_name) {
+            const isWindsor = /^windsor$/i.test(viewer.mandal_name);
+            if (isWindsor) {
+                 // Windsor includes explicit Windsor OR empty/null (default)
+                 conditions.push({ 
+                     $or: [
+                         { mandal_name: { $regex: new RegExp(`^${viewer.mandal_name}$`, 'i') } },
+                         { mandal_name: { $exists: false } }, 
+                         { mandal_name: '' },
+                         { mandal_name: null }
+                     ]
+                 });
+            } else {
+                 conditions.push({ mandal_name: { $regex: new RegExp(`^${viewer.mandal_name}$`, 'i') } });
+            }
+        } else {
+             // If user has no mandal, 'my_mandal' returns nothing
+             conditions.push({ mandal_name: '__RESTRICTED__' });
+        }
+    } else if (scope === 'other_mandals') {
+        if (viewer.mandal_name) {
+            const isWindsor = /^windsor$/i.test(viewer.mandal_name);
+            if (isWindsor) {
+                 // Other means NOT Windsor AND NOT Empty
+                 conditions.push({ 
+                     $and: [
+                         { mandal_name: { $not: { $regex: new RegExp(`^${viewer.mandal_name}$`, 'i') } } },
+                         { mandal_name: { $ne: '' } },
+                         { mandal_name: { $ne: null } }
+                     ] 
+                 });
+            } else {
+                 conditions.push({ mandal_name: { $not: { $regex: new RegExp(`^${viewer.mandal_name}$`, 'i') } } });
+            }
+        }
+        // If user has no mandal, 'other' is everyone else (which is everyone), so no filter needed
+    }
+
     const searchFilter = communitySearchConditions(searchTerm);
     if (searchFilter) {
       conditions.push(searchFilter);

@@ -80,19 +80,18 @@ export default function GroupsView({ student, portalAuthHeaders }) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  const [scope, setScope] = useState('all');
+
   const fetchGroups = async () => {
     setLoading(true);
     try {
-      console.log('[GroupsView] Fetching groups...');
-      const res = await fetch('/api/student-portal/groups', { headers: portalAuthHeaders });
+      console.log('[GroupsView] Fetching groups...', scope);
+      const res = await fetch(`/api/student-portal/groups?scope=${scope}`, { headers: portalAuthHeaders });
       const data = await res.json();
       if (data.groups) {
         setGroups(data.groups);
 
         // If we have a selected group, update its data from the new list
-        // Use a functional state update to ensure we check against the latest selectedGroup if needed,
-        // but here we are inside the function scope. 
-        // Better to check the current 'selectedGroup' state.
         if (selectedGroup) {
           const updatedGroup = data.groups.find(g => g._id === selectedGroup._id);
           if (updatedGroup) {
@@ -107,6 +106,10 @@ export default function GroupsView({ student, portalAuthHeaders }) {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchGroups();
+  }, [scope]);
 
   const fetchMessages = async (groupId) => {
     try {

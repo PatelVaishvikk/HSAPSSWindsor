@@ -280,7 +280,9 @@ export default async function handler(req, res) {
           'employment_status',
           'employment_company',
           'employment_role',
-          'mandal_name' // Allow update but will be checked below
+          'employment_role',
+          'mandal_name',
+          'mukt_type'
         ];
 
         // Only Super Admins can update 'is_admin' status

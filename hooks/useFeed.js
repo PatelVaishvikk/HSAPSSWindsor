@@ -5,12 +5,17 @@ const fetcher = (url) => fetch(url).then((res) => {
   return res.json();
 });
 
-export function useFeed() {
-  const { data, error, isLoading, mutate } = useSWR('/api/student-portal/posts', fetcher, {
-    refreshInterval: 30000, // Poll every 30 seconds
-    revalidateOnFocus: true,
-    dedupingInterval: 2000,
-  });
+export function useFeed(scope = 'all', page = 1) {
+  const { data, error, isLoading, mutate } = useSWR(
+    `/api/student-portal/posts?scope=${scope}&page=${page}&limit=20`, 
+    fetcher, 
+    {
+      refreshInterval: 30000,
+      revalidateOnFocus: true,
+      dedupingInterval: 2000,
+      keepPreviousData: true
+    }
+  );
 
   return {
     posts: data?.posts || [],

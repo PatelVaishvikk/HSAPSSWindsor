@@ -349,7 +349,9 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
 
 
   // Feed state
-  const { posts: feedPosts, isLoading: feedLoading, error: feedError, mutate: mutateFeed } = useFeed();
+  const [feedScope, setFeedScope] = useState('all');
+  const [communityScope, setCommunityScope] = useState('all'); // Added community scope
+  const { posts: feedPosts, isLoading: feedLoading, error: feedError, mutate: mutateFeed } = useFeed(feedScope);
   const [postForm, setPostForm] = useState({ content: '' });
   const [postSubmitting, setPostSubmitting] = useState(false);
   const [postComments, setPostComments] = useState({}); // { postId: [comments] }
@@ -1064,6 +1066,11 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
         if (searchValue && searchValue.trim()) {
           params.set('search', searchValue.trim());
         }
+        // Add Scope
+        params.set('scope', communityScope);
+
+        console.log('[DEBUG] refreshCommunityProfiles fetching with scope:', communityScope, 'Search:', searchValue);
+
         const query = params.toString();
         const response = await fetch(
           `/api/student-portal/community${query ? `?${query}` : ''}`,
@@ -1085,7 +1092,7 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
         setCommunityLoading(false);
       }
     },
-    [communitySearch, portalAuthHeaders]
+    [communitySearch, communityScope, portalAuthHeaders]
   );
 
   const refreshInboxThreads = useCallback(
@@ -1711,6 +1718,13 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
     refreshCommunityProfiles,
     refreshInboxThreads
   ]);
+
+  // Refetch when scope changes
+  useEffect(() => {
+    if (activePane === 'community') {
+        refreshCommunityProfiles();
+    }
+  }, [communityScope, refreshCommunityProfiles]);
 
 
 
@@ -3084,6 +3098,34 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
                   </small>
                 </div>
               </div>
+              
+              <div className="d-flex gap-2 mb-3">
+                <Button
+                  variant={communityScope === 'all' ? 'primary' : 'outline-primary'}
+                  size="sm"
+                  className="flex-grow-1"
+                  onClick={() => setCommunityScope('all')}
+                >
+                  All
+                </Button>
+                <Button
+                  variant={communityScope === 'my_mandal' ? 'primary' : 'outline-primary'}
+                  size="sm"
+                  className="flex-grow-1"
+                  onClick={() => setCommunityScope('my_mandal')}
+                >
+                  My Mandal
+                </Button>
+                <Button
+                  variant={communityScope === 'other_mandals' ? 'primary' : 'outline-primary'}
+                  size="sm"
+                  className="flex-grow-1"
+                  onClick={() => setCommunityScope('other_mandals')}
+                >
+                  Other
+                </Button>
+              </div>
+
               <Form className="community-search-form" onSubmit={handleCommunitySearchSubmit}>
                 <div className="d-flex flex-column gap-3">
                   <Form.Control
@@ -3266,16 +3308,12 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
                                 <p className="text-muted small mb-0">{profile.community_headline}</p>
                               )}
                               <div className="d-flex gap-1 mt-1 flex-wrap">
-                                {profile.mandal_name && (
                                   <Badge bg="info" className="fw-normal" style={{ fontSize: '0.7em' }}>
-                                    {profile.mandal_name}
+                                    {profile.mandal_name || 'Windsor'}
                                   </Badge>
-                                )}
-                                {profile.mukt_type && (
                                   <Badge bg="warning" text="dark" className="fw-normal" style={{ fontSize: '0.7em' }}>
-                                    {profile.mukt_type}
+                                    {profile.mukt_type || 'Yuvak'}
                                   </Badge>
-                                )}
                               </div>
                               <div className="presence-line text-muted small mt-1">
                                 <span
@@ -3484,6 +3522,33 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
             <p className="text-muted small mb-0">
               Share updates, thoughts, and connect with the community.
             </p>
+          </div>
+          
+          <div className="d-flex gap-2">
+               <Button 
+                  variant={feedScope === 'all' ? 'primary' : 'outline-secondary'} 
+                  size="sm" 
+                  onClick={() => setFeedScope('all')}
+                  className="rounded-pill px-3"
+               >
+                  All
+               </Button>
+               <Button 
+                  variant={feedScope === 'my_mandal' ? 'primary' : 'outline-secondary'} 
+                  size="sm" 
+                  onClick={() => setFeedScope('my_mandal')}
+                  className="rounded-pill px-3"
+               >
+                  My Mandal
+               </Button>
+               <Button 
+                  variant={feedScope === 'other_mandals' ? 'primary' : 'outline-secondary'} 
+                  size="sm" 
+                  onClick={() => setFeedScope('other_mandals')}
+                  className="rounded-pill px-3"
+               >
+                  Other Mandals
+               </Button>
           </div>
         </div>
 

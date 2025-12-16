@@ -17,13 +17,45 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  res.setHeader('Cache-Control', 'no-store, max-age=0');
+
   try {
     // 1. Fetch all other students (excluding self)
-    // We fetch fields needed for matching: academic, career, interests
-    const others = await Student.find({ 
-      _id: { $ne: student._id },
-      // Optional: Filter for active students if needed, e.g., last_portal_login_at: { $exists: true }
-    })
+    const { scope = 'all' } = req.query;
+    const query = { _id: { $ne: student._id } };
+
+    if (scope === 'my_mandal') {
+        if (student.mandal_name) {
+            const isWindsor = /^windsor$/i.test(student.mandal_name);
+            if (isWindsor) {
+                query.$or = [
+                     { mandal_name: { $regex: new RegExp(`^${student.mandal_name}$`, 'i') } },
+                     { mandal_name: { $exists: false } }, 
+                     { mandal_name: '' },
+                     { mandal_name: null }
+                ];
+            } else {
+                query.mandal_name = { $regex: new RegExp(`^${student.mandal_name}$`, 'i') };
+            }
+        } else {
+             query.mandal_name = '__RESTRICTED__'; // No mandal -> no matches
+        }
+    } else if (scope === 'other_mandals') {
+        if (student.mandal_name) {
+             const isWindsor = /^windsor$/i.test(student.mandal_name);
+             if (isWindsor) {
+                 query.$and = [
+                     { mandal_name: { $not: { $regex: new RegExp(`^${student.mandal_name}$`, 'i') } } },
+                     { mandal_name: { $ne: '' } },
+                     { mandal_name: { $ne: null } }
+                 ];
+             } else {
+                 query.mandal_name = { $not: { $regex: new RegExp(`^${student.mandal_name}$`, 'i') } };
+             }
+        }
+    }
+
+    const others = await Student.find(query)
     .select('first_name last_name profile_picture study_program study_institution study_specialization interests employment_status employment_role employment_company bio')
     .lean();
 

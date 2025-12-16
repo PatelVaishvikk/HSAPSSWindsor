@@ -14,9 +14,13 @@ export default function StudySyncView({ student, portalAuthHeaders, onConnect })
   // Profile fetch removed - using main student profile
 
 
+  const [scope, setScope] = useState('all');
+
   const fetchMatches = async () => {
+    setLoading(true);
     try {
-      const res = await fetch('/api/student-portal/study-sync/matches', {
+      console.log('[StudySyncView] Fetching matches with scope:', scope);
+      const res = await fetch(`/api/student-portal/study-sync/matches?scope=${scope}`, {
         headers: portalAuthHeaders || {}
       });
       if (res.ok) {
@@ -32,7 +36,7 @@ export default function StudySyncView({ student, portalAuthHeaders, onConnect })
 
   useEffect(() => {
     fetchMatches();
-  }, []);
+  }, [scope]);
 
 
 
@@ -44,14 +48,41 @@ export default function StudySyncView({ student, portalAuthHeaders, onConnect })
 
   return (
     <div className="study-sync-container">
-      <div className="d-flex justify-content-between align-items-center mb-4">
+      <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
         <div>
           <h2 className="mb-1">Smart Connect 🚀</h2>
           <p className="text-muted mb-0">Discover peers, mentors, and study partners based on your profile.</p>
         </div>
-        <Button variant="outline-primary" onClick={() => window.location.reload()}>
-          <i className="fas fa-sync me-2"></i>Refresh Matches
-        </Button>
+        
+        <div className="d-flex gap-2">
+             <Button 
+                variant={scope === 'all' ? 'primary' : 'outline-secondary'} 
+                size="sm" 
+                onClick={() => setScope('all')}
+                className="rounded-pill px-3"
+             >
+                All
+             </Button>
+             <Button 
+                variant={scope === 'my_mandal' ? 'primary' : 'outline-secondary'} 
+                size="sm" 
+                onClick={() => setScope('my_mandal')}
+                className="rounded-pill px-3"
+             >
+                My Mandal
+             </Button>
+             <Button 
+                variant={scope === 'other_mandals' ? 'primary' : 'outline-secondary'} 
+                size="sm" 
+                onClick={() => setScope('other_mandals')}
+                className="rounded-pill px-3"
+             >
+                Other
+             </Button>
+             <Button variant="light" size="sm" onClick={fetchMatches} className="rounded-circle" title="Refresh">
+               <i className="fas fa-sync"></i>
+             </Button>
+        </div>
       </div>
 
       <Row>

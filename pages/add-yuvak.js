@@ -50,6 +50,12 @@ const POST_GRAD_OPTIONS = [
   { value: 'other', label: 'Other' }
 ];
 
+const MANDAL_OPTIONS = [
+  'Windsor', 'Brampton', 'Mississauga', 'Etobicoke', 'Kitchener', 'London', 'Hamilton', 'Other'
+];
+
+const MUKT_OPTIONS = ['Yuvak', 'Yuvati', 'Ambrish', 'Expected'];
+
 const getProgramDefinition = (institution, programValue) => {
   const options = PROGRAM_LIBRARY[institution] || [];
   return options.find(program => program.value === programValue) || null;
@@ -93,8 +99,16 @@ export default function AddYuvak() {
     moved_out_date: '',
     moved_out_job: '',
     moved_out_address: '',
-    moved_out_notes: ''
+    moved_out_notes: '',
+    mandal_name: '',
+    mukt_type: ''
   });
+
+  const MANDAL_OPTIONS = [
+    'Windsor', 'Brampton', 'Mississauga', 'Etobicoke', 'Kitchener', 'London', 'Hamilton', 'Other'
+  ];
+
+  const MUKT_OPTIONS = ['Yuvak', 'Yuvati', 'Ambrish', 'Expected'];
   const [loading, setLoading] = useState(false);
   const { show: showToast } = useNotification();
   const [error, setError] = useState(null);
@@ -419,7 +433,9 @@ export default function AddYuvak() {
       moved_out_date: formData.moved_out ? formData.moved_out_date : '',
       moved_out_job: formData.moved_out ? (formData.moved_out_job || '').trim() : '',
       moved_out_address: formData.moved_out ? (formData.moved_out_address || '').trim() : '',
-      moved_out_notes: formData.moved_out ? (formData.moved_out_notes || '').trim() : ''
+      moved_out_notes: formData.moved_out ? (formData.moved_out_notes || '').trim() : '',
+      mandal_name: formData.mandal_name || '',
+      mukt_type: formData.mukt_type || ''
     };
 
     try {
@@ -553,6 +569,37 @@ export default function AddYuvak() {
                   placeholder="Enter address"
                 ></textarea>
               </div>
+            </div>
+
+            <div className="row">
+               <div className="col-md-6 mb-3">
+                 <label className="form-label">Mandal</label>
+                 <select
+                   id="mandal_name"
+                   className="form-select"
+                   value={formData.mandal_name}
+                   onChange={handleChange}
+                 >
+                   <option value="">Select Mandal</option>
+                   {MANDAL_OPTIONS.map(opt => (
+                     <option key={opt} value={opt}>{opt}</option>
+                   ))}
+                 </select>
+               </div>
+               <div className="col-md-6 mb-3">
+                 <label className="form-label">Mukt Type</label>
+                 <select
+                   id="mukt_type"
+                   className="form-select"
+                   value={formData.mukt_type}
+                   onChange={handleChange}
+                 >
+                   <option value="">Select Type</option>
+                   {MUKT_OPTIONS.map(opt => (
+                     <option key={opt} value={opt}>{opt}</option>
+                   ))}
+                 </select>
+               </div>
             </div>
           </>
         );

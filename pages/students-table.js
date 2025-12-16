@@ -75,6 +75,12 @@ const POST_GRAD_OPTIONS = [
   { value: 'other', label: 'Other' },
 ];
 
+const MANDAL_OPTIONS = [
+  'Windsor', 'Brampton', 'Mississauga', 'Etobicoke', 'Kitchener', 'London', 'Hamilton', 'Other'
+];
+
+const MUKT_OPTIONS = ['Yuvak', 'Yuvati', 'Ambrish', 'Expected'];
+
 const PORTAL_FIELD_LABEL_MAP = STUDENT_PORTAL_FIELD_DEFS.reduce((acc, field) => {
   acc[field.name] = field.label;
   return acc;
@@ -434,7 +440,9 @@ export default function StudentsTable() {
       post_graduation_plan: student.post_graduation_plan || student.employment_status || '',
       employment_status: student.employment_status || student.post_graduation_plan || '',
       employment_company: student.employment_company || '',
-      employment_role: student.employment_role || ''
+      employment_role: student.employment_role || '',
+      mandal_name: student.mandal_name || '',
+      mukt_type: student.mukt_type || ''
     });
     setShowEditModal(true);
   }, []);
@@ -717,6 +725,23 @@ export default function StudentsTable() {
           </div>
         );
       },
+    },
+    {
+      name: 'Mandal',
+      selector: row => row.mandal_name || 'Windsor',
+      sortable: true,
+      minWidth: '120px',
+      grow: 1,
+      cell: row => (
+        <div className="d-flex flex-column gap-1">
+           <span className="badge bg-info text-dark fw-normal">
+             {row.mandal_name || 'Windsor'}
+           </span>
+           <span className="badge bg-warning text-dark fw-normal">
+             {row.mukt_type || 'Yuvak'}
+           </span>
+        </div>
+      )
     },
     {
       name: 'Study Program',
@@ -1089,6 +1114,30 @@ export default function StudentsTable() {
                 <Form.Label className="small mb-1">Address</Form.Label>
                 <Form.Control size="sm" type="text" placeholder="123 Main St..." value={editForm.address} onChange={(e) => setEditForm({ ...editForm, address: e.target.value })} />
               </Form.Group>
+              <Row className="mb-3">
+                 <Form.Group as={Col} xs={12} md={6} controlId="editMandal">
+                   <Form.Label className="small mb-1">Mandal</Form.Label>
+                   <Form.Select
+                     size="sm"
+                     value={editForm.mandal_name}
+                     onChange={(e) => setEditForm({...editForm, mandal_name: e.target.value})}
+                   >
+                      <option value="">Select Mandal</option>
+                      {MANDAL_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                   </Form.Select>
+                 </Form.Group>
+                 <Form.Group as={Col} xs={12} md={6} controlId="editMukt">
+                   <Form.Label className="small mb-1">Mukt Type</Form.Label>
+                   <Form.Select
+                     size="sm"
+                     value={editForm.mukt_type}
+                     onChange={(e) => setEditForm({...editForm, mukt_type: e.target.value})}
+                   >
+                      <option value="">Select Type</option>
+                      {MUKT_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                   </Form.Select>
+                 </Form.Group>
+              </Row>
               <Row className="mb-3">
                 <Form.Group as={Col} xs={12} md={3} controlId="editDob">
                   <Form.Label className="small mb-1">Date of Birth</Form.Label>
@@ -1573,6 +1622,14 @@ export default function StudentsTable() {
               <Row className="mb-2">
                 <Col xs={4}><strong>Last Name:</strong></Col>
                 <Col xs={8}>{selectedStudent.last_name || 'N/A'}</Col>
+              </Row>
+              <Row className="mb-2">
+                <Col xs={4}><strong>Mandal:</strong></Col>
+                <Col xs={8}>{selectedStudent.mandal_name || 'Windsor'}</Col>
+              </Row>
+              <Row className="mb-2">
+                <Col xs={4}><strong>Mukt Type:</strong></Col>
+                <Col xs={8}>{selectedStudent.mukt_type || 'Yuvak'}</Col>
               </Row>
               <Row className="mb-2">
                 <Col xs={4}><strong>Email:</strong></Col>

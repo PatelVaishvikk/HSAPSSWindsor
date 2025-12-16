@@ -1,6 +1,7 @@
 import dbConnect from '../../../lib/dbConnect';
 import Post from '../../../models/Post.js';
 import Comment from '../../../models/Comment.js';
+import Student from '../../../models/Student.js';
 import { authenticateStudentFromRequest } from '../../../lib/studentPortalAuth.js';
 
 const sanitizeString = (value) => {
@@ -90,10 +91,46 @@ export default async function handler(req, res) {
 
     switch (req.method) {
       case 'GET': {
-        const { page = 1, limit = 20 } = req.query;
+        const { page = 1, limit = 20, scope = 'all' } = req.query;
         const skip = (parseInt(page) - 1) * parseInt(limit);
 
-        const posts = await Post.find()
+        let query = {};
+        if (scope === 'my_mandal' && viewer.mandal_name) {
+             let filter = {};
+             const isWindsor = /^windsor$/i.test(viewer.mandal_name);
+             if (isWindsor) {
+                 filter = { 
+                     $or: [
+                         { mandal_name: { $regex: new RegExp(`^${viewer.mandal_name}$`, 'i') } },
+                         { mandal_name: { $exists: false } }, 
+                         { mandal_name: '' },
+                         { mandal_name: null }
+                     ]
+                 };
+             } else {
+                 filter = { mandal_name: { $regex: new RegExp(`^${viewer.mandal_name}$`, 'i') } };
+             }
+             const studentIds = await Student.find(filter).distinct('_id');
+             query.author = { $in: studentIds };
+        } else if (scope === 'other_mandals' && viewer.mandal_name) {
+             let filter = {};
+             const isWindsor = /^windsor$/i.test(viewer.mandal_name);
+             if (isWindsor) {
+                 filter = { 
+                     $and: [
+                         { mandal_name: { $not: { $regex: new RegExp(`^${viewer.mandal_name}$`, 'i') } } },
+                         { mandal_name: { $ne: '' } },
+                         { mandal_name: { $ne: null } }
+                     ] 
+                 };
+             } else {
+                 filter = { mandal_name: { $not: { $regex: new RegExp(`^${viewer.mandal_name}$`, 'i') } } };
+             }
+             const studentIds = await Student.find(filter).distinct('_id');
+             query.author = { $in: studentIds };
+        }
+
+        const posts = await Post.find(query)
           .sort({ created_at: -1 })
           .skip(skip)
           .limit(parseInt(limit))
