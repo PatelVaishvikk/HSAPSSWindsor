@@ -4,6 +4,7 @@ import {
 } from 'react-bootstrap';
 import Navbar from '../components/Navbar';
 import Head from 'next/head';
+import { useNotification } from '../contexts/NotificationContext';
 
 const UNIT_OPTIONS = ['kg', 'g', 'L', 'ml', 'pcs', 'pack', 'dozen', 'other'];
 
@@ -17,7 +18,7 @@ export default function GroceryPage() {
   const [modalItem, setModalItem] = useState({ name: '', quantity: '', unit: '', minStock: '', note: '' });
   const [filter, setFilter] = useState('');
   const [tab, setTab] = useState('stock');
-  const [toast, setToast] = useState({ show: false, type: '', msg: '' });
+  const { show: showToast } = useNotification();
   const [dark, setDark] = useState(false);
 
   // Sabha
@@ -89,7 +90,7 @@ export default function GroceryPage() {
         if (!res.ok) throw new Error(data.error || 'Failed to add item');
         setItems([...items, data.item]);
         setShowAddEdit(false);
-        setToast({ show: true, type: 'success', msg: 'Added new grocery item!' });
+        showToast('Added new grocery item!', 'success');
       } catch (err) {
         setItemsError(err.message);
       }
@@ -107,7 +108,7 @@ export default function GroceryPage() {
         updated[editIndex] = data.item;
         setItems(updated);
         setShowAddEdit(false);
-        setToast({ show: true, type: 'success', msg: 'Changes saved.' });
+        showToast('Changes saved.', 'success');
       } catch (err) {
         setItemsError(err.message);
       }
@@ -122,7 +123,7 @@ export default function GroceryPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to delete item');
       setItems(items.filter((_, i) => i !== idx));
-      setToast({ show: true, type: 'danger', msg: 'Deleted grocery item.' });
+      showToast('Deleted grocery item.', 'danger');
     } catch (err) {
       setItemsError(err.message);
     }
@@ -160,7 +161,7 @@ export default function GroceryPage() {
       await fetch(`/api/grocery?id=${item._id}`, { method: 'DELETE' });
     }
     setItems(items.filter(i => !i.toBuy));
-    setToast({ show: true, type: 'danger', msg: 'Deleted all "To Buy" items.' });
+    showToast('Deleted all "To Buy" items.', 'danger');
   };
   const handleBulkMarkBought = async () => {
     await Promise.all(
@@ -173,7 +174,7 @@ export default function GroceryPage() {
       )
     );
     setItems(items.map(i => ({ ...i, toBuy: false })));
-    setToast({ show: true, type: 'success', msg: 'Marked all as bought.' });
+    showToast('Marked all as bought.', 'success');
   };
 
   // Sabha features
@@ -204,7 +205,7 @@ export default function GroceryPage() {
         return item;
       }));
       setNewSabha({ date: '', menu: '', groceriesUsed: [] });
-      setToast({ show: true, type: 'success', msg: 'Sabha recorded!' });
+      showToast('Sabha recorded!', 'success');
     } catch (err) {
       setSabhaError(err.message);
     }
@@ -216,7 +217,7 @@ export default function GroceryPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to delete sabha record');
       setSabhaRecords(sabhaRecords.filter(rec => rec._id !== id));
-      setToast({ show: true, type: 'danger', msg: 'Sabha record deleted.' });
+      showToast('Sabha record deleted.', 'danger');
     } catch (err) {
       setSabhaError(err.message);
     } finally {
@@ -226,13 +227,7 @@ export default function GroceryPage() {
 
   const shoppingList = items.filter(item => item.toBuy || (item.minStock && item.quantity <= item.minStock));
 
-  // Toast auto-hide
-  useEffect(() => {
-    if (toast.show) {
-      const t = setTimeout(() => setToast({ ...toast, show: false }), 2300);
-      return () => clearTimeout(t);
-    }
-  }, [toast]);
+
 
   // Auto dark mode
   useEffect(() => {
@@ -313,7 +308,7 @@ export default function GroceryPage() {
                   <Button className="rounded-pill fw-bold glass-btn" variant="success" onClick={openAddModal}><i className="fas fa-plus"></i> Add Grocery</Button>
                 </OverlayTrigger>
                 <Button className="rounded-pill glass-btn" variant="outline-danger" onClick={handleBulkDeleteToBuy} disabled={!toBuyCount}>
-                  <i className="fas fa-trash me-1"></i> Delete All "To Buy"
+                  <i className="fas fa-trash me-1"></i> Delete All &quot;To Buy&quot;
                 </Button>
                 <Button className="rounded-pill glass-btn" variant="outline-primary" onClick={handleBulkMarkBought} disabled={!toBuyCount}>
                   <i className="fas fa-check me-1"></i> Mark All Bought
@@ -576,15 +571,7 @@ export default function GroceryPage() {
             </Form>
           </Offcanvas.Body>
         </Offcanvas>
-        {/* Toast Notification */}
-        {toast.show && (
-          <div className={`position-fixed bottom-0 end-0 p-4 z-3`} style={{ minWidth: 220 }}>
-            <Alert variant={toast.type} className="d-flex align-items-center shadow-lg border-0" onClose={() => setToast({ ...toast, show: false })} dismissible>
-              <i className={`fas fa-${toast.type === 'danger' ? 'times-circle' : 'check-circle'} me-2`}></i>
-              <div>{toast.msg}</div>
-            </Alert>
-          </div>
-        )}
+
       </div>
       {/* Modern Glass Styles */}
       <style jsx global>{`

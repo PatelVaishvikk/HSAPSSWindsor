@@ -13,7 +13,16 @@ export default async function handler(req, res) {
     case 'GET': {
       // List all grocery items
       try {
-        const items = await GroceryItem.find().sort({ name: 1 });
+        const { isSuper, mandal } = req.adminRights;
+        const filter = {};
+        if (!isSuper) {
+             if (mandal) {
+                 filter.mandal = mandal;
+             } else {
+                 return res.status(200).json({ items: [] });
+             }
+        }
+        const items = await GroceryItem.find(filter).sort({ name: 1 });
         res.status(200).json({ items });
       } catch (err) {
         res.status(500).json({ error: 'Failed to fetch grocery items' });
@@ -23,7 +32,18 @@ export default async function handler(req, res) {
     case 'POST': {
       // Add new grocery item
       try {
-        const item = new GroceryItem(req.body);
+        const { isSuper, mandal } = req.adminRights;
+        const data = req.body;
+        
+        // Enforce Mandal
+        if (!isSuper) {
+             if (!mandal) return res.status(403).json({ error: 'No Mandal assigned' });
+             data.mandal = mandal;
+        } else {
+             if (!data.mandal) data.mandal = 'Windsor';
+        }
+
+        const item = new GroceryItem(data);
         await item.save();
         res.status(201).json({ item });
       } catch (err) {
@@ -36,9 +56,18 @@ export default async function handler(req, res) {
       const { id } = req.query;
       if (!id) return res.status(400).json({ error: 'Missing item id' });
       try {
-        const item = await GroceryItem.findByIdAndUpdate(id, req.body, { new: true });
+        const { isSuper, mandal } = req.adminRights;
+        const item = await GroceryItem.findById(id);
         if (!item) return res.status(404).json({ error: 'Item not found' });
-        res.status(200).json({ item });
+
+        if (!isSuper) {
+             if (!mandal || item.mandal !== mandal) {
+                 return res.status(403).json({ error: 'Unauthorized to update this item' });
+             }
+        }
+
+        const updated = await GroceryItem.findByIdAndUpdate(id, req.body, { new: true });
+        res.status(200).json({ item: updated });
       } catch (err) {
         res.status(400).json({ error: err.message || 'Failed to update item' });
       }
@@ -49,8 +78,17 @@ export default async function handler(req, res) {
       const { id } = req.query;
       if (!id) return res.status(400).json({ error: 'Missing item id' });
       try {
-        const item = await GroceryItem.findByIdAndDelete(id);
+        const { isSuper, mandal } = req.adminRights;
+        const item = await GroceryItem.findById(id);
         if (!item) return res.status(404).json({ error: 'Item not found' });
+        
+        if (!isSuper) {
+             if (!mandal || item.mandal !== mandal) {
+                 return res.status(403).json({ error: 'Unauthorized to delete this item' });
+             }
+        }
+
+        await GroceryItem.findByIdAndDelete(id);
         res.status(200).json({ message: 'Item deleted' });
       } catch (err) {
         res.status(400).json({ error: err.message || 'Failed to delete item' });

@@ -99,6 +99,14 @@ const BirthdayReminder = () => {
       clearTimeout(initialTimer);
     };
   }, [notificationPermission]);
+  
+  // Auto-hide after 3 seconds
+  useEffect(() => {
+    if (showToast) {
+      const t = setTimeout(() => setShowToast(false), 3000);
+      return () => clearTimeout(t);
+    }
+  }, [showToast]);
 
   return (
     <ToastContainer position="top-end" className="p-3" style={{ zIndex: 1070 }}>
@@ -108,7 +116,7 @@ const BirthdayReminder = () => {
         bg="info"
         className="text-white"
       >
-        <Toast.Header closeButton={false}>
+        <Toast.Header closeButton={true}>
           <FaBirthdayCake className="me-2" />
           <strong className="me-auto">Birthday Reminders</strong>
           <small>Today</small>

@@ -3,6 +3,57 @@ import { useMemo, useState } from 'react';
 import Head from 'next/head';
 import Navbar from '../components/Navbar';
 import { useRouter } from 'next/router';
+import { useNotification } from '../contexts/NotificationContext';
+
+const interestOptions = [
+  'Sports', 'Music', 'Reading', 'Art', 'Technology',
+  'Science', 'Travel', 'Cooking', 'Photography', 'Dance'
+];
+
+const INSTITUTION_OPTIONS = [
+  { value: 'uwindsor', label: 'University of Windsor' },
+  { value: 'st_clair', label: 'St. Clair College' },
+  { value: 'other', label: 'Other' }
+];
+
+const PROGRAM_LIBRARY = {
+  uwindsor: [
+    { value: 'masters_applied_computing', label: 'Masters of Applied Computing', level: 'masters' },
+    { value: 'meng', label: 'Master of Engineering (MEng)', level: 'meng', specializations: ['Civil', 'ECE', 'Mechanical', 'Automobile'] },
+    { value: 'mba', label: 'MBA', level: 'mba' },
+    { value: 'msc', label: 'MSc', level: 'msc' },
+    { value: 'uwindsor_other', label: 'Other Windsor Program', level: 'other' }
+  ],
+  st_clair: [
+    { value: 'pg_business', label: 'Business', level: 'pg_diploma' },
+    { value: 'pg_international_business_management', label: 'International Business Management', level: 'pg_diploma' },
+    { value: 'pg_data_analytics', label: 'Data Analytics', level: 'pg_diploma' },
+    { value: 'pg_predictive_data_analytics', label: 'Predictive Data Analytics', level: 'pg_diploma' },
+    { value: 'pg_cybersecurity', label: 'Cybersecurity & IT Security', level: 'pg_diploma' },
+    { value: 'pg_supply_chain', label: 'Supply Chain Management & Logistics', level: 'pg_diploma' },
+    { value: 'pg_construction_project_management', label: 'Construction Project Management', level: 'pg_diploma' },
+    { value: 'pg_health_care', label: 'Health Care Programs', level: 'pg_diploma', specializations: ['Nursing', 'Medical Laboratory', 'Fitness & Health Promotion', 'Occupational Therapist Assistant'] },
+    { value: 'pg_engineering_technology', label: 'Engineering Technology', level: 'pg_diploma', specializations: ['Civil', 'Mechanical', 'Electrical', 'Biomedical'] },
+    { value: 'pg_skilled_trades', label: 'Skilled Trades', level: 'pg_diploma', specializations: ['Carpentry', 'Welding', 'Plumbing', 'Refrigeration', 'Greenhouse Technician', 'Landscape Horticulture'] },
+    { value: 'st_clair_other', label: 'Other St. Clair Program', level: 'pg_diploma' }
+  ],
+  other: [
+    { value: 'other_program', label: 'Other Program', level: 'other' }
+  ]
+};
+
+const POST_GRAD_OPTIONS = [
+  { value: 'working', label: 'Working' },
+  { value: 'job_search', label: 'Job Searching' },
+  { value: 'higher_studies', label: 'Higher Studies' },
+  { value: 'entrepreneur', label: 'Entrepreneurship' },
+  { value: 'other', label: 'Other' }
+];
+
+const getProgramDefinition = (institution, programValue) => {
+  const options = PROGRAM_LIBRARY[institution] || [];
+  return options.find(program => program.value === programValue) || null;
+};
 
 export default function AddYuvak() {
   const [formData, setFormData] = useState({
@@ -45,61 +96,11 @@ export default function AddYuvak() {
     moved_out_notes: ''
   });
   const [loading, setLoading] = useState(false);
-  const [toast, setToast] = useState(null);
+  const { show: showToast } = useNotification();
   const [error, setError] = useState(null);
   const [step, setStep] = useState(1);
   const [previewUrl, setPreviewUrl] = useState(null);
   const router = useRouter();
-
-  const interestOptions = [
-    'Sports', 'Music', 'Reading', 'Art', 'Technology',
-    'Science', 'Travel', 'Cooking', 'Photography', 'Dance'
-  ];
-
-  const INSTITUTION_OPTIONS = [
-    { value: 'uwindsor', label: 'University of Windsor' },
-    { value: 'st_clair', label: 'St. Clair College' },
-    { value: 'other', label: 'Other' }
-  ];
-
-  const PROGRAM_LIBRARY = {
-    uwindsor: [
-      { value: 'masters_applied_computing', label: 'Masters of Applied Computing', level: 'masters' },
-      { value: 'meng', label: 'Master of Engineering (MEng)', level: 'meng', specializations: ['Civil', 'ECE', 'Mechanical', 'Automobile'] },
-      { value: 'mba', label: 'MBA', level: 'mba' },
-      { value: 'msc', label: 'MSc', level: 'msc' },
-      { value: 'uwindsor_other', label: 'Other Windsor Program', level: 'other' }
-    ],
-    st_clair: [
-      { value: 'pg_business', label: 'Business', level: 'pg_diploma' },
-      { value: 'pg_international_business_management', label: 'International Business Management', level: 'pg_diploma' },
-      { value: 'pg_data_analytics', label: 'Data Analytics', level: 'pg_diploma' },
-      { value: 'pg_predictive_data_analytics', label: 'Predictive Data Analytics', level: 'pg_diploma' },
-      { value: 'pg_cybersecurity', label: 'Cybersecurity & IT Security', level: 'pg_diploma' },
-      { value: 'pg_supply_chain', label: 'Supply Chain Management & Logistics', level: 'pg_diploma' },
-      { value: 'pg_construction_project_management', label: 'Construction Project Management', level: 'pg_diploma' },
-      { value: 'pg_health_care', label: 'Health Care Programs', level: 'pg_diploma', specializations: ['Nursing', 'Medical Laboratory', 'Fitness & Health Promotion', 'Occupational Therapist Assistant'] },
-      { value: 'pg_engineering_technology', label: 'Engineering Technology', level: 'pg_diploma', specializations: ['Civil', 'Mechanical', 'Electrical', 'Biomedical'] },
-      { value: 'pg_skilled_trades', label: 'Skilled Trades', level: 'pg_diploma', specializations: ['Carpentry', 'Welding', 'Plumbing', 'Refrigeration', 'Greenhouse Technician', 'Landscape Horticulture'] },
-      { value: 'st_clair_other', label: 'Other St. Clair Program', level: 'pg_diploma' }
-    ],
-    other: [
-      { value: 'other_program', label: 'Other Program', level: 'other' }
-    ]
-  };
-
-  const POST_GRAD_OPTIONS = [
-    { value: 'working', label: 'Working' },
-    { value: 'job_search', label: 'Job Searching' },
-    { value: 'higher_studies', label: 'Higher Studies' },
-    { value: 'entrepreneur', label: 'Entrepreneurship' },
-    { value: 'other', label: 'Other' }
-  ];
-
-  const getProgramDefinition = (institution, programValue) => {
-    const options = PROGRAM_LIBRARY[institution] || [];
-    return options.find(program => program.value === programValue) || null;
-  };
 
   const availablePrograms = useMemo(
     () => PROGRAM_LIBRARY[formData.study_institution] || [],
@@ -449,7 +450,7 @@ export default function AddYuvak() {
         throw new Error(result.error || 'Failed to add yuvak');
       }
 
-      showToast('Success', 'Yuvak added successfully', 'success');
+      showToast('Yuvak added successfully', 'success');
       router.push('/students-table');
     } catch (err) {
       console.error('Error adding yuvak:', err);
@@ -459,11 +460,7 @@ export default function AddYuvak() {
     }
   };
 
-  // Display toast notification
-  const showToast = (title, message, type = 'success') => {
-    setToast({ title, message, type });
-    setTimeout(() => setToast(null), 5000);
-  };
+  // Display toast notification (removed local implementation)
 
   // Render form content for the current step
   const renderFormStep = () => {
@@ -1135,35 +1132,7 @@ export default function AddYuvak() {
         </div>
       </main>
 
-      {/* Toast Notification */}
-      {toast && (
-        <div className="toast-container position-fixed bottom-0 end-0 p-3">
-          <div 
-            className={`toast show align-items-center text-white bg-${toast.type} border-0`}
-            role="alert"
-            aria-live="assertive"
-            aria-atomic="true"
-            style={{
-              minWidth: '300px',
-              borderRadius: '10px',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
-            }}
-          >
-            <div className="d-flex">
-              <div className="toast-body">
-                <strong>{toast.title}</strong><br />
-                {toast.message}
-              </div>
-              <button 
-                type="button" 
-                className="btn-close btn-close-white me-2 m-auto" 
-                onClick={() => setToast(null)}
-                aria-label="Close"
-              ></button>
-            </div>
-          </div>
-        </div>
-      )}
+
 
       {/* Debugging Information (remove in production) */}
       {process.env.NODE_ENV === 'development' && (

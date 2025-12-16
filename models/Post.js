@@ -68,14 +68,21 @@ PostSchema.methods.isLikedBy = function(userId) {
 
 // Method to toggle like
 PostSchema.methods.toggleLike = async function(userId) {
-  const index = this.likes.findIndex(id => id.toString() === userId.toString());
-  if (index > -1) {
-    this.likes.splice(index, 1); // Unlike
+  // Ensure we're working with ObjectsIds
+  const uid = new mongoose.Types.ObjectId(userId);
+  
+  // Use MongooseArray methods which are more robust for ObjectIds
+  // Check if ID exists in array (handles ObjectId vs String comparison correctly usually, but equals is safest)
+  const isLiked = this.likes.some(id => (id._id || id).toString() === uid.toString());
+  
+  if (isLiked) {
+    this.likes.pull(uid); // Mongoose specific pull handles casting
   } else {
-    this.likes.push(userId); // Like
+    this.likes.addToSet(uid); // Mongoose specific addToSet prevents duplicates
   }
+  
   await this.save();
-  return index === -1; // Return true if liked, false if unliked
+  return !isLiked; // Returns true if we just liked it
 };
 
 export default mongoose.models.Post || mongoose.model('Post', PostSchema);

@@ -108,6 +108,20 @@ const StudentSchema = new mongoose.Schema({
     required: [true, 'Phone number is required'], 
     trim: true 
   },
+  mandal_name: {
+    type: String,
+    trim: true,
+    default: ''
+  },
+  is_admin: {
+    type: Boolean,
+    default: false
+  },
+  mukt_type: {
+    type: String,
+    enum: ['Yuvak', 'Yuvati', 'Ambrish', 'Expected', ''],
+    default: ''
+  },
   phone_normalized: {
     type: String,
     trim: true,

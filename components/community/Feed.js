@@ -7,6 +7,7 @@ const Feed = ({
   users = [], 
   currentUser, 
   onLikePost, 
+  onShowLikes,
   onFollowUser,
   onMessageUser,
   onCreatePost,
@@ -19,7 +20,12 @@ const Feed = ({
   postComments = {},
   commentDrafts = {},
   onCommentChange,
-  onCommentSubmit
+
+  onCommentSubmit,
+  onDeletePost,
+  onUpdatePost,
+  onDeleteComment,
+  onUpdateComment
 }) => {
   
   // Helper to check if current user follows target
@@ -96,6 +102,11 @@ const Feed = ({
                 commentDraft={commentDrafts[pid]}
                 onCommentChange={(val) => onCommentChange && onCommentChange(pid, val)}
                 onCommentSubmit={onCommentSubmit}
+                onDelete={onDeletePost}
+                onUpdate={onUpdatePost}
+                onShowLikes={onShowLikes}
+                onDeleteComment={onDeleteComment}
+                onUpdateComment={onUpdateComment}
               />
             );
           })
@@ -108,12 +119,12 @@ const Feed = ({
             <h6 className="mb-3 px-2 font-weight-bold text-secondary text-uppercase" style={{ fontSize: '0.75rem', letterSpacing: '0.05em' }}>
                 Suggested Students
             </h6>
-            {users
-              .filter(u => u._id !== currentUser._id)
+            {Array.from(new Map(users.map(u => [u.id || u._id, u])).values()) // Deduplicate by ID
+              .filter(u => (u.id || u._id) !== (currentUser.id || currentUser._id))
               .slice(0, 5)
               .map(user => (
                 <UserCard
-                    key={user._id}
+                    key={user.id || user._id}
                     user={user}
                     currentUser={currentUser}
                     isFollowing={isFollowing(user._id)}

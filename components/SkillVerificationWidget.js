@@ -322,7 +322,7 @@ export default function SkillVerificationWidget({ currentUser, skills = [] }) {
               )}
               {selectedSkill?.name !== 'JavaScript' && selectedSkill?.name !== 'Python' && (
                 <p>
-                  Describe a project or scenario where you've applied <strong>{selectedSkill?.name}</strong>.
+                  Describe a project or scenario where you&apos;ve applied <strong>{selectedSkill?.name}</strong>.
                   What challenges did you face and how did you overcome them?
                 </p>
               )}

@@ -6,6 +6,8 @@ import '../styles/globals.css';
 import DarkModeToggle from '@/components/DarkModeToggle';
 import Navigation from '../components/Navbar';
 import dynamic from 'next/dynamic';
+import { NotificationProvider } from '../contexts/NotificationContext';
+import GlobalNotifications from '../components/NotificationSystem';
 // import ChatWidget from '../components/ChatWidget'; // Import the Chat Widget
 
 // Dynamically import BirthdayReminder with no SSR
@@ -21,7 +23,7 @@ const MyApp = ({ Component, pageProps }) => {
     // }, []);
 
     return (
-        <>
+        <NotificationProvider>
             <Head>
                 {/* Meta tags for SEO */}
                 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -34,6 +36,7 @@ const MyApp = ({ Component, pageProps }) => {
             <div className="app-container">
                 {/* Render the main app component */}
                 <Component {...pageProps} />
+                <GlobalNotifications />
             </div>
 
             {/* Render the floating Chat Widget globally */}
@@ -134,7 +137,7 @@ const MyApp = ({ Component, pageProps }) => {
 
              <BirthdayReminder />
 
-        </>
+        </NotificationProvider>
     );
 };
 

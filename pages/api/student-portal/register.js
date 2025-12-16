@@ -60,9 +60,32 @@ export default async function handler(req, res) {
         ? { $or: conditions }
         : { phone: trimPhone(phone) };
 
-    const student = await Student.findOne(lookup);
+    let student = await Student.findOne(lookup);
+    
+    // Create new student if not found
     if (!student) {
-      return res.status(404).json({ error: 'No student found with that phone number' });
+      const { first_name, last_name, mandal_name, mukt_type } = req.body;
+      
+      if (!first_name || !last_name) {
+          return res.status(400).json({ error: 'First Name and Last Name are required for new registration' });
+      }
+
+      if (!mandal_name || !mukt_type) {
+          return res.status(400).json({ error: 'Mandal Name and Mukt Type are required' });
+      }
+
+      student = new Student({
+        phone: trimPhone(phone),
+        phone_normalized: digits,
+        first_name: first_name.trim(),
+        last_name: last_name.trim(),
+        mandal_name: mandal_name.trim(),
+        mukt_type: mukt_type
+      });
+    } else {
+        // Update existing student with new fields if provided
+        if (req.body.mandal_name) student.mandal_name = req.body.mandal_name;
+        if (req.body.mukt_type) student.mukt_type = req.body.mukt_type;
     }
 
     if (student.portal_password_hash) {

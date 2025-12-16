@@ -1,5 +1,6 @@
 import { getPortalSessionFromRequest } from '../lib/studentPortalAuth';
 import { ACCESS_COOKIE_NAME, REFRESH_COOKIE_NAME, parseCookies, verifyAccessToken, verifyRefreshToken } from '../lib/portalSession';
+import Link from 'next/link';
 
 export default function DebugAuth({ debugInfo }) {
   return (
@@ -9,7 +10,7 @@ export default function DebugAuth({ debugInfo }) {
         {JSON.stringify(debugInfo, null, 2)}
       </pre>
       <div className="mt-3">
-        <a href="/student-portal" className="btn btn-primary">Go to Portal</a>
+        <Link href="/student-portal" className="btn btn-primary">Go to Portal</Link>
       </div>
     </div>
   );

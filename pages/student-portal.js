@@ -83,6 +83,12 @@ const PROGRAM_LIBRARY = {
   ]
 };
 
+const MANDAL_OPTIONS = [
+  'Windsor', 'Brampton', 'Mississauga', 'Etobicoke', 'Kitchener', 'London', 'Hamilton', 'Other'
+];
+
+const MUKT_OPTIONS = ['Yuvak', 'Yuvati', 'Ambrish'];
+
 const FIELD_CONFIG_MAP = new Map(
   STUDENT_PORTAL_FIELD_DEFS.map((field) => [field.name, field])
 );
@@ -189,6 +195,10 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
   const [registerPhone, setRegisterPhone] = useState('');
   const [registerPassword, setRegisterPassword] = useState('');
   const [registerConfirm, setRegisterConfirm] = useState('');
+  const [registerFirstName, setRegisterFirstName] = useState('');
+  const [registerLastName, setRegisterLastName] = useState('');
+  const [registerMandal, setRegisterMandal] = useState('');
+  const [registerMuktType, setRegisterMuktType] = useState('');
   const [authMode, setAuthMode] = useState('login');
   const [student, setStudent] = useState(initialStudent || null);
 
@@ -211,6 +221,23 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
   const [successMessage, setSuccessMessage] = useState('');
   const [showThankYou, setShowThankYou] = useState(false);
   const [sessionPassword, setSessionPassword] = useState('');
+  
+  // Restore session password from local storage on mount
+  useEffect(() => {
+    const savedPassword = localStorage.getItem('portalSessionPassword');
+    if (savedPassword) {
+      setSessionPassword(savedPassword);
+    } else {
+        // Dev fallback
+        setSessionPassword('dasnadas');
+    }
+  }, []);
+
+  useEffect(() => {
+      if (sessionPassword) {
+          localStorage.setItem('portalSessionPassword', sessionPassword);
+      }
+  }, [sessionPassword]);
   const [portalMeta, setPortalMeta] = useState(initialPortalMeta || {
     has_custom_password: false,
     used_default_password: false,
@@ -305,6 +332,20 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
 
+  // Likes Modal State
+  const [showLikesModal, setShowLikesModal] = useState(false);
+  const [likesModalTitle, setLikesModalTitle] = useState('Likes');
+  const [likesModalUsers, setLikesModalUsers] = useState([]);
+
+  // Comment Delete Confirmation Modal
+  const [showDeleteCommentModal, setShowDeleteCommentModal] = useState(false);
+  const [commentToDelete, setCommentToDelete] = useState(null);
+  const [postOfCommentToDelete, setPostOfCommentToDelete] = useState(null);
+
+  // Post Delete Confirmation Modal
+  const [showDeletePostModal, setShowDeletePostModal] = useState(false);
+  const [postToDelete, setPostToDelete] = useState(null);
+
 
 
   // Feed state
@@ -314,6 +355,46 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
   const [postComments, setPostComments] = useState({}); // { postId: [comments] }
   const [commentDrafts, setCommentDrafts] = useState({}); // { postId: text }
   const [showComments, setShowComments] = useState({}); // { postId: boolean }
+
+
+
+  const handleUpdatePost = async (postId, newContent) => {
+    // Optimistic Update
+    mutateFeed((current) => ({
+      ...current,
+      posts: (current?.posts || []).map(p => 
+        (p.id === postId || p._id === postId) ? { ...p, content: newContent } : p
+      )
+    }), false);
+
+    try {
+      await fetch('/api/student-portal/posts', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(portalAuthHeadersRef.current || {})
+        },
+        body: JSON.stringify({ postId, content: newContent })
+      });
+
+      enqueueToast({
+        variant: 'success',
+        title: 'Post Updated',
+        message: 'Your post has been updated.'
+      });
+      
+      mutateFeed(); // Revalidate
+    } catch (error) {
+      console.error('Update error:', error);
+      mutateFeed(); // Revert
+      enqueueToast({
+        variant: 'danger',
+        title: 'Error',
+        message: 'Could not update post.'
+      });
+    }
+  };
+
 
   const enqueueToast = useCallback(
     ({ variant = 'primary', title, message, actionLabel, onAction }) => {
@@ -1325,29 +1406,70 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
     });
     socket.on('post:like', (data) => {
       if (data?.postId) {
-        mutateFeed((current) => ({
-          ...current,
-          posts: (current?.posts || []).map((post) =>
-            post.id === data.postId ? { ...post, likes: data.likes } : post
-          )
-        }), false);
+        mutateFeed((current) => {
+          if (!current?.posts) return current;
+          
+          return {
+            ...current,
+            posts: current.posts.map((post) => {
+              if (post.id === data.postId || post._id === data.postId) {
+                let newLikedBy = post.liked_by || [];
+                
+                if (data.liked) {
+                  // Add user if not present
+                  if (!newLikedBy.some(u => u.id === data.userId)) {
+                    newLikedBy = [...newLikedBy, { id: data.userId, name: data.userName }];
+                  }
+                } else {
+                  // Remove user
+                  newLikedBy = newLikedBy.filter(u => u.id !== data.userId);
+                }
+
+                return { 
+                  ...post, 
+                  likes: data.likes,
+                  liked_by: newLikedBy,
+                  // Also update is_liked if it's the current user
+                  is_liked: data.userId === (student._id || student.id) ? data.liked : post.is_liked
+                };
+              }
+              return post;
+            })
+          };
+        }, false);
       }
     });
-    socket.on('post:comment', (data) => {
-      if (data?.comment) {
-        const postId = data.comment.post;
-        setPostComments((prev) => ({
-          ...prev,
-          [postId]: [...(prev[postId] || []), data.comment]
-        }));
-        mutateFeed((current) => ({
-          ...current,
-          posts: (current?.posts || []).map((post) =>
-            post.id === postId ? { ...post, comments: (post.comments || 0) + 1 } : post
-          )
-        }), false);
-      }
-    });
+      socket.on('post:comment', (data) => {
+       if (data?.comment) {
+         // Prevent double-commenting for the author (handled by optimistic update)
+         const viewerId = student?._id || student?.id;
+         const authorId = data.comment.author?.id || data.comment.author?._id;
+         
+         if (viewerId && authorId && String(viewerId) === String(authorId)) {
+             return; 
+         }
+
+         const postId = data.comment.post;
+         setPostComments((prev) => {
+           const currentComments = prev[postId] || [];
+           // Deduplicate by ID just in case
+           if (currentComments.some(c => c._id === data.comment._id || c.id === data.comment._id)) {
+             return prev;
+           }
+           return {
+             ...prev,
+             [postId]: [...currentComments, data.comment]
+           };
+         });
+         
+         mutateFeed((current) => ({
+           ...current,
+           posts: (current?.posts || []).map((post) =>
+             post.id === postId ? { ...post, comments: (post.comments || 0) + 1 } : post
+           )
+         }), false);
+       }
+     });
 
     socket.on('follow_update', (data) => {
       console.log('[CHAT] Follow update received:', data);
@@ -1977,12 +2099,34 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
 
     setCommentSubmitting(prev => ({ ...prev, [postId]: true }));
 
+    // Optimistic Update
+    const tempId = `temp-${Date.now()}`;
+    const optimisticComment = {
+      id: tempId,
+      _id: tempId,
+      post: postId,
+      author: {
+        first_name: student.first_name,
+        last_name: student.last_name,
+        profile_picture: student.profile_picture
+      },
+      author_name: `${student.first_name} ${student.last_name || ''}`.trim(),
+      content: content,
+      created_at: new Date().toISOString()
+    };
+
+    setPostComments((prev) => ({
+      ...prev,
+      [postId]: [...(prev[postId] || []), optimisticComment]
+    }));
+    setCommentDrafts((prev) => ({ ...prev, [postId]: '' }));
+
     try {
       const response = await fetch('/api/student-portal/post-actions?action=comment', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(portalAuthHeaders || {})
+          ...(portalAuthHeadersRef.current || {})
         },
         body: JSON.stringify({ postId, content })
       });
@@ -1990,19 +2134,105 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
       if (!response.ok) {
         throw new Error(data.error || 'Unable to add comment');
       }
+      
+      // Replace optimistic comment with real one
       setPostComments((prev) => ({
         ...prev,
-        [postId]: [...(prev[postId] || []), data.comment]
+        [postId]: prev[postId].map(c => c.id === tempId ? data.comment : c)
       }));
-      setCommentDrafts((prev) => ({ ...prev, [postId]: '' }));
+
       // Update comment count
       mutateFeed();
     } catch (error) {
       console.error('Comment submission failed:', error);
+      // Revert optimistic comment
+      setPostComments((prev) => ({
+        ...prev,
+        [postId]: prev[postId].filter(c => c.id !== tempId)
+      }));
+      setCommentDrafts((prev) => ({ ...prev, [postId]: content })); // Restore text
+      enqueueToast({
+        variant: 'danger',
+        title: 'Error',
+        message: 'Failed to post comment'
+      });
     } finally {
       setCommentSubmitting(prev => ({ ...prev, [postId]: false }));
     }
   };
+
+  const handleDeleteComment = (commentId, postId) => {
+      setCommentToDelete(commentId);
+      setPostOfCommentToDelete(postId);
+      setShowDeleteCommentModal(true);
+  };
+
+  const confirmDeleteComment = async () => {
+    if (!commentToDelete || !postOfCommentToDelete) return;
+
+    const commentId = commentToDelete;
+    const postId = postOfCommentToDelete;
+    
+    // Optimistic Update
+    setPostComments(prev => ({
+        ...prev,
+        [postId]: (prev[postId] || []).filter(c => (c.id || c._id) !== commentId)
+    }));
+    
+    // Update count in feed
+    mutateFeed((current) => ({
+        ...current,
+        posts: (current?.posts || []).map(p => 
+            (p.id === postId || p._id === postId) ? { ...p, comments: Math.max(0, (p.comments || 0) - 1) } : p
+        )
+    }), false);
+
+    setShowDeleteCommentModal(false);
+    setCommentToDelete(null);
+    setPostOfCommentToDelete(null);
+
+    try {
+        await fetch(`/api/student-portal/post-actions?action=comment&commentId=${commentId}`, {
+            method: 'DELETE',
+            headers: {
+                ...(portalAuthHeadersRef.current || {})
+            }
+        });
+        mutateFeed(); // Revalidate
+    } catch (error) {
+        console.error('Delete comment failed:', error);
+        enqueueToast({ variant: 'danger', title: 'Error', message: 'Failed to delete comment' });
+        mutateFeed(); // Revert
+    }
+  };
+
+  const handleUpdateComment = async (commentId, content, postId) => {
+    // Optimistic Update
+    setPostComments(prev => ({
+        ...prev,
+        [postId]: (prev[postId] || []).map(c => 
+            (c.id === commentId || c._id === commentId) ? { ...c, content } : c
+        )
+    }));
+
+    try {
+        await fetch('/api/student-portal/post-actions?action=comment', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                ...(portalAuthHeadersRef.current || {})
+            },
+            body: JSON.stringify({ commentId, content })
+        });
+        mutateFeed(); 
+    } catch (error) {
+        console.error('Update comment failed:', error);
+        enqueueToast({ variant: 'danger', title: 'Error', message: 'Failed to update comment' });
+        mutateFeed(); // Revert
+    }
+  };
+
+
 
   const handleSharePost = async (postId) => {
     try {
@@ -2034,25 +2264,61 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
     }
   };
 
-  const handleDeletePost = async (postId) => {
-    if (!confirm('Are you sure you want to delete this post?')) {
-      return;
-    }
+  const handleDeletePost = (postId) => {
+    setPostToDelete(postId);
+    setShowDeletePostModal(true);
+  };
+
+  const confirmDeletePost = async () => {
+    if (!postToDelete) return;
+    const postId = postToDelete;
+
+    // Optimistic Update: Immediately remove post from UI
+    mutateFeed((current) => ({
+      ...current,
+      posts: (current?.posts || []).filter(p => p.id !== postId && p._id !== postId)
+    }), false);
+
+    setShowDeletePostModal(false);
+    setPostToDelete(null);
+
     try {
+      const headers = portalAuthHeadersRef.current || {};
       const response = await fetch(`/api/student-portal/posts?postId=${postId}`, {
         method: 'DELETE',
         headers: {
-          ...(portalAuthHeaders || {})
+          ...headers
         }
       });
-      const data = await response.json();
+
       if (!response.ok) {
+        const data = await response.json();
         throw new Error(data.error || 'Unable to delete post');
       }
-      mutateFeed();
+      
+      enqueueToast({
+        variant: 'success',
+        title: 'Post Deleted',
+        message: 'Post has been removed successfully.'
+      });
+
+      mutateFeed(); // Revalidate to be sure
     } catch (error) {
       console.error('Delete post failed:', error);
+      mutateFeed(); // Revert on error
+      enqueueToast({
+        variant: 'danger',
+        title: 'Delete Failed',
+        message: error.message || 'Could not delete the post.'
+      });
     }
+  };
+
+  const handleShowLikes = (post) => {
+    if (!post) return;
+    setLikesModalTitle('People who liked this');
+    setLikesModalUsers(post.liked_by || []);
+    setShowLikesModal(true);
   };
 
 
@@ -2233,7 +2499,11 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
         body: JSON.stringify({
           phone: registerPhone,
           password: registerPassword,
-          confirmPassword: registerConfirm
+          confirmPassword: registerConfirm,
+          first_name: registerFirstName,
+          last_name: registerLastName,
+          mandal_name: registerMandal,
+          mukt_type: registerMuktType
         })
       });
 
@@ -2270,7 +2540,21 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
 
       if (response.ok) {
         const data = await response.json();
-        setFollowList(data[type] || []);
+        const list = data[type] || [];
+        setFollowList(list);
+
+        // Sync local student state to match the server's real count
+        // This fixes the mismatch between the profile card count (e.g. 4) and the actual list (e.g. 2)
+        const realIds = list.map(u => u.id || u._id).filter(Boolean);
+        
+        setStudent(prev => {
+           if (!prev) return prev;
+           return {
+             ...prev,
+             [type]: realIds // unique list of IDs
+           };
+        });
+
       } else {
         console.error('Failed to fetch', type);
         setFollowList([]);
@@ -2981,6 +3265,18 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
                               {profile.community_headline && (
                                 <p className="text-muted small mb-0">{profile.community_headline}</p>
                               )}
+                              <div className="d-flex gap-1 mt-1 flex-wrap">
+                                {profile.mandal_name && (
+                                  <Badge bg="info" className="fw-normal" style={{ fontSize: '0.7em' }}>
+                                    {profile.mandal_name}
+                                  </Badge>
+                                )}
+                                {profile.mukt_type && (
+                                  <Badge bg="warning" text="dark" className="fw-normal" style={{ fontSize: '0.7em' }}>
+                                    {profile.mukt_type}
+                                  </Badge>
+                                )}
+                              </div>
                               <div className="presence-line text-muted small mt-1">
                                 <span
                                   className={`presence-dot ${profile.online ? 'presence-dot-online' : ''}`}
@@ -3202,6 +3498,7 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
             users={suggestedUsers}
             currentUser={student}
             onLikePost={handleLikePost}
+            onShowLikes={handleShowLikes}
             onFollowUser={(id, action) => handleFollow(id, action || 'follow')}
             onMessageUser={(user) => {
                 setActiveConversation({ 
@@ -3213,6 +3510,8 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
                 setActivePane('inbox');
             }}
             onCreatePost={handlePostSubmit}
+            onDeletePost={handleDeletePost}
+            onUpdatePost={handleUpdatePost}
             postContent={postForm.content}
             onPostContentChange={(content) => setPostForm({ ...postForm, content })}
             isSubmitting={postSubmitting}
@@ -3223,6 +3522,8 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
             commentDrafts={commentDrafts}
             onCommentChange={(postId, val) => setCommentDrafts(prev => ({ ...prev, [postId]: val }))}
             onCommentSubmit={handleCommentSubmit}
+            onDeleteComment={handleDeleteComment}
+            onUpdateComment={handleUpdateComment}
         />
       </div>
     );
@@ -3896,6 +4197,21 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
 
           <h5 className="fw-bold mb-1">{student.first_name} {student.last_name}</h5>
           <p className="text-muted small mb-3">{student.study || 'Student'}</p>
+          
+          <div className="d-flex justify-content-center gap-2 mb-3">
+            {student.mandal_name && (
+              <Badge bg="info" className="fw-normal">
+                <i className="fas fa-map-marker-alt me-1"></i>
+                {student.mandal_name}
+              </Badge>
+            )}
+            {student.mukt_type && (
+              <Badge bg="warning" text="dark" className="fw-normal">
+                <i className="fas fa-user-tag me-1"></i>
+                {student.mukt_type}
+              </Badge>
+            )}
+          </div>
 
           <div className="d-flex justify-content-center gap-4 border-top pt-3">
             <div className="text-center cursor-pointer" onClick={() => handleShowFollowModal('followers')} style={{ cursor: 'pointer' }}>
@@ -4436,7 +4752,7 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
                             </div>
                             <h1 className="fw-bold display-5 mb-3 text-dark">HSAPSS Windsor</h1>
                             <p className="lead text-muted mb-4">
-                              A single space for every Windsor yuvak's journey. Connect, grow, and support each other.
+                              A single space for every Windsor yuvak&apos;s journey. Connect, grow, and support each other.
                             </p>
                             <div className="d-flex flex-column gap-3">
                               <div className="d-flex align-items-center gap-3">
@@ -4522,6 +4838,73 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
                               </Form>
                             ) : (
                               <Form onSubmit={handleRegister}>
+                                <div className="row g-2 mb-3">
+                                  <div className="col-6">
+                                    <Form.Group controlId="register-first-name">
+                                      <Form.Label className="fw-semibold small text-muted text-uppercase">First Name</Form.Label>
+                                      <Form.Control
+                                        type="text"
+                                        size="lg"
+                                        placeholder="First Name"
+                                        value={registerFirstName}
+                                        onChange={(e) => setRegisterFirstName(e.target.value)}
+                                        required
+                                        className="bg-light border-0"
+                                      />
+                                    </Form.Group>
+                                  </div>
+                                  <div className="col-6">
+                                    <Form.Group controlId="register-last-name">
+                                      <Form.Label className="fw-semibold small text-muted text-uppercase">Last Name</Form.Label>
+                                      <Form.Control
+                                        type="text"
+                                        size="lg"
+                                        placeholder="Last Name"
+                                        value={registerLastName}
+                                        onChange={(e) => setRegisterLastName(e.target.value)}
+                                        required
+                                        className="bg-light border-0"
+                                      />
+                                    </Form.Group>
+                                  </div>
+                                </div>
+
+                                <div className="row g-2 mb-3">
+                                  <div className="col-6">
+                                    <Form.Group controlId="register-mandal">
+                                      <Form.Label className="fw-semibold small text-muted text-uppercase">Mandal</Form.Label>
+                                      <Form.Select
+                                        size="lg"
+                                        value={registerMandal}
+                                        onChange={(e) => setRegisterMandal(e.target.value)}
+                                        required
+                                        className="bg-light border-0"
+                                      >
+                                        <option value="">Select...</option>
+                                        {MANDAL_OPTIONS.map(opt => (
+                                          <option key={opt} value={opt}>{opt}</option>
+                                        ))}
+                                      </Form.Select>
+                                    </Form.Group>
+                                  </div>
+                                  <div className="col-6">
+                                    <Form.Group controlId="register-mukt-type">
+                                      <Form.Label className="fw-semibold small text-muted text-uppercase">Mukt Type</Form.Label>
+                                      <Form.Select
+                                        size="lg"
+                                        value={registerMuktType}
+                                        onChange={(e) => setRegisterMuktType(e.target.value)}
+                                        required
+                                        className="bg-light border-0"
+                                      >
+                                        <option value="">Select...</option>
+                                        {MUKT_OPTIONS.map(opt => (
+                                          <option key={opt} value={opt}>{opt}</option>
+                                        ))}
+                                      </Form.Select>
+                                    </Form.Group>
+                                  </div>
+                                </div>
                                 <Form.Group className="mb-3" controlId="register-phone">
                                   <Form.Label className="fw-semibold small text-muted text-uppercase">Phone Number</Form.Label>
                                   <Form.Control
@@ -4717,6 +5100,8 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
                                              commentDrafts={commentDrafts}
                                              onCommentChange={(postId, val) => setCommentDrafts(prev => ({ ...prev, [postId]: val }))}
                                              onCommentSubmit={handleCommentSubmit}
+                                             onDeleteComment={handleDeleteComment}
+                                             onUpdateComment={handleUpdateComment}
                                           />
                                       ) : (
                                           <div className="text-center text-muted py-5">
@@ -4835,6 +5220,35 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
           </Toast>
         ))}
       </ToastContainer>
+
+      {/* Follow/Likes List Modal - Reusing Follow Modal structure or creating new? Creating simple new one for now */}
+       <Modal show={showLikesModal} onHide={() => setShowLikesModal(false)} centered>
+        <Modal.Header closeButton className="border-0">
+          <Modal.Title className="h5">{likesModalTitle}</Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="p-0">
+          <ListGroup variant="flush">
+            {likesModalUsers && likesModalUsers.length > 0 ? (
+              likesModalUsers.map((user) => (
+                <ListGroup.Item key={user.id} className="d-flex align-items-center justify-content-between p-3 border-light">
+                  <div className="d-flex align-items-center gap-3">
+                    <div 
+                      className="rounded-circle bg-light d-flex align-items-center justify-content-center text-primary fw-bold"
+                      style={{ width: '40px', height: '40px', fontSize: '1rem' }}
+                    >
+                      {user.name.charAt(0)}
+                    </div>
+                    <span className="fw-medium text-dark">{user.name}</span>
+                  </div>
+                 {/*  Future: Add Follow button here if not following */}
+                </ListGroup.Item>
+              ))
+            ) : (
+              <div className="text-center p-4 text-muted">No likes yet</div>
+            )}
+          </ListGroup>
+        </Modal.Body>
+      </Modal>
 
       {/* Theme Picker Modal */}
       {showThemePicker && (
@@ -5217,34 +5631,96 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
         </Offcanvas.Body>
       </Offcanvas>
 
+      {/* Comments Delete Confirmation Modal */}
+      <Modal show={showDeleteCommentModal} onHide={() => setShowDeleteCommentModal(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Delete Comment</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          Are you sure you want to delete this comment? This action cannot be undone.
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowDeleteCommentModal(false)}>
+            Cancel
+          </Button>
+          <Button variant="danger" onClick={confirmDeleteComment}>
+            Delete
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Post Delete Confirmation Modal */}
+      <Modal show={showDeletePostModal} onHide={() => setShowDeletePostModal(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Delete Post</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          Are you sure you want to delete this post? This action cannot be undone.
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowDeletePostModal(false)}>
+            Cancel
+          </Button>
+          <Button variant="danger" onClick={confirmDeletePost}>
+            Delete
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
       {/* Followers/Following Modal */}
       <Modal show={showFollowModal} onHide={() => setShowFollowModal(false)} centered>
         <Modal.Header closeButton>
-          <Modal.Title>{followModalType === 'followers' ? 'Followers' : 'Following'}</Modal.Title>
+          <Modal.Title>
+            {followModalType === 'followers' ? 'Followers' : 'Following'}
+            {followList.length > 0 && (
+               <span className="text-muted ms-2 fw-normal" style={{ fontSize: '1rem' }}>
+                 ({followList.reduce((unique, item) => {
+                    const id = item.id || item._id;
+                    return unique.includes(id) ? unique : [...unique, id];
+                 }, []).length})
+               </span>
+            )}
+          </Modal.Title>
         </Modal.Header>
-        <Modal.Body>
+        <Modal.Body className="p-0">
           {followListLoading ? (
             <div className="text-center py-4">
               <Spinner animation="border" />
             </div>
           ) : (
-            <div className="list-group list-group-flush">
-              {followList.map((user) => {
-                const isFollowing = (student?.following || []).includes(user.id);
+            <ListGroup variant="flush">
+              {/* Deduplicate users by ID */}
+              {followList
+                .filter((user, index, self) => 
+                  index === self.findIndex((u) => (u.id || u._id) === (user.id || user._id))
+                )
+                .map((user) => {
+                const userId = user.id || user._id;
+                const displayName = `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.name || 'User';
+                const initials = displayName.charAt(0).toUpperCase();
+
                 return (
-                  <div key={user.id} className="list-group-item d-flex align-items-center gap-3 p-3">
-                    <div className="flex-grow-1">
-                      <div className="fw-semibold">{user.first_name} {user.last_name}</div>
-                      {user.study && <div className="small text-muted">{user.study}</div>}
+                  <ListGroup.Item key={userId} className="d-flex align-items-center justify-content-between p-3 border-light">
+                    <div className="d-flex align-items-center gap-3">
+                      <div 
+                        className="rounded-circle bg-light d-flex align-items-center justify-content-center text-primary fw-bold"
+                        style={{ width: '40px', height: '40px', fontSize: '1rem' }}
+                      >
+                        {initials}
+                      </div>
+                      <div>
+                        <div className="fw-medium text-dark">{displayName}</div>
+                        {user.study && <div className="small text-muted" style={{ fontSize: '0.85rem' }}>{user.study}</div>}
+                      </div>
                     </div>
-                    {user.online ? <Badge bg="success">Online</Badge> : <small className="text-muted">Offline</small>}
-                  </div>
+                    {user.online ? <Badge bg="success" pill>Online</Badge> : <small className="text-muted">Offline</small>}
+                  </ListGroup.Item>
                 );
               })}
               {followList.length === 0 && (
-                <div className="text-center text-muted py-3">No users found</div>
+                <div className="text-center p-4 text-muted">No users found</div>
               )}
-            </div>
+            </ListGroup>
           )}
         </Modal.Body>
       </Modal>

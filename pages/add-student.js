@@ -5,46 +5,6 @@ import Head from 'next/head';
 import { FaPlus, FaTimes, FaSave, FaUndo } from 'react-icons/fa';
 import Navbar from '../components/Navbar';
 
-export default function AddStudent() {
-  const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  const [showToast, setShowToast] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
-  const [toastVariant, setToastVariant] = useState('success');
-  const [error, setError] = useState('');
-  
-  // Enhanced form data with events array
-  const [formData, setFormData] = useState({
-    first_name: '',
-    last_name: '',
-    mail_id: '',
-    phone: '',
-    address: '',
-    date_of_birth: '',
-    gender: '',
-    education: '',
-    study_level: '',
-    study_institution: '',
-    study_program: '',
-    study_specialization: '',
-    study: '',
-    emergency_contact: '',
-    notes: '',
-    events: [], // Array to store multiple events
-    // Moved out fields
-    moved_out: false,
-    moved_out_date: '',
-    moved_out_job: '',
-    moved_out_address: '',
-    moved_out_notes: '',
-    graduation_completed: false,
-    graduation_date: '',
-    post_graduation_plan: '',
-    employment_status: '',
-    employment_company: '',
-    employment_role: ''
-  });
-
 const INSTITUTION_OPTIONS = [
   { value: 'uwindsor', label: 'University of Windsor' },
   { value: 'st_clair', label: 'St. Clair College' },
@@ -89,6 +49,46 @@ const getProgramDefinition = (institution, programValue) => {
   const list = PROGRAM_LIBRARY[institution] || [];
   return list.find((program) => program.value === programValue) || null;
 };
+
+export default function AddStudent() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastVariant, setToastVariant] = useState('success');
+  const [error, setError] = useState('');
+  
+  // Enhanced form data with events array
+  const [formData, setFormData] = useState({
+    first_name: '',
+    last_name: '',
+    mail_id: '',
+    phone: '',
+    address: '',
+    date_of_birth: '',
+    gender: '',
+    education: '',
+    study_level: '',
+    study_institution: '',
+    study_program: '',
+    study_specialization: '',
+    study: '',
+    emergency_contact: '',
+    notes: '',
+    events: [], // Array to store multiple events
+    // Moved out fields
+    moved_out: false,
+    moved_out_date: '',
+    moved_out_job: '',
+    moved_out_address: '',
+    moved_out_notes: '',
+    graduation_completed: false,
+    graduation_date: '',
+    post_graduation_plan: '',
+    employment_status: '',
+    employment_company: '',
+    employment_role: ''
+  });
   // Event types for dropdown
   const eventTypes = [
     'Yuva Mahotsav',
@@ -745,7 +745,7 @@ const getProgramDefinition = (institution, programValue) => {
                     <Card.Body>
                       {formData.events.length === 0 ? (
                         <Alert variant="info">
-                          No events added yet. Click the "Add Event" button to add participation details.
+                          No events added yet. Click the &quot;Add Event&quot; button to add participation details.
                         </Alert>
                       ) : (
                         formData.events.map((event, index) => (

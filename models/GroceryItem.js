@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 
 const GroceryItemSchema = new mongoose.Schema({
   name: { type: String, required: true, trim: true },
+  mandal: { type: String, default: 'Windsor' },
   quantity: { type: Number, required: true, default: 0 },
   unit: { type: String, required: true, trim: true },
   minStock: { type: Number, default: 0 },

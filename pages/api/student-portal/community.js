@@ -64,9 +64,11 @@ const toProfilePayload = (student, viewerId) => {
     last_portal_update_at: student.last_portal_update_at
       ? student.last_portal_update_at.toISOString()
       : null,
-    has_requested_follow: Array.isArray(student.followRequests) 
+    has_requested_follow: Array.isArray(student.followRequests)
       ? student.followRequests.some(id => id.toString() === viewerId.toString())
-      : false
+      : false,
+    mandal_name: student.mandal_name || '',
+    mukt_type: student.mukt_type || ''
   };
 };
 
@@ -106,7 +108,7 @@ export default async function handler(req, res) {
     const communityMembers = await Student.find(query)
       .sort({ available_to_help: -1, updated_at: -1 })
       .select(
-        'first_name last_name study post_graduation_plan community_headline community_bio community_skills community_interests available_to_help help_offering linkedin_url portfolio_url mail_id phone updated_at last_portal_update_at last_portal_login_at followRequests'
+        'first_name last_name study post_graduation_plan community_headline community_bio community_skills community_interests available_to_help help_offering linkedin_url portfolio_url mail_id phone updated_at last_portal_update_at last_portal_login_at followRequests mandal_name mukt_type'
       )
       .lean();
 

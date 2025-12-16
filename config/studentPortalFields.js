@@ -27,11 +27,22 @@ export const COMMUNITY_VISIBILITY_OPTIONS = [
   { value: 'hidden', label: 'Hidden from community' }
 ];
 
+export const MANDAL_OPTIONS_LIST = [
+  'Windsor', 'Brampton', 'Mississauga', 'Etobicoke', 'Kitchener', 'London', 'Hamilton', 'Other'
+];
+
+export const MUKT_OPTIONS_LIST = ['Yuvak', 'Yuvati', 'Ambrish', 'Expected'];
+
+export const MANDAL_OPTIONS = MANDAL_OPTIONS_LIST.map(v => ({ value: v, label: v }));
+export const MUKT_OPTIONS = MUKT_OPTIONS_LIST.map(v => ({ value: v, label: v }));
+
 export const STUDENT_PORTAL_FIELD_DEFS = [
   { name: 'first_name', label: 'First Name', type: 'text', required: true },
   { name: 'last_name', label: 'Last Name', type: 'text', required: true },
   { name: 'mail_id', label: 'Email', type: 'email' },
   { name: 'phone', label: 'Phone Number', type: 'tel', required: true },
+  { name: 'mandal_name', label: 'Mandal', type: 'select', options: MANDAL_OPTIONS },
+  { name: 'mukt_type', label: 'Mukt Type', type: 'select', options: MUKT_OPTIONS },
   { name: 'gender', label: 'Gender', type: 'select', options: GENDER_OPTIONS },
   { name: 'address', label: 'Address', type: 'textarea', rows: 3 },
   { name: 'date_of_birth', label: 'Date of Birth', type: 'date' },

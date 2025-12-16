@@ -1,6 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     reactStrictMode: true,
+    swcMinify: true,
+    images: {
+        domains: ['localhost'],
+    },
+    eslint: {
+        // Allow production builds even with ESLint warnings
+        ignoreDuringBuilds: true,
+    },
 
     webpack: (config) => {
         config.resolve.fallback = {

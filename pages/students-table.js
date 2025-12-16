@@ -301,6 +301,8 @@ export default function StudentsTable() {
   const [isSavingCallLog, setIsSavingCallLog] = useState(false);
   const [callLogReason, setCallLogReason] = useState('');
   const [callLogOtherReason, setCallLogOtherReason] = useState('');
+  const [currentUser, setCurrentUser] = useState(null);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
   // --- API Interaction (using useCallback) ---
   const fetchStudents = useCallback(async (page = 1, limit = perPage, search = searchTerm) => {
@@ -377,6 +379,19 @@ export default function StudentsTable() {
   useEffect(() => {
     setMounted(true);
     fetchStudents(1, 10, '');
+    
+    // Check if current user is Super Admin
+    fetch('/api/auth/me')
+      .then(res => res.json())
+      .then(data => {
+        if (data.user) {
+          setCurrentUser(data.user);
+          if (data.user.isSuper || data.user.phone === '5199927920') {
+            setIsSuperAdmin(true);
+          }
+        }
+      })
+      .catch(console.error);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -583,6 +598,30 @@ export default function StudentsTable() {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showToastMessage, totalRows, students.length, currentPage, fetchStudents, perPage, searchTerm]);
+
+  // --- Admin Identity Banner ---
+  const renderAdminIdentity = () => {
+    if (!currentUser) return null;
+    const isGlobal = currentUser.isSuper || currentUser.phone === '5199927920';
+    const scope = isGlobal ? 'Global (All Mandals)' : (currentUser.mandal_name || 'Restricted');
+    
+    return (
+      <div className={`alert ${isGlobal ? 'alert-info' : 'alert-warning'} mb-4 d-flex align-items-center justify-content-between`}>
+        <div>
+          <i className={`fas ${isGlobal ? 'fa-globe' : 'fa-building'} me-2`}></i>
+          <strong>Logged in as:</strong> {currentUser.name} ({currentUser.phone})
+          <span className="mx-2">|</span>
+          <strong className="text-uppercase">Scope:</strong> {scope}
+        </div>
+        {!isGlobal && (
+          <Badge bg="warning" text="dark">Mandal Admin</Badge>
+        )}
+        {isGlobal && (
+          <Badge bg="info" text="dark">Super Admin</Badge>
+        )}
+      </div>
+    );
+  };
 
   const handleAddCallLog = useCallback((student) => {
     if (!student) return;
@@ -804,6 +843,41 @@ export default function StudentsTable() {
         </div>
       ),
     },
+    ...(isSuperAdmin ? [{
+      name: 'Admin Access',
+      selector: row => row.is_admin,
+      sortable: true,
+      minWidth: '100px',
+      cell: row => (
+        <Form.Check 
+          type="switch"
+          id={`admin-switch-${row._id}`}
+          checked={!!row.is_admin}
+          disabled={row.phone === '5199927920'} // Prevent disabling super admin
+          onChange={async (e) => {
+            const newValue = e.target.checked;
+            // Optimistic update
+            setStudents(prev => prev.map(s => s._id === row._id ? { ...s, is_admin: newValue } : s));
+            
+            try {
+              const res = await fetch(`/api/students?id=${row._id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ is_admin: newValue })
+              });
+              if (!res.ok) throw new Error('Failed to update admin status');
+              showToastMessage(`Admin access ${newValue ? 'granted' : 'revoked'} for ${row.first_name}`, 'success');
+            } catch (err) {
+              console.error(err);
+              showToastMessage('Failed to update admin status', 'danger');
+              // Revert
+              setStudents(prev => prev.map(s => s._id === row._id ? { ...s, is_admin: !newValue } : s));
+            }
+          }}
+          label={<span className="small text-muted">{row.is_admin ? 'On' : 'Off'}</span>}
+        />
+      )
+    }] : []),
     {
       name: 'Actions',
       button: true,
@@ -1229,6 +1303,7 @@ export default function StudentsTable() {
                 <Form.Label className="small mb-1">Notes</Form.Label>
                 <Form.Control size="sm" as="textarea" rows={3} placeholder="Additional notes..." value={editForm.notes} onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })} />
               </Form.Group>
+              {renderAdminIdentity()}
               {/* Moved Out Section */}
               <Card className="mb-3">
                 <Card.Header className="bg-light">

@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 
 const SabhaGrocerySchema = new mongoose.Schema({
   date: { type: Date, required: true },
+  mandal: { type: String, default: 'Windsor' },
   menu: { type: String, required: true, trim: true },
   groceriesUsed: [
     {

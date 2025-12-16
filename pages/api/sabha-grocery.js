@@ -13,7 +13,17 @@ export default async function handler(req, res) {
     case 'GET': {
       // List all sabha grocery records
       try {
-        const records = await SabhaGrocery.find().sort({ date: -1 });
+        const { isSuper, mandal } = req.adminRights;
+        const filter = {};
+        if (!isSuper) {
+             if (mandal) {
+                 filter.mandal = mandal;
+             } else {
+                 // No mandal -> No access
+                 return res.status(200).json({ records: [] });
+             }
+        }
+        const records = await SabhaGrocery.find(filter).sort({ date: -1 });
         res.status(200).json({ records });
       } catch (err) {
         res.status(500).json({ error: 'Failed to fetch sabha records' });
@@ -23,7 +33,19 @@ export default async function handler(req, res) {
     case 'POST': {
       // Add new sabha record
       try {
-        const record = new SabhaGrocery(req.body);
+        const { isSuper, mandal } = req.adminRights;
+        const data = req.body;
+        
+        // Enforce Mandal
+        if (!isSuper) {
+            if (!mandal) return res.status(403).json({ error: 'No Mandal assigned' });
+            data.mandal = mandal;
+        } else {
+            // Super admin can specify, or defaults to Windsor/Provided
+            if (!data.mandal) data.mandal = 'Windsor'; 
+        }
+
+        const record = new SabhaGrocery(data);
         await record.save();
         res.status(201).json({ record });
       } catch (err) {
@@ -36,8 +58,17 @@ export default async function handler(req, res) {
       const { id } = req.query;
       if (!id) return res.status(400).json({ error: 'Missing record id' });
       try {
-        const record = await SabhaGrocery.findByIdAndDelete(id);
+        const { isSuper, mandal } = req.adminRights;
+        const record = await SabhaGrocery.findById(id);
         if (!record) return res.status(404).json({ error: 'Record not found' });
+
+        if (!isSuper) {
+             if (!mandal || record.mandal !== mandal) {
+                 return res.status(403).json({ error: 'Unauthorized to delete this record' });
+             }
+        }
+
+        await SabhaGrocery.findByIdAndDelete(id);
         res.status(200).json({ message: 'Record deleted' });
       } catch (err) {
         res.status(400).json({ error: err.message || 'Failed to delete record' });
@@ -49,4 +80,4 @@ export default async function handler(req, res) {
       res.status(405).json({ error: `Method ${method} not allowed` });
     }
   }
-} 
+}

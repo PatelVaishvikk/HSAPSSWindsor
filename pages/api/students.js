@@ -33,9 +33,13 @@ const normalizePhoneDigits = (value) =>
   typeof value === 'string' ? value.replace(/\D+/g, '') : '';
 
 export default async function handler(req, res) {
-  if (!requireAdmin(req, res)) {
+  const authorized = await requireAdmin(req, res);
+  if (!authorized) {
     return;
   }
+  
+  const { isSuper, mandal } = req.adminRights;
+  console.log(`[API students] Phone: ${req.body?.phone || 'GET'} | Rights:`, req.adminRights);
 
   await connectDb();
   const { method } = req;
@@ -47,6 +51,17 @@ export default async function handler(req, res) {
         const pageNum = parseInt(page || '1', 10);
         const limitNum = parseInt(limit || '0', 10);
         const conditions = [];
+        
+        // Apply Mandal Filtering
+        const { isSuper, mandal } = req.adminRights;
+        if (!isSuper) {
+             if (mandal) {
+                 conditions.push({ mandal_name: mandal });
+             } else {
+                 // Restricted admin with no mandal -> See nothing
+                 conditions.push({ mandal_name: '__RESTRICTED_NO_MANDAL__' });
+             }
+        }
 
         if (search && search.trim()) {
           const searchRegex = new RegExp(search.trim(), 'i');
@@ -116,7 +131,17 @@ export default async function handler(req, res) {
 
     case 'POST': {
       try {
+        const { isSuper, mandal } = req.adminRights;
         const data = req.body;
+        
+        // Enforce Mandal on Creation
+        if (!isSuper) {
+          if (!mandal) return res.status(403).json({ error: 'No Mandal assigned' });
+          
+          // Force overwrite mandal_name if provided, or set it
+          data.mandal_name = mandal;
+        }
+        
         data.first_name = normalizeString(data.first_name);
         data.last_name = normalizeString(data.last_name);
         const normalizedEmail = data.mail_id ? data.mail_id.trim().toLowerCase() : '';
@@ -206,9 +231,17 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Missing student id' });
       }
       try {
+        const { isSuper, mandal } = req.adminRights;
         const student = await Student.findById(id);
         if (!student) {
           return res.status(404).json({ error: 'Student not found' });
+        }
+        
+        // Enforce Mandal Check on Update
+        if (!isSuper) {
+             if (!mandal || student.mandal_name !== mandal) {
+                 return res.status(403).json({ error: 'Unauthorized to update this student' });
+             }
         }
 
         const fields = [
@@ -246,8 +279,19 @@ export default async function handler(req, res) {
           'post_graduation_plan',
           'employment_status',
           'employment_company',
-          'employment_role'
+          'employment_role',
+          'mandal_name' // Allow update but will be checked below
         ];
+
+        // Only Super Admins can update 'is_admin' status
+        if (isSuper) {
+          fields.push('is_admin');
+        } else {
+           // Non-super admins CANNOT change mandal_name
+           // Remove mandal_name from fields
+           const mandalIndex = fields.indexOf('mandal_name');
+           if (mandalIndex > -1) fields.splice(mandalIndex, 1);
+        }
 
         for (const field of fields) {
           if (Object.prototype.hasOwnProperty.call(req.body, field)) {
@@ -269,6 +313,8 @@ export default async function handler(req, res) {
                 req.body.graduation_date && (req.body.graduation_completed ?? student.graduation_completed)
                   ? formatDate(req.body.graduation_date)
                   : null;
+            } else if (field === 'is_admin') {
+              student.is_admin = !!req.body.is_admin;
             } else {
               student[field] = req.body[field];
             }
@@ -300,7 +346,7 @@ export default async function handler(req, res) {
 
         stringFields.forEach((field) => {
           if (Object.prototype.hasOwnProperty.call(req.body, field)) {
-            student[field] = normalizeString(student[field]);
+            if (student[field]) student[field] = normalizeString(student[field]);
           }
         });
         student.phone_normalized = normalizePhoneDigits(student.phone);
@@ -339,10 +385,20 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Missing student id' });
       }
       try {
-        const deletedStudent = await Student.findByIdAndDelete(id);
-        if (!deletedStudent) {
+        const { isSuper, mandal } = req.adminRights;
+        const student = await Student.findById(id);
+        if (!student) {
           return res.status(404).json({ error: 'Student not found' });
         }
+
+        // Enforce Mandal Check on Delete
+        if (!isSuper) {
+             if (!mandal || student.mandal_name !== mandal) {
+                 return res.status(403).json({ error: 'Unauthorized to delete this student' });
+             }
+        }
+
+        await Student.findByIdAndDelete(id);
         await CallLog.deleteMany({ student_id: id });
         res.status(200).json({ message: 'Student deleted successfully' });
       } catch (err) {

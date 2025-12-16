@@ -40,13 +40,24 @@ const formatPost = async (post, viewerId) => {
   const commentCount = await Comment.countDocuments({ post: doc._id });
   
   // Check if viewer liked this post
-  const isLiked = doc.likes ? doc.likes.some(id => id.toString() === viewerId.toString()) : false;
+  // doc.likes can be array of IDs OR array of populated objects
+  const isLiked = doc.likes ? doc.likes.some(like => {
+    const likeId = like._id || like;
+    return likeId.toString() === viewerId.toString();
+  }) : false;
   
   return {
     id: doc._id ? doc._id.toString() : null,
     author: formatStudent(doc.author || null),
     content: doc.content || '',
     likes: doc.likes ? doc.likes.length : 0,
+    liked_by: doc.likes && doc.likes.length > 0 ? 
+      doc.likes
+        .filter(u => u.first_name) // Only include populated users
+        .map(u => ({ 
+          id: u._id.toString(), 
+          name: `${u.first_name} ${u.last_name || ''}`.trim() 
+        })) : [],
     shares: doc.shares ? doc.shares.length : 0,
     comments: commentCount,
     is_liked: isLiked,
@@ -89,6 +100,10 @@ export default async function handler(req, res) {
           .populate({
             path: 'author',
             select: 'first_name last_name study community_headline last_portal_login_at'
+          })
+          .populate({
+            path: 'likes',
+            select: 'first_name last_name'
           })
           .populate({
             path: 'shared_from',
@@ -223,6 +238,8 @@ export default async function handler(req, res) {
         const { postId } = req.query;
         const cleanId = sanitizeString(postId);
 
+        console.log('[API] DELETE Post Request:', { postId, cleanId, viewerId: viewer._id });
+
         if (!cleanId) {
           return res.status(400).json({ error: 'Post ID is required' });
         }
@@ -230,10 +247,18 @@ export default async function handler(req, res) {
         const post = await Post.findById(cleanId);
 
         if (!post) {
+          console.log('[API] Post not found for ID:', cleanId);
           return res.status(404).json({ error: 'Post not found' });
         }
 
         const postAuthorId = post.author?._id?.toString() || post.author?.toString();
+        
+        console.log('[API] Msg Auth Check:', {
+          postAuthorId,
+          viewerId: viewer._id.toString(),
+          match: postAuthorId === viewer._id.toString()
+        });
+
         if (postAuthorId !== viewer._id.toString()) {
           return res.status(403).json({ error: 'Only the author can delete this post' });
         }

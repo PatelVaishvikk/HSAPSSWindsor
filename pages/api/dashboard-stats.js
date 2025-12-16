@@ -49,24 +49,43 @@ export default async function handler(req, res) {
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    if (!requireAdmin(req, res)) {
+    const authorized = await requireAdmin(req, res);
+    if (!authorized) {
         return;
     }
+    const { isSuper, mandal } = req.adminRights;
 
     try {
         await connectDb();
 
-        // Get total students count
-        const totalStudents = await Student.countDocuments();
+        const filter = {};
+        if (!isSuper && mandal) {
+            filter.mandal_name = mandal;
+        } else if (!isSuper && !mandal) {
+            filter.mandal_name = '__RESTRICTED_NO_MANDAL__';
+        }
 
-        // Get total calls count
-        const totalCalls = await CallLog.countDocuments();
+        // Get total students count
+        const totalStudents = await Student.countDocuments(filter);
+
+        // Get total calls count (filter by student mandal) -> this is complex as CallLog stores student_id
+        // For simplicity, we might only filter Student counts for now, or perform a join logic if needed.
+        // Assuming CallLog should also be filtered. We need to find students first.
+        
+        let callLogFilter = {};
+        if (!isSuper) {
+          const studentIds = await Student.find(filter).select('_id');
+          callLogFilter = { student_id: { $in: studentIds.map(s => s._id) } };
+        }
+
+        const totalCalls = await CallLog.countDocuments(callLogFilter);
 
         // Get completed calls count
-        const completedCalls = await CallLog.countDocuments({ status: 'Completed' });
+        const completedCalls = await CallLog.countDocuments({ ...callLogFilter, status: 'Completed' });
 
-        // Get pending calls (calls with needs_follow_up = true or status != 'Completed')
+        // Get pending calls
         const pendingCalls = await CallLog.countDocuments({
+            ...callLogFilter,
             $or: [
                 { needs_follow_up: true },
                 { status: { $ne: 'Completed' } }
@@ -82,12 +101,15 @@ export default async function handler(req, res) {
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
         const todaysCalls = await CallLog.countDocuments({
+            ...callLogFilter,
             timestamp: { $gte: startOfToday }
         });
         const weeksCalls = await CallLog.countDocuments({
+            ...callLogFilter,
             timestamp: { $gte: startOfWeek }
         });
         const monthsCalls = await CallLog.countDocuments({
+            ...callLogFilter,
             timestamp: { $gte: startOfMonth }
         });
 
@@ -104,7 +126,7 @@ export default async function handler(req, res) {
 
         // Group call logs for last Friday by notes
         const fridayLogs = await CallLog.aggregate([
-            { $match: { timestamp: { $gte: lastFriday, $lte: endOfFriday } } },
+            { $match: { ...callLogFilter, timestamp: { $gte: lastFriday, $lte: endOfFriday } } },
             { $group: { _id: '$notes', count: { $sum: 1 } } }
         ]);
         // Map to expected keys
@@ -118,19 +140,23 @@ export default async function handler(req, res) {
 
         // --- Student analytics ---
         const institutionAgg = await Student.aggregate([
+            { $match: filter },
             { $group: { _id: { $ifNull: ['$study_institution', ''] }, count: { $sum: 1 } } },
             { $sort: { count: -1 } }
         ]);
         const programAgg = await Student.aggregate([
+            { $match: filter },
             { $group: { _id: { $ifNull: ['$study', ''] }, count: { $sum: 1 } } },
             { $sort: { count: -1 } },
             { $limit: 6 }
         ]);
         const postGradAgg = await Student.aggregate([
+            { $match: filter },
             { $group: { _id: { $ifNull: ['$post_graduation_plan', ''] }, count: { $sum: 1 } } },
             { $sort: { count: -1 } }
         ]);
         const employmentAgg = await Student.aggregate([
+             { $match: filter },
             { $group: { _id: { $ifNull: ['$employment_status', ''] }, count: { $sum: 1 } } },
             { $sort: { count: -1 } }
         ]);
@@ -145,7 +171,7 @@ export default async function handler(req, res) {
             employmentStatus: mapAggregatesToList(employmentAgg, EMPLOYMENT_STATUS_LABELS)
         };
 
-        const movedOutCount = await Student.countDocuments({ moved_out: true });
+        const movedOutCount = await Student.countDocuments({ ...filter, moved_out: true });
         studyInsights.residency = {
             active: Math.max(totalStudents - movedOutCount, 0),
             movedOut: movedOutCount

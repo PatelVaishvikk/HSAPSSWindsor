@@ -63,8 +63,22 @@ export default async function handler(req, res) {
           lastActivity: null,
         };
 
+        const { isSuper, mandal } = req.adminRights;
         const filter = {};
         let allowedStudentIdsSet = null;
+
+        // Apply Mandal Restrictions
+        if (!isSuper) {
+          if (mandal) {
+             // Find all students in this mandal
+             const mandalStudents = await Student.find({ mandal_name: mandal }, '_id');
+             const mandalStudentIds = mandalStudents.map(s => s._id);
+             filter.student_id = { $in: mandalStudentIds };
+          } else {
+             // No mandal assigned -> See nothing
+             filter.student_id = { $in: [] }; 
+          }
+        }
 
         if (student) {
           const normalizedStudentId = normalizeObjectId(student);

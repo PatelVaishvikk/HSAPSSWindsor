@@ -40,6 +40,7 @@ const formatComment = (comment) => {
     id: doc._id ? doc._id.toString() : null,
     post: doc.post ? doc.post.toString() : null,
     author: formatStudent(doc.author || null),
+    author_name: doc.author ? `${doc.author.first_name} ${doc.author.last_name || ''}`.trim() : 'Unknown',
     content: doc.content || '',
     created_at: doc.created_at ? new Date(doc.created_at).toISOString() : null,
     updated_at: doc.updated_at ? new Date(doc.updated_at).toISOString() : null
@@ -113,6 +114,7 @@ export default async function handler(req, res) {
             postId: cleanId, 
             likes: post.likes.length,
             userId: viewer._id.toString(),
+            userName: `${viewer.first_name} ${viewer.last_name || ''}`.trim(),
             liked: wasLiked
           });
         }
@@ -239,6 +241,44 @@ export default async function handler(req, res) {
           }
 
           return res.status(200).json({ message: 'Comment deleted successfully' });
+        } else if (req.method === 'PUT') {
+            const { commentId, content } = req.body;
+            const cleanId = sanitizeString(commentId);
+            const cleanContent = sanitizeString(content);
+
+            if (!cleanId) {
+                return res.status(400).json({ error: 'Comment ID is required' });
+            }
+            if (!cleanContent) {
+                return res.status(400).json({ error: 'Content is required' });
+            }
+
+            const comment = await Comment.findById(cleanId);
+            if (!comment) {
+                return res.status(404).json({ error: 'Comment not found' });
+            }
+
+            const commentAuthorId = comment.author?._id?.toString() || comment.author?.toString();
+            if (commentAuthorId !== viewer._id.toString()) {
+                return res.status(403).json({ error: 'Only the author can edit this comment' });
+            }
+
+            comment.content = cleanContent.slice(0, 1000);
+            comment.updated_at = new Date();
+            await comment.save();
+            await comment.populate({
+                path: 'author',
+                select: 'first_name last_name study community_headline last_portal_login_at'
+            });
+
+            const payload = formatComment(comment);
+
+            const io = global?.io;
+            if (io) {
+                io.to('feed').emit('post:comment:update', { comment: payload });
+            }
+
+            return res.status(200).json({ comment: payload });
         }
         break;
       }
