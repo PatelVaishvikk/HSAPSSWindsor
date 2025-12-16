@@ -9,6 +9,8 @@ export default function Document() {
                 <meta name="description" content="HSAPSS Windsor - Dashboard and Student Management" />
                 <meta name="author" content="HSAPSS Windsor" />
                 <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+                <link rel="icon" href="/images/favicon.png" />
+                <link rel="apple-touch-icon" href="/images/favicon.png" />
 
                 {/* External FontAwesome & Bootstrap CDN links */}
                 <link
