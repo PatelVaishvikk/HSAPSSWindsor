@@ -25,6 +25,7 @@ import GroupsView from '../components/GroupsView';
 import DigitalLibrary from '../components/DigitalLibrary';
 import Feed from '../components/community/Feed';
 import CustomToastContainer from '../components/ui/ToastContainer';
+import PortalSidebar from '../components/portal/PortalSidebar';
 
 const DEFAULT_PASSWORD = 'dasnadas'; // Force rebuild
 
@@ -4348,6 +4349,38 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
   );
 
 
+  // Handle notification delete
+  const handleDeleteNotification = async (notificationId) => {
+    // Optimistic update
+    setNotifications(prev => prev.filter(n => n.id !== notificationId));
+    setUnreadNotificationCount(prev => {
+        // Only decrement if we removed an unread one
+        const notif = notifications.find(n => n.id === notificationId);
+        if (notif && !notif.read) return Math.max(0, prev - 1);
+        return prev;
+    });
+
+    try {
+      const resp = await fetch(`/api/student-portal/notifications?notificationId=${notificationId}`, {
+        method: 'DELETE',
+        headers: {
+          ...(portalAuthHeadersRef.current || {})
+        }
+      });
+
+      if (!resp.ok) throw new Error('Failed to delete');
+    } catch (error) {
+      console.error('Failed to delete notification:', error);
+      enqueueToast({
+        variant: 'danger',
+        title: 'Error',
+        message: 'Could not delete notification'
+      });
+      // Re-fetch to restore state if needed
+      // refreshNotifications(); 
+    }
+  };
+
   return (
     <>
       <Head>
@@ -4616,169 +4649,18 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
 
         {/* Sidebar Navigation (Desktop Only) */}
         <div className="d-none d-lg-block">
-          {student && (
-            <div className="d-flex flex-column sidebar-modern position-fixed h-100" style={{ width: 280, zIndex: 1000, top: 0, left: 0, overflow: 'hidden' }}>
-              {/* Header */}
-              <div className="p-4 pb-2 flex-shrink-0">
-                <div className="d-flex align-items-center justify-content-between">
-                  <div className="d-flex align-items-center gap-3">
-                    <div className="rounded-3 overflow-hidden shadow-sm" style={{ width: 48, height: 48 }}>
-                      <img src="/windsor.jpg" alt="HSAPSS Logo" className="w-100 h-100 object-fit-cover" />
-                    </div>
-                    <div>
-                      <h5 className="fw-bold mb-0 text-dark">HSAPSS</h5>
-                      <small className="text-muted">Student Portal</small>
-                    </div>
-                  </div>
-                  <Button
-                    variant="light"
-                    size="sm"
-                    className="rounded-circle"
-                    onClick={() => setShowThemePicker(true)}
-                    title="Change Theme"
-                  >
-                    <i className="fas fa-palette text-muted"></i>
-                  </Button>
-                </div>
-              </div>
-
-              {/* Scrollable Navigation */}
-              <div className="flex-grow-1 overflow-y-auto custom-scrollbar px-3 py-2" style={{ minHeight: 0 }}>
-                <div className="d-flex flex-column gap-2">
-                  <Button
-                    variant="link"
-                    className={`text-start d-flex align-items-center gap-3 px-3 py-3 rounded-3 border-0 text-decoration-none nav-btn ${activePane === 'profile' ? 'active' : ''}`}
-                    onClick={() => setActivePane('profile')}
-                  >
-                    <i className={`fas fa-user-circle ${activePane === 'profile' ? '' : 'text-muted'}`} style={{ width: 24 }}></i>
-                    <span>My Profile</span>
-                  </Button>
-
-                  <Button
-                    variant="link"
-                    className={`text-start d-flex align-items-center gap-3 px-3 py-3 rounded-3 border-0 text-decoration-none nav-btn ${activePane === 'community' ? 'active' : ''}`}
-                    onClick={() => setActivePane('community')}
-                  >
-                    <i className={`fas fa-users ${activePane === 'community' ? '' : 'text-muted'}`} style={{ width: 24 }}></i>
-                    <span>Community Hub</span>
-                  </Button>
-
-                  <Button
-                    variant="link"
-                    className={`text-start d-flex align-items-center gap-3 px-3 py-3 rounded-3 border-0 text-decoration-none nav-btn ${activePane === 'study-sync' ? 'active' : ''}`}
-                    onClick={() => setActivePane('study-sync')}
-                  >
-                    <i className={`fas fa-fire ${activePane === 'study-sync' ? '' : 'text-muted'}`} style={{ width: 24 }}></i>
-                    <span>Study Sync</span>
-                  </Button>
-
-                  <Button
-                    variant="link"
-                    className={`text-start d-flex align-items-center gap-3 px-3 py-3 rounded-3 border-0 text-decoration-none nav-btn ${activePane === 'groups' ? 'active' : ''}`}
-                    onClick={() => setActivePane('groups')}
-                  >
-                    <i className={`fas fa-comments ${activePane === 'groups' ? '' : 'text-muted'}`} style={{ width: 24 }}></i>
-                    <span>Groups</span>
-                  </Button>
-
-                  <Button
-                    variant="link"
-                    className={`text-start d-flex align-items-center gap-3 px-3 py-3 rounded-3 border-0 text-decoration-none nav-btn ${activePane === 'help' ? 'active' : ''}`}
-                    onClick={() => setActivePane('help')}
-                  >
-                    <i className={`fas fa-hands-helping ${activePane === 'help' ? '' : 'text-muted'}`} style={{ width: 24 }}></i>
-                    <span>Help Board</span>
-                  </Button>
-
-                  <Button
-                    variant="link"
-                    className={`text-start d-flex align-items-center gap-3 px-3 py-3 rounded-3 border-0 text-decoration-none nav-btn ${activePane === 'library' ? 'active' : ''}`}
-                    onClick={() => setActivePane('library')}
-                  >
-                    <i className={`fas fa-book ${activePane === 'library' ? '' : 'text-muted'}`} style={{ width: 24 }}></i>
-                    <span>The Archive</span>
-                  </Button>
-
-                  <Button
-                    variant="link"
-                    className={`text-start d-flex align-items-center gap-3 px-3 py-3 rounded-3 border-0 text-decoration-none nav-btn ${activePane === 'feed' ? 'active' : ''}`}
-                    onClick={() => setActivePane('feed')}
-                  >
-                    <i className={`fas fa-rss ${activePane === 'feed' ? '' : 'text-muted'}`} style={{ width: 24 }}></i>
-                    <span>Feed</span>
-                  </Button>
-
-                  <Button
-                    variant="link"
-                    className={`text-start d-flex align-items-center gap-3 px-3 py-3 rounded-3 border-0 text-decoration-none nav-btn ${showNotificationPanel ? 'active' : ''}`}
-                    onClick={() => setShowNotificationPanel(!showNotificationPanel)}
-                  >
-                    <div className="position-relative">
-                      <i className={`fas fa-bell ${showNotificationPanel ? '' : 'text-muted'}`} style={{ width: 24 }}></i>
-                      {unreadNotificationCount > 0 && (
-                        <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style={{ fontSize: '0.6rem' }}>
-                          {unreadNotificationCount}
-                        </span>
-                      )}
-                    </div>
-                    <span>Notifications</span>
-                  </Button>
-
-                  <Button
-                    variant="link"
-                    className={`text-start d-flex align-items-center gap-3 px-3 py-3 rounded-3 border-0 text-decoration-none nav-btn ${activePane === 'settings' ? 'active' : ''}`}
-                    onClick={() => setActivePane('settings')}
-                  >
-                    <i className={`fas fa-cog ${activePane === 'settings' ? '' : 'text-muted'}`} style={{ width: 24 }}></i>
-                    <span>Settings</span>
-                  </Button>
-
-                  {portalMeta.can_access_admin && (
-                    <div className="mt-4">
-                      <Button
-                        variant="link"
-                        className={`text-start d-flex align-items-center gap-3 px-3 py-3 rounded-3 border-0 text-decoration-none nav-btn ${activePane === 'analytics' ? 'active' : ''}`}
-                        onClick={() => setActivePane('analytics')}
-                      >
-                        <i className={`fas fa-chart-line ${activePane === 'analytics' ? '' : 'text-muted'}`} style={{ width: 24 }}></i>
-                        <span>Analytics</span>
-                      </Button>
-                      <div className="text-uppercase text-muted fw-bold small px-3 mb-2 mt-3" style={{ fontSize: '0.75rem', letterSpacing: '0.05em' }}>Admin Tools</div>
-                      {portalMeta.admin_shortcuts.map((shortcut, idx) => (
-                        <Button
-                          key={idx}
-                          variant="light"
-                          href={shortcut.href}
-                          className="text-start d-flex align-items-center gap-3 px-3 py-2 rounded-3 border-0 bg-transparent w-100 text-dark mb-1 nav-btn"
-                        >
-                          <i className={`${shortcut.icon} text-primary`} style={{ width: 24 }}></i>
-                          <span>{shortcut.label}</span>
-                        </Button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Footer */}
-              <div className="p-4 pt-3 border-top flex-shrink-0 bg-surface">
-                <div className="d-flex align-items-center gap-3 px-2 mb-3">
-                  <div className="bg-body rounded-circle d-flex align-items-center justify-content-center text-primary fw-bold" style={{ width: 40, height: 40 }}>
-                    {buildInitials(student?.first_name, student?.last_name)}
-                  </div>
-                  <div className="overflow-hidden">
-                    <div className="fw-bold text-truncate text-main">{student?.first_name}</div>
-                    <div className="small text-muted text-truncate">{student?.phone}</div>
-                  </div>
-                </div>
-                <Button variant="light" className="w-100 border-0 text-danger bg-danger bg-opacity-10 hover-danger" onClick={handleLogout}>
-                  <i className="fas fa-sign-out-alt me-2"></i>
-                  Sign Out
-                </Button>
-              </div>
-              <div className="pb-5"></div>
-            </div>
-          )}
+          <PortalSidebar
+            student={student}
+            activePane={activePane}
+            setActivePane={setActivePane}
+            showNotificationPanel={showNotificationPanel}
+            setShowNotificationPanel={setShowNotificationPanel}
+            unreadNotificationCount={unreadNotificationCount}
+            portalMeta={portalMeta}
+            handleLogout={handleLogout}
+            setShowThemePicker={setShowThemePicker}
+            className="position-fixed top-0 start-0 z-index-fixed"
+          />
         </div>
 
 
@@ -4786,20 +4668,25 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
         <div className={`flex-grow-1 ${student ? 'ms-lg-auto' : ''}`} style={{ marginLeft: 0, width: '100%' }}>
           <div className="container-fluid p-0">
             {student && (
-              <div className="d-lg-none p-1 d-flex bg-surface border-top position-fixed bottom-0 start-0 end-0 justify-content-between" style={{ zIndex: 1100 }}>
-                {['profile', 'community', 'groups', 'study-sync', 'help', 'library', 'feed', 'settings'].map(pane => (
-                  <Button
-                    key={pane}
-                    variant={activePane === pane ? 'primary' : 'light'}
-                    size="sm"
-                    className={`flex-grow-1 d-flex flex-column align-items-center justify-content-center gap-1 border-0 ${activePane === pane ? 'btn-primary' : 'btn-light'}`}
-                    onClick={() => setActivePane(pane)}
-                    style={{ minHeight: '56px', padding: '4px 0' }}
-                  >
-                    <i className={`fas fa-${pane === 'profile' ? 'user' : pane === 'community' ? 'users' : pane === 'groups' ? 'comments' : pane === 'study-sync' ? 'fire' : pane === 'help' ? 'hands-helping' : pane === 'library' ? 'book' : pane === 'feed' ? 'rss' : 'cog'}`}></i>
-                    <span style={{ fontSize: '0.65rem' }}>{pane === 'study-sync' ? 'Sync' : pane === 'library' ? 'Archive' : pane.charAt(0).toUpperCase() + pane.slice(1)}</span>
-                  </Button>
-                ))}
+              <div className="d-lg-none bg-white border-top position-fixed bottom-0 start-0 end-0 shadow-lg d-flex justify-content-between align-items-center px-2 py-1" 
+                   style={{ zIndex: 1050, height: '70px', paddingBottom: 'env(safe-area-inset-bottom, 10px)' }}>
+                <div className="d-flex w-100 align-items-center justify-content-between" style={{ overflowX: 'auto', whiteSpace: 'nowrap', WebkitOverflowScrolling: 'touch' }}>
+                  {['profile', 'community', 'feed', 'study-sync', 'help', 'library', 'groups', 'settings'].map(pane => (
+                    <Button
+                      key={pane}
+                      variant={activePane === pane ? 'primary-soft' : 'link'}
+                      size="sm"
+                      className={`d-flex flex-column align-items-center justify-content-center border-0 rounded-3 mx-1 ${activePane === pane ? 'text-primary bg-primary bg-opacity-10' : 'text-muted'}`}
+                      onClick={() => setActivePane(pane)}
+                      style={{ minWidth: '60px', height: '56px' }}
+                    >
+                      <i className={`fas fa-${pane === 'profile' ? 'user' : pane === 'community' ? 'users' : pane === 'groups' ? 'comments' : pane === 'study-sync' ? 'fire' : pane === 'help' ? 'hands-helping' : pane === 'library' ? 'book' : pane === 'feed' ? 'rss' : 'cog'} mb-1`} style={{ fontSize: '1.2rem' }}></i>
+                      <span style={{ fontSize: '0.65rem', fontWeight: activePane === pane ? 'bold' : 'normal' }}>
+                        {pane === 'study-sync' ? 'Sync' : pane === 'library' ? 'Archive' : pane.charAt(0).toUpperCase() + pane.slice(1)}
+                      </span>
+                    </Button>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -5481,9 +5368,23 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
                     <strong className={!notif.read ? 'text-primary' : 'text-main'}>
                       {notif.title}
                     </strong>
-                    <small className="text-muted">
-                      {notif.timestamp ? formatConversationTimestamp(notif.timestamp) : 'Just now'}
-                    </small>
+                    <div className="d-flex align-items-center gap-2">
+                        <small className="text-muted">
+                        {notif.timestamp ? formatConversationTimestamp(notif.timestamp) : 'Just now'}
+                        </small>
+                        <Button
+                            variant="link"
+                            className="p-0 text-muted"
+                            size="sm"
+                            style={{ lineHeight: 1, minWidth: 'auto' }}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteNotification(notif.id);
+                            }}
+                        >
+                            <i className="fas fa-times"></i>
+                        </Button>
+                    </div>
                   </div>
                   <p className="mb-2 text-muted small">{notif.message}</p>
 

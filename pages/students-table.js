@@ -3,6 +3,7 @@
 import { Modal, Button, Form, Badge, Toast, Row, Col, InputGroup, Spinner, DropdownButton, Dropdown, Container, Card } from 'react-bootstrap';
 import dynamic from 'next/dynamic';
 import ViewStudentModal from '../components/admin/ViewStudentModal';
+import EditStudentModal from '../components/admin/EditStudentModal';
 import Navbar from '../components/Navbar'; // Verify path
 import Head from 'next/head';
 import { debounce } from 'lodash';
@@ -255,7 +256,7 @@ export default function StudentsTable() {
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [showToast, setShowToast] = useState(false);
   const [toastInfo, setToastInfo] = useState({ message: '', variant: 'success' });
-  const [editForm, setEditForm] = useState({});
+
   const [callLog, setCallLog] = useState({});
   const [mounted, setMounted] = useState(false);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
@@ -356,49 +357,9 @@ export default function StudentsTable() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Updated handleEdit to include new fields (and remove gender)
+  // Updated handleEdit
   const handleEdit = useCallback((student) => {
     setSelectedStudent(student);
-    setEditForm({
-      first_name: student.first_name || '',
-      last_name: student.last_name || '',
-      mail_id: student.mail_id || '',
-      phone: student.phone || '',
-      address: student.address || '',
-      date_of_birth: student.date_of_birth ? formatDateForInput(student.date_of_birth) : '',
-      gender: student.gender || '',
-      education: student.education || '',
-      study_level: student.study_level || '',
-      study_institution: student.study_institution || '',
-      study_program: student.study_program || '',
-      study_specialization: student.study_specialization || '',
-      study: student.study || '',
-      emergency_contact: student.emergency_contact || '',
-      notes: student.notes || '',
-      box_cricket: student.box_cricket || false,
-      box_cricket_years: student.box_cricket_years || '',
-      atmiya_cricket_tournament: student.atmiya_cricket_tournament || false,
-      atmiya_cricket_years: student.atmiya_cricket_years || '',
-      atmiya_youth_shibir: student.atmiya_youth_shibir || false,
-      atmiya_youth_years: student.atmiya_youth_years || '',
-      yuva_mahotsav: student.yuva_mahotsav || false,
-      yuva_mahotsav_years: student.yuva_mahotsav_years || '',
-      harimay: student.harimay || false,
-      // Moved out fields
-      moved_out: student.moved_out || false,
-      moved_out_date: student.moved_out_date ? formatDateForInput(student.moved_out_date) : '',
-      moved_out_job: student.moved_out_job || '',
-      moved_out_address: student.moved_out_address || '',
-      moved_out_notes: student.moved_out_notes || '',
-      graduation_completed: !!student.graduation_completed,
-      graduation_date: student.graduation_date ? formatDateForInput(student.graduation_date) : '',
-      post_graduation_plan: student.post_graduation_plan || student.employment_status || '',
-      employment_status: student.employment_status || student.post_graduation_plan || '',
-      employment_company: student.employment_company || '',
-      employment_role: student.employment_role || '',
-      mandal_name: student.mandal_name || '',
-      mukt_type: student.mukt_type || ''
-    });
     setShowEditModal(true);
   }, []);
 
@@ -408,113 +369,11 @@ export default function StudentsTable() {
     setShowViewModal(true);
   }, []);
 
-  const editAvailablePrograms = useMemo(
-    () => PROGRAM_LIBRARY[editForm.study_institution] || [],
-    [editForm.study_institution]
-  );
-
-  const editSelectedProgramDefinition = useMemo(
-    () => getProgramDefinition(editForm.study_institution, editForm.study_program),
-    [editForm.study_institution, editForm.study_program]
-  );
-
-  const editAvailableSpecializations = useMemo(
-    () => editSelectedProgramDefinition?.specializations || [],
-    [editSelectedProgramDefinition]
-  );
-
-  const editStudySummary = useMemo(() => {
-    const parts = [];
-    if (editSelectedProgramDefinition) parts.push(editSelectedProgramDefinition.label);
-    if (editAvailableSpecializations.length > 0) {
-      if (editForm.study_specialization) parts.push(editForm.study_specialization);
-    } else if (editForm.study_specialization) {
-      parts.push(editForm.study_specialization);
-    }
-    return parts.join(' - ');
-  }, [editSelectedProgramDefinition, editAvailableSpecializations, editForm.study_specialization]);
-
-  const editShowEmploymentFields = editForm.post_graduation_plan === 'working';
-
-  const handleEditInstitutionChange = useCallback((value) => {
-    setEditForm((prev) => ({
-      ...prev,
-      study_institution: value,
-      study_program: '',
-      study_specialization: '',
-      study_level: '',
-      education: '',
-      study: ''
-    }));
-  }, []);
-
-  const handleEditProgramChange = useCallback((value) => {
-    setEditForm((prev) => {
-      const definition = getProgramDefinition(prev.study_institution, value);
-      return {
-        ...prev,
-        study_program: value,
-        study_level: definition?.level || '',
-        education: definition?.level || '',
-        study_specialization: '',
-        study: definition?.label || ''
-      };
-    });
-  }, []);
-
-  const handleEditGraduationToggle = useCallback((checked) => {
-    setEditForm((prev) => ({
-      ...prev,
-      graduation_completed: checked,
-      graduation_date: checked ? prev.graduation_date : '',
-    }));
-  }, []);
-
-  const handleEditPostGradPlanChange = useCallback((value) => {
-    setEditForm((prev) => ({
-      ...prev,
-      post_graduation_plan: value,
-      employment_status: value,
-      ...(value !== 'working' ? { employment_company: '', employment_role: '' } : {}),
-    }));
-  }, []);
-
-  const saveEditChanges = useCallback(async () => {
+  // Updated saveEditChanges to accept payload from Modal
+  const saveEditChanges = useCallback(async (payload) => {
     if (!selectedStudent?._id) return;
     setIsSavingEdit(true);
     try {
-      const definition = getProgramDefinition(editForm.study_institution, editForm.study_program);
-      const derivedLevel = definition?.level || editForm.study_level || editForm.education || '';
-      const trim = (value) => (typeof value === 'string' ? value.trim() : value);
-      const payload = {
-        ...editForm,
-        education: derivedLevel,
-        study_level: derivedLevel,
-        study_institution: editForm.study_institution || '',
-        study_program: editForm.study_program || '',
-        study_specialization: trim(editForm.study_specialization),
-        study: (editStudySummary || editForm.study || '').trim(),
-        graduation_completed: !!editForm.graduation_completed,
-        graduation_date: editForm.graduation_completed && editForm.graduation_date ? editForm.graduation_date : '',
-        post_graduation_plan: trim(editForm.post_graduation_plan) || '',
-        employment_status: trim(editForm.post_graduation_plan) || '',
-        employment_company: trim(editForm.post_graduation_plan === 'working' ? editForm.employment_company : ''),
-        employment_role: trim(editForm.post_graduation_plan === 'working' ? editForm.employment_role : ''),
-      };
-
-      if (!payload.study_program && !payload.study) {
-        delete payload.study_institution;
-        delete payload.study_program;
-        delete payload.study_specialization;
-        delete payload.study_level;
-        delete payload.study;
-      }
-
-      if (payload.post_graduation_plan !== 'working') {
-        delete payload.employment_company;
-        delete payload.employment_role;
-      }
-
       const response = await fetch(`/api/students?id=${selectedStudent._id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -526,6 +385,7 @@ export default function StudentsTable() {
       }
       setShowEditModal(false);
       showToastMessage('Student updated successfully', 'success');
+      // Optimistic update or refetch
       fetchStudents(currentPage, perPage, searchTerm.trim());
     } catch (error) {
       console.error('Error updating student:', error);
@@ -533,7 +393,7 @@ export default function StudentsTable() {
     } finally {
       setIsSavingEdit(false);
     }
-  }, [selectedStudent, editForm, editStudySummary, showToastMessage, fetchStudents, currentPage, perPage, searchTerm]);
+  }, [selectedStudent, showToastMessage, fetchStudents, currentPage, perPage, searchTerm]);
 
   const handleDelete = useCallback(async (studentId, studentName) => {
     if (!window.confirm(`Are you sure you want to delete ${studentName}? This action cannot be undone.`)) {
@@ -1028,368 +888,14 @@ export default function StudentsTable() {
       </Container>
 
       {/* --- Edit Student Modal --- */}
-      <Modal
+      <EditStudentModal
         show={showEditModal}
         onHide={() => setShowEditModal(false)}
-        centered
-        backdrop="static"
-        scrollable
-        contentClassName="solid-modal"
-      >
-        <Modal.Header closeButton>
-          <Modal.Title className="h6">
-            <i className="fas fa-user-edit me-2"></i>
-            Edit: {selectedStudent?.first_name} {selectedStudent?.last_name}
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body className="py-3 px-4">
-          {selectedStudent && (
-            <Form id="editStudentForm" onSubmit={(e) => { e.preventDefault(); saveEditChanges(); }}>
-              <Row className="mb-3">
-                <Form.Group as={Col} xs={12} md={6} controlId="editFirstName">
-                  <Form.Label className="small mb-1">First Name <span className="text-danger">*</span></Form.Label>
-                  <Form.Control size="sm" type="text" value={editForm.first_name} onChange={(e) => setEditForm({ ...editForm, first_name: e.target.value })} required />
-                </Form.Group>
-                <Form.Group as={Col} xs={12} md={6} controlId="editLastName" className="mt-2 mt-md-0">
-                  <Form.Label className="small mb-1">Last Name <span className="text-danger">*</span></Form.Label>
-                  <Form.Control size="sm" type="text" value={editForm.last_name} onChange={(e) => setEditForm({ ...editForm, last_name: e.target.value })} required />
-                </Form.Group>
-              </Row>
-              <Row className="mb-3">
-                <Form.Group as={Col} xs={12} md={6} controlId="editEmail">
-                  <Form.Label className="small mb-1">Email <span className="text-danger">*</span></Form.Label>
-                  <Form.Control size="sm" type="email" placeholder="student@example.com" value={editForm.mail_id} onChange={(e) => setEditForm({ ...editForm, mail_id: e.target.value })} required />
-                </Form.Group>
-                <Form.Group as={Col} xs={12} md={6} controlId="editPhone" className="mt-2 mt-md-0">
-                  <Form.Label className="small mb-1">Phone <span className="text-danger">*</span></Form.Label>
-                  <Form.Control size="sm" type="tel" placeholder="+1-555-123-4567" value={editForm.phone} onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })} required />
-                </Form.Group>
-              </Row>
-              <Form.Group className="mb-3" controlId="editAddress">
-                <Form.Label className="small mb-1">Address</Form.Label>
-                <Form.Control size="sm" type="text" placeholder="123 Main St..." value={editForm.address} onChange={(e) => setEditForm({ ...editForm, address: e.target.value })} />
-              </Form.Group>
-              <Row className="mb-3">
-                 <Form.Group as={Col} xs={12} md={6} controlId="editMandal">
-                   <Form.Label className="small mb-1">Mandal</Form.Label>
-                   <Form.Select
-                     size="sm"
-                     value={editForm.mandal_name}
-                     onChange={(e) => setEditForm({...editForm, mandal_name: e.target.value})}
-                   >
-                      <option value="">Select Mandal</option>
-                      {MANDAL_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                   </Form.Select>
-                 </Form.Group>
-                 <Form.Group as={Col} xs={12} md={6} controlId="editMukt">
-                   <Form.Label className="small mb-1">Mukt Type</Form.Label>
-                   <Form.Select
-                     size="sm"
-                     value={editForm.mukt_type}
-                     onChange={(e) => setEditForm({...editForm, mukt_type: e.target.value})}
-                   >
-                      <option value="">Select Type</option>
-                      {MUKT_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                   </Form.Select>
-                 </Form.Group>
-              </Row>
-              <Row className="mb-3">
-                <Form.Group as={Col} xs={12} md={3} controlId="editDob">
-                  <Form.Label className="small mb-1">Date of Birth</Form.Label>
-                  <Form.Control
-                    size="sm"
-                    type="date"
-                    value={editForm.date_of_birth}
-                    onChange={(e) => setEditForm({ ...editForm, date_of_birth: e.target.value })}
-                  />
-                </Form.Group>
-                <Form.Group as={Col} xs={12} md={3} controlId="editGender" className="mt-2 mt-md-0">
-                  <Form.Label className="small mb-1">Gender</Form.Label>
-                  <Form.Select
-                    size="sm"
-                    value={editForm.gender || ''}
-                    onChange={(e) => setEditForm({ ...editForm, gender: e.target.value })}
-                  >
-                    <option value="">Select Gender</option>
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                    <option value="other">Other</option>
-                  </Form.Select>
-                </Form.Group>
-                <Form.Group as={Col} xs={12} md={3} controlId="editInstitution" className="mt-2 mt-md-0">
-                  <Form.Label className="small mb-1">Institution</Form.Label>
-                  <Form.Select
-                    size="sm"
-                    value={editForm.study_institution}
-                    onChange={(e) => handleEditInstitutionChange(e.target.value)}
-                  >
-                    <option value="">Select Institution</option>
-                    {INSTITUTION_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>{option.label}</option>
-                    ))}
-                  </Form.Select>
-                </Form.Group>
-                <Form.Group as={Col} xs={12} md={3} controlId="editProgram" className="mt-2 mt-md-0">
-                  <Form.Label className="small mb-1">Program</Form.Label>
-                  <Form.Select
-                    size="sm"
-                    value={editForm.study_program}
-                    onChange={(e) => handleEditProgramChange(e.target.value)}
-                    disabled={!editForm.study_institution}
-                  >
-                    <option value="">Select Program</option>
-                    {editAvailablePrograms.map((program) => (
-                      <option key={program.value} value={program.value}>{program.label}</option>
-                    ))}
-                  </Form.Select>
-                </Form.Group>
-              </Row>
-              <Row className="mb-3">
-                <Form.Group as={Col} xs={12} md={editAvailableSpecializations.length ? 6 : 12} controlId="editSpecialization">
-                  <Form.Label className="small mb-1">Specialization / Focus</Form.Label>
-                  {editAvailableSpecializations.length ? (
-                    <Form.Select
-                      size="sm"
-                      value={editForm.study_specialization}
-                      onChange={(e) => setEditForm({ ...editForm, study_specialization: e.target.value })}
-                    >
-                      <option value="">Select Specialization</option>
-                      {editAvailableSpecializations.map((spec) => (
-                        <option key={spec} value={spec}>{spec}</option>
-                      ))}
-                    </Form.Select>
-                  ) : (
-                    <Form.Control
-                      size="sm"
-                      type="text"
-                      value={editForm.study_specialization}
-                      onChange={(e) => setEditForm({ ...editForm, study_specialization: e.target.value })}
-                      placeholder="Enter specialization or focus area"
-                      disabled={!editForm.study_program}
-                    />
-                  )}
-                </Form.Group>
-                <Form.Group as={Col} xs={12} md={editAvailableSpecializations.length ? 6 : 12} controlId="editProgramSummary" className="mt-2 mt-md-0">
-                  <Form.Label className="small mb-1">Program Summary</Form.Label>
-                  <Form.Control
-                    size="sm"
-                    type="text"
-                    value={editStudySummary || editForm.study || ''}
-                    readOnly
-                    placeholder="Summary shown after selecting program"
-                  />
-                </Form.Group>
-              </Row>
-              <Row className="mb-3">
-                <Form.Group as={Col} xs={12} md={4} controlId="editGraduationCompleted">
-                  <Form.Check
-                    type="checkbox"
-                    label="Graduation completed?"
-                    checked={!!editForm.graduation_completed}
-                    onChange={(e) => handleEditGraduationToggle(e.target.checked)}
-                  />
-                </Form.Group>
-                <Form.Group as={Col} xs={12} md={4} controlId="editGraduationDate" className="mt-2 mt-md-0">
-                  <Form.Label className="small mb-1">Graduation Date</Form.Label>
-                  <Form.Control
-                    size="sm"
-                    type="date"
-                    value={editForm.graduation_date || ''}
-                    onChange={(e) => setEditForm({ ...editForm, graduation_date: e.target.value })}
-                    disabled={!editForm.graduation_completed}
-                  />
-                </Form.Group>
-                <Form.Group as={Col} xs={12} md={4} controlId="editPostGradPlan" className="mt-2 mt-md-0">
-                  <Form.Label className="small mb-1">Post-Graduation Plan</Form.Label>
-                  <Form.Select
-                    size="sm"
-                    value={editForm.post_graduation_plan || ''}
-                    onChange={(e) => handleEditPostGradPlanChange(e.target.value)}
-                  >
-                    <option value="">Select plan</option>
-                    {POST_GRAD_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>{option.label}</option>
-                    ))}
-                  </Form.Select>
-                </Form.Group>
-              </Row>
-              {editShowEmploymentFields && (
-                <Row className="mb-3">
-                  <Form.Group as={Col} xs={12} md={6} controlId="editEmploymentCompany">
-                    <Form.Label className="small mb-1">Company / Organization</Form.Label>
-                    <Form.Control
-                      size="sm"
-                      type="text"
-                      value={editForm.employment_company}
-                      onChange={(e) => setEditForm({ ...editForm, employment_company: e.target.value })}
-                      placeholder="Where are they working?"
-                    />
-                  </Form.Group>
-                  <Form.Group as={Col} xs={12} md={6} controlId="editEmploymentRole" className="mt-2 mt-md-0">
-                    <Form.Label className="small mb-1">Role / Title</Form.Label>
-                    <Form.Control
-                      size="sm"
-                      type="text"
-                      value={editForm.employment_role}
-                      onChange={(e) => setEditForm({ ...editForm, employment_role: e.target.value })}
-                      placeholder="Job role or designation"
-                    />
-                  </Form.Group>
-                </Row>
-              )}
-              <Form.Group className="mb-3" controlId="editEmergencyContact">
-                <Form.Label className="small mb-1">Emergency Contact</Form.Label>
-                <Form.Control size="sm" type="text" placeholder="Name - Phone (e.g., Jane Doe - 555-987-6543)" value={editForm.emergency_contact} onChange={(e) => setEditForm({ ...editForm, emergency_contact: e.target.value })} />
-              </Form.Group>
-              {/* New Section: Event Participation */}
-              <h6 className="mt-3">Event Participation</h6>
-              <Row className="mb-3">
-                <Col xs={12} md={6}>
-                  <Form.Check
-                    type="checkbox"
-                    id="editBoxCricket"
-                    label="Box Cricket"
-                    checked={editForm.box_cricket}
-                    onChange={(e) => setEditForm({ ...editForm, box_cricket: e.target.checked })}
-                  />
-                  {editForm.box_cricket && (
-                    <Form.Control size="sm" type="number" placeholder="Years" value={editForm.box_cricket_years} onChange={(e) => setEditForm({ ...editForm, box_cricket_years: e.target.value })} className="mt-1" />
-                  )}
-                </Col>
-                <Col xs={12} md={6}>
-                  <Form.Check
-                    type="checkbox"
-                    id="editAtmiyaCricket"
-                    label="Atmiya Cricket Tournament"
-                    checked={editForm.atmiya_cricket_tournament}
-                    onChange={(e) => setEditForm({ ...editForm, atmiya_cricket_tournament: e.target.checked })}
-                  />
-                  {editForm.atmiya_cricket_tournament && (
-                    <Form.Control size="sm" type="number" placeholder="Years" value={editForm.atmiya_cricket_years} onChange={(e) => setEditForm({ ...editForm, atmiya_cricket_years: e.target.value })} className="mt-1" />
-                  )}
-                </Col>
-              </Row>
-              <Row className="mb-3">
-                <Col xs={12} md={6}>
-                  <Form.Check
-                    type="checkbox"
-                    id="editAtmiyaYouth"
-                    label="Atmiya Youth Shibir"
-                    checked={editForm.atmiya_youth_shibir}
-                    onChange={(e) => setEditForm({ ...editForm, atmiya_youth_shibir: e.target.checked })}
-                  />
-                  {editForm.atmiya_youth_shibir && (
-                    <Form.Control size="sm" type="number" placeholder="Years" value={editForm.atmiya_youth_years} onChange={(e) => setEditForm({ ...editForm, atmiya_youth_years: e.target.value })} className="mt-1" />
-                  )}
-                </Col>
-                <Col xs={12} md={6}>
-                  <Form.Check
-                    type="checkbox"
-                    id="editYuvaMahotsav"
-                    label="Yuva Mahotsav"
-                    checked={editForm.yuva_mahotsav}
-                    onChange={(e) => setEditForm({ ...editForm, yuva_mahotsav: e.target.checked })}
-                  />
-                  {editForm.yuva_mahotsav && (
-                    <Form.Control size="sm" type="number" placeholder="Years" value={editForm.yuva_mahotsav_years} onChange={(e) => setEditForm({ ...editForm, yuva_mahotsav_years: e.target.value })} className="mt-1" />
-                  )}
-                </Col>
-              </Row>
-              <Form.Check
-                type="checkbox"
-                id="editHarimay"
-                label="Harimay"
-                checked={editForm.harimay}
-                onChange={(e) => setEditForm({ ...editForm, harimay: e.target.checked })}
-                className="mb-3"
-              />
-              <Form.Group className="mb-2" controlId="editNotes">
-                <Form.Label className="small mb-1">Notes</Form.Label>
-                <Form.Control size="sm" as="textarea" rows={3} placeholder="Additional notes..." value={editForm.notes} onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })} />
-              </Form.Group>
-              {renderAdminIdentity()}
-              {/* Moved Out Section */}
-              <Card className="mb-3">
-                <Card.Header className="bg-light">
-                  <h6 className="mb-0">Moved Out Information</h6>
-                </Card.Header>
-                <Card.Body>
-                  <Form.Check
-                    type="checkbox"
-                    id="editMovedOutCheckbox"
-                    label="Student has moved out of Windsor"
-                    checked={editForm.moved_out}
-                    onChange={e => setEditForm({ ...editForm, moved_out: e.target.checked })}
-                    className="mb-3"
-                  />
-                  {editForm.moved_out && (
-                    <>
-                      <Row>
-                        <Col md={6}>
-                          <Form.Group className="mb-3">
-                            <Form.Label>Date Moved Out</Form.Label>
-                            <Form.Control
-                              type="date"
-                              value={editForm.moved_out_date}
-                              onChange={e => setEditForm({ ...editForm, moved_out_date: e.target.value })}
-                            />
-                          </Form.Group>
-                        </Col>
-                        <Col md={6}>
-                          <Form.Group className="mb-3">
-                            <Form.Label>Job/Occupation</Form.Label>
-                            <Form.Control
-                              type="text"
-                              value={editForm.moved_out_job}
-                              onChange={e => setEditForm({ ...editForm, moved_out_job: e.target.value })}
-                              placeholder="What job are they doing?"
-                            />
-                          </Form.Group>
-                        </Col>
-                      </Row>
-                      <Form.Group className="mb-3">
-                        <Form.Label>New Address</Form.Label>
-                        <Form.Control
-                          type="text"
-                          value={editForm.moved_out_address}
-                          onChange={e => setEditForm({ ...editForm, moved_out_address: e.target.value })}
-                          placeholder="New address after moving out"
-                        />
-                      </Form.Group>
-                      <Form.Group className="mb-3">
-                        <Form.Label>Notes about move</Form.Label>
-                        <Form.Control
-                          as="textarea"
-                          rows={2}
-                          value={editForm.moved_out_notes}
-                          onChange={e => setEditForm({ ...editForm, moved_out_notes: e.target.value })}
-                          placeholder="Any notes about the move (optional)"
-                        />
-                      </Form.Group>
-                    </>
-                  )}
-                </Card.Body>
-              </Card>
-            </Form>
-          )}
-        </Modal.Body>
-        <Modal.Footer className="px-3 py-2">
-          <Button variant="secondary" size="sm" onClick={() => setShowEditModal(false)} disabled={isSavingEdit}>
-            Cancel
-          </Button>
-          <Button variant="primary" size="sm" type="submit" form="editStudentForm" disabled={isSavingEdit || !selectedStudent}>
-            {isSavingEdit ? (
-              <>
-                <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" /> Saving...
-              </>
-            ) : (
-              <>
-                <i className="fas fa-save me-1"></i> Save
-              </>
-            )}
-          </Button>
-        </Modal.Footer>
-      </Modal>
+        student={selectedStudent}
+        currentUser={currentUser}
+        onSave={saveEditChanges}
+        isSaving={isSavingEdit}
+      />
 
       {/* --- Add Call Log Modal --- */}
       <Modal

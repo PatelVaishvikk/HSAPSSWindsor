@@ -5,7 +5,6 @@ export default function Document() {
         <Html lang="en">
             <Head>
                 {/* Meta tags for SEO */}
-                <meta name="viewport" content="width=device-width, initial-scale=1" />
                 <meta name="description" content="HSAPSS Windsor - Dashboard and Student Management" />
                 <meta name="author" content="HSAPSS Windsor" />
                 <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
