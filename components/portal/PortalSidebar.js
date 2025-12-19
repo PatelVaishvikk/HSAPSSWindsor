@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Button } from 'react-bootstrap';
+import { Button, Badge } from 'react-bootstrap';
 import { buildInitials } from '../../lib/studentPortalUtils';
 
 export default function PortalSidebar({
@@ -63,6 +63,18 @@ export default function PortalSidebar({
           >
             <i className={`fas fa-users ${activePane === 'community' ? '' : 'text-muted'}`} style={{ width: 24 }}></i>
             <span>Community Hub</span>
+          </Button>
+
+          <Button
+            variant="link"
+            className={`text-start d-flex align-items-center gap-3 px-3 py-3 rounded-3 border-0 text-decoration-none nav-btn ${activePane === 'mentorship' ? 'active' : ''}`}
+            onClick={() => setActivePane('mentorship')}
+          >
+            <i className={`fas fa-graduation-cap ${activePane === 'mentorship' ? '' : 'text-muted'}`} style={{ width: 24 }}></i>
+            <span className="d-flex align-items-center gap-2">
+              Mentorship
+              <Badge bg="primary" pill style={{ fontSize: '0.6rem' }}>New</Badge>
+            </span>
           </Button>
 
           <Button

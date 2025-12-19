@@ -10,10 +10,12 @@ export function useFeed(scope = 'all', page = 1) {
     `/api/student-portal/posts?scope=${scope}&page=${page}&limit=20`, 
     fetcher, 
     {
-      refreshInterval: 30000,
+      refreshInterval: 60000, 
       revalidateOnFocus: true,
-      dedupingInterval: 2000,
-      keepPreviousData: true
+      revalidateOnReconnect: true,
+      dedupingInterval: 1000, 
+      keepPreviousData: true,
+      focusThrottleInterval: 5000
     }
   );
 

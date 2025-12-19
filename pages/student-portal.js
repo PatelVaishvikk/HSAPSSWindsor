@@ -14,7 +14,9 @@ import {
   Toast,
   ToastContainer,
   Dropdown,
-  Modal
+  Modal,
+  Row,
+  Col
 } from 'react-bootstrap';
 import { io } from 'socket.io-client';
 import { STUDENT_PORTAL_FIELD_DEFS, STUDENT_PORTAL_FIELD_NAMES } from '../config/studentPortalFields.js';
@@ -26,6 +28,9 @@ import DigitalLibrary from '../components/DigitalLibrary';
 import Feed from '../components/community/Feed';
 import CustomToastContainer from '../components/ui/ToastContainer';
 import PortalSidebar from '../components/portal/PortalSidebar';
+import MentorshipHub from '../components/portal/MentorshipHub';
+import CommunityPane from '../components/portal/CommunityPane';
+import PortalAvatar from '../components/portal/PortalAvatar';
 
 const DEFAULT_PASSWORD = 'dasnadas'; // Force rebuild
 
@@ -1700,25 +1705,34 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
     setProfilePreview(null);
   }, []);
 
+  // --- PERFORMANCE: BATCHED INITIALIZATION ---
+  const initPortalData = useCallback(async () => {
+    if (!student?._id || communityInitialized) return;
+    
+    // Fetch critical path (Feed + Community Preview) in parallel
+    // Community initialized flag is set but only 20 profiles are fetched first
+    refreshCommunityProfiles();
+    refreshInboxThreads();
+    fetchNotifications();
+  }, [student?._id, communityInitialized, refreshCommunityProfiles, refreshInboxThreads, fetchNotifications]);
+
   useEffect(() => {
-    if (student && (activePane === 'community' || activePane === 'feed')) {
-      if (!communityInitialized && !communityLoading) {
-        refreshCommunityProfiles();
-      }
-      if (!inboxInitialized && !inboxLoading) {
-        refreshInboxThreads();
-      }
+    if (student?._id) {
+       initPortalData();
     }
-  }, [
-    student,
-    activePane,
-    communityInitialized,
-    communityLoading,
-    inboxInitialized,
-    inboxLoading,
-    refreshCommunityProfiles,
-    refreshInboxThreads
-  ]);
+  }, [student?._id, initPortalData]);
+
+  // Lazy refetch when pane becomes active
+  useEffect(() => {
+    if (!student?._id) return;
+
+    if (activePane === 'community' && !communityInitialized) {
+       refreshCommunityProfiles();
+    }
+    if (activePane === 'help') {
+       refreshHelpRequests();
+    }
+  }, [activePane, student?._id, communityInitialized, refreshCommunityProfiles, refreshHelpRequests]);
 
   // Refetch when scope changes
   useEffect(() => {
@@ -3053,462 +3067,27 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
   };
 
   const renderCommunityPane = () => (
-    <div className="community-pane">
-      <Card className="community-hero-card border-0 shadow-sm mb-4 text-white">
-        <Card.Body className="p-4 p-lg-5 position-relative">
-          <div className="community-hero-overlay" />
-          <div className="position-relative">
-            <h3 className="fw-bold mb-2">Community Hub</h3>
-            <p className="mb-4 lead">
-              Celebrate wins, find collaborators, and unlock help from fellow HSAPSS students.
-            </p>
-            <div className="d-flex flex-wrap gap-3">
-              <Button
-                variant="light"
-                onClick={() => setActivePane('help')}
-                className="text-primary fw-semibold"
-              >
-                <i className="fas fa-life-ring me-2"></i>
-                Ask for help
-              </Button>
-              <Button
-                variant="outline-light"
-                className="fw-semibold text-white"
-                onClick={() => openConversationWithStudent(
-                  communityProfiles.find((profile) => !profile.is_self) || communityProfiles[0] || {}
-                )}
-                disabled={communityProfiles.length === 0}
-              >
-                <i className="fas fa-paper-plane me-2"></i>
-                Say hello
-              </Button>
-            </div>
-          </div>
-        </Card.Body>
-      </Card>
-
-      <div className="row g-4 align-items-start">
-        <div className="col-12 col-xl-4">
-          <Card className="border-0 shadow-sm mb-4 community-search-card">
-            <Card.Body>
-              <div className="d-flex align-items-center justify-content-between mb-3">
-                <div>
-                  <h6 className="fw-semibold mb-1">Find your people</h6>
-                  <small className="text-muted">
-                    Search by name, skills, program, or interests.
-                  </small>
-                </div>
-              </div>
-              
-              <div className="d-flex gap-2 mb-3">
-                <Button
-                  variant={communityScope === 'all' ? 'primary' : 'outline-primary'}
-                  size="sm"
-                  className="flex-grow-1"
-                  onClick={() => setCommunityScope('all')}
-                >
-                  All
-                </Button>
-                <Button
-                  variant={communityScope === 'my_mandal' ? 'primary' : 'outline-primary'}
-                  size="sm"
-                  className="flex-grow-1"
-                  onClick={() => setCommunityScope('my_mandal')}
-                >
-                  My Mandal
-                </Button>
-                <Button
-                  variant={communityScope === 'other_mandals' ? 'primary' : 'outline-primary'}
-                  size="sm"
-                  className="flex-grow-1"
-                  onClick={() => setCommunityScope('other_mandals')}
-                >
-                  Other
-                </Button>
-              </div>
-
-              <Form className="community-search-form" onSubmit={handleCommunitySearchSubmit}>
-                <div className="d-flex flex-column gap-3">
-                  <Form.Control
-                    type="search"
-                    placeholder="Type a keyword to explore"
-                    value={communitySearch}
-                    onChange={(event) => setCommunitySearch(event.target.value)}
-                  />
-                  <div className="d-flex gap-2">
-                    <Button type="submit" variant="primary" className="flex-grow-1" disabled={communityLoading}>
-                      {communityLoading ? (
-                        <>
-                          <Spinner animation="border" size="sm" className="me-2" role="status" />
-                          Searching...
-                        </>
-                      ) : (
-                        <>
-                          <i className="fas fa-search me-2"></i>
-                          Search
-                        </>
-                      )}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline-secondary"
-                      onClick={() => {
-                        setCommunitySearch('');
-                        refreshCommunityProfiles('');
-                      }}
-                      disabled={communityLoading}
-                    >
-                      <i className="fas fa-sync-alt"></i>
-                    </Button>
-                  </div>
-                </div>
-              </Form>
-            </Card.Body>
-          </Card>
-
-          <Card className="border-0 shadow-sm community-inbox-card">
-            <Card.Body>
-              <div className="d-flex justify-content-between align-items-center mb-3">
-                <div>
-                  <h6 className="fw-semibold mb-1">Conversations</h6>
-                  <small className="text-muted">
-                    {inboxThreads.length
-                      ? 'Pick up where you left off.'
-                      : 'Start a fresh conversation with someone new.'}
-                  </small>
-                </div>
-                <Button
-                  variant="light"
-                  size="sm"
-                  onClick={() => refreshInboxThreads()}
-                  disabled={inboxLoading}
-                >
-                  <i className="fas fa-rotate-right"></i>
-                </Button>
-              </div>
-              {inboxError && (
-                <Alert variant="warning" className="py-2">
-                  {inboxError}
-                </Alert>
-              )}
-              {inboxLoading && inboxThreads.length === 0 ? (
-                <div className="text-center py-4">
-                  <Spinner animation="border" role="status" />
-                </div>
-              ) : inboxThreads.length === 0 ? (
-                <div className="text-center py-4 text-muted small">
-                  No conversations yet. Reach out to a student that inspires you.
-                </div>
-              ) : (
-                <ListGroup variant="flush" className="conversation-thread-list">
-                  {inboxThreads.map((thread) => (
-                    <ListGroup.Item
-                      key={thread.student.id}
-                      action
-                      onClick={() => openConversationWithStudent(thread)}
-                      className="d-flex gap-3 align-items-start"
-                    >
-                      <div className="conversation-avatar">
-                        {buildInitials(thread.student.first_name, thread.student.last_name)}
-                      </div>
-                      <div className="flex-grow-1">
-                        <div className="d-flex align-items-center justify-content-between mb-1">
-                          <div
-                            className="fw-semibold conversation-thread-name"
-                            role="button"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              openProfilePreview(thread.student);
-                            }}
-                          >
-                            {thread.student.first_name} {thread.student.last_name}
-                          </div>
-                          <small className="text-muted">
-                            {formatConversationTimestamp(thread.lastTimestamp)}
-                          </small>
-                        </div>
-                        <div className="thread-presence text-muted small mb-1">
-                          <span
-                            className={`presence-dot ${thread.student.online ? 'presence-dot-online' : ''}`}
-                            aria-hidden="true"
-                          ></span>
-                          {formatPresenceText(thread.student.online, thread.student.last_seen)}
-                        </div>
-                        <div className="text-muted small text-truncate mb-1">
-                          {thread.lastMessage || 'Say hi and introduce yourself.'}
-                        </div>
-                        <div className="d-flex align-items-center gap-2">
-                          {thread.student.study && (
-                            <span className="badge bg-primary-subtle text-primary-emphasis">
-                              {thread.student.study}
-                            </span>
-                          )}
-                          {thread.unreadCount > 0 && (
-                            <Badge bg="primary" pill>
-                              {thread.unreadCount}
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                    </ListGroup.Item>
-                  ))}
-                </ListGroup>
-              )}
-            </Card.Body>
-          </Card>
-        </div>
-
-        <div className="col-12 col-xl-8">
-          {communityError && (
-            <Alert variant="danger" className="mb-4">
-              {communityError}
-            </Alert>
-          )}
-
-          {communityLoading && communityProfiles.length === 0 ? (
-            <div className="text-center py-5">
-              <Spinner animation="border" role="status" className="text-primary" />
-              <p className="text-muted small mt-3 mb-0">Loading community profiles...</p>
-            </div>
-          ) : communityProfiles.length === 0 ? (
-            <div className="text-center py-5">
-              <div className="empty-state-icon mb-3">
-                <i className="fas fa-users"></i>
-              </div>
-              <h6 className="fw-semibold mb-2">No matching profiles yet</h6>
-              <p className="text-muted small mb-0">
-                Encourage your friends to update their profiles or adjust your search filters.
-              </p>
-            </div>
-          ) : (
-            <div className="row g-4">
-              {communityProfiles.map((profile) => (
-                <div key={profile.id} className="col-12 col-md-6">
-                  <Card className="community-card h-100 border-0 shadow-sm">
-                    <Card.Body className="d-flex flex-column">
-                      <div className="d-flex justify-content-between align-items-start mb-3">
-                        <div>
-                          <div className="d-flex align-items-center gap-2">
-                            <div className="conversation-avatar conversation-avatar-sm">
-                              {renderAvatar(profile)}
-                            </div>
-                            <div>
-                              <h6
-                                className="fw-bold mb-0 community-name-link"
-                                role="button"
-                                onClick={() => openProfilePreview(profile)}
-                              >
-                                {profile.first_name} {profile.last_name}{' '}
-                                {profile.is_self && (
-                                  <Badge bg="primary" pill>
-                                    You
-                                  </Badge>
-                                )}
-                              </h6>
-                              {profile.community_headline && (
-                                <p className="text-muted small mb-0">{profile.community_headline}</p>
-                              )}
-                              <div className="d-flex gap-1 mt-1 flex-wrap">
-                                  <Badge bg="info" className="fw-normal" style={{ fontSize: '0.7em' }}>
-                                    {profile.mandal_name || 'Windsor'}
-                                  </Badge>
-                                  <Badge bg="warning" text="dark" className="fw-normal" style={{ fontSize: '0.7em' }}>
-                                    {profile.mukt_type || 'Yuvak'}
-                                  </Badge>
-                              </div>
-                              <div className="presence-line text-muted small mt-1">
-                                <span
-                                  className={`presence-dot ${profile.online ? 'presence-dot-online' : ''}`}
-                                  aria-hidden="true"
-                                ></span>
-                                {formatPresenceText(profile.online, profile.last_seen)}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        {profile.available_to_help && (
-                          <Badge bg="success" pill>
-                            Available to help
-                          </Badge>
-                        )}
-                      </div>
-                      {profile.community_bio && (
-                        <p className="text-muted small mb-3">{profile.community_bio}</p>
-                      )}
-                      {profile.community_skills?.length > 0 && (
-                        <div className="d-flex flex-wrap gap-2 mb-3">
-                          {profile.community_skills.map((skill) => (
-                            <span
-                              key={`${profile.id}-${skill}`}
-                              className="badge rounded-pill bg-primary-subtle text-primary-emphasis"
-                            >
-                              <i className="fas fa-star me-1"></i>
-                              {skill}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                      {profile.community_interests?.length > 0 && (
-                        <div className="d-flex flex-wrap gap-2 mb-3">
-                          {profile.community_interests.map((interest) => (
-                            <span
-                              key={`${profile.id}-interest-${interest}`}
-                              className="badge rounded-pill bg-secondary-subtle text-secondary-emphasis"
-                            >
-                              {interest}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                      <ul className="list-unstyled small mb-3">
-                        {profile.study && (
-                          <li className="mb-1">
-                            <i className="fas fa-graduation-cap me-2 text-primary"></i>
-                            {profile.study}
-                          </li>
-                        )}
-                        {profile.post_graduation_plan && (
-                          <li className="mb-1">
-                            <i className="fas fa-briefcase me-2 text-primary"></i>
-                            {profile.post_graduation_plan}
-                          </li>
-                        )}
-                      </ul>
-                      {profile.help_offering && (
-                        <div className="small bg-primary-subtle text-primary-emphasis rounded-3 p-3 mb-3">
-                          <i className="fas fa-hands-helping me-2"></i>
-                          {profile.help_offering}
-                        </div>
-                      )}
-                      {(profile.mail_id || profile.phone) && (
-                        <div className="community-contact small mb-3">
-                          {profile.mail_id && (
-                            <OverlayTrigger
-                              placement="top"
-                              overlay={<Tooltip id={`tooltip-email-${profile.id}`}>Copy email</Tooltip>}
-                            >
-                              <button
-                                type="button"
-                                className="contact-chip"
-                                onClick={() => {
-                                  if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
-                                    navigator.clipboard.writeText(profile.mail_id);
-                                  }
-                                }}
-                              >
-                                <i className="fas fa-envelope me-2"></i>
-                                {profile.mail_id}
-                              </button>
-                            </OverlayTrigger>
-                          )}
-                          {profile.phone && (
-                            <OverlayTrigger
-                              placement="top"
-                              overlay={<Tooltip id={`tooltip-phone-${profile.id}`}>Copy phone</Tooltip>}
-                            >
-                              <button
-                                type="button"
-                                className="contact-chip"
-                                onClick={() => {
-                                  if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
-                                    navigator.clipboard.writeText(profile.phone);
-                                  }
-                                }}
-                              >
-                                <i className="fas fa-phone me-2"></i>
-                                {profile.phone}
-                              </button>
-                            </OverlayTrigger>
-                          )}
-                        </div>
-                      )}
-                      <div className="d-flex flex-wrap gap-2 mt-auto">
-                        {!profile.is_self && (
-                          <Button
-                            size="sm"
-                            variant={
-                              student.following?.includes(profile.id)
-                                ? "outline-secondary"
-                                : profile.has_requested_follow
-                                  ? "secondary"
-                                  : "primary"
-                            }
-                            disabled={profile.has_requested_follow}
-                            onClick={() => {
-                              const isFollowing = student.following?.includes(profile.id);
-                              handleFollow(profile.id, isFollowing ? 'unfollow' : 'request');
-                            }}
-                          >
-                            <i className={`fas fa-${student.following?.includes(profile.id)
-                              ? 'user-check'
-                              : profile.has_requested_follow
-                                ? 'clock'
-                                : 'user-plus'
-                              } me-2`}></i>
-                            {student.following?.includes(profile.id)
-                              ? 'Following'
-                              : profile.has_requested_follow
-                                ? 'Requested'
-                                : 'Follow'}
-                          </Button>
-                        )}
-                        {!profile.is_self && (
-                          <Button
-                            size="sm"
-                            variant="primary"
-                            onClick={() => openConversationWithStudent(profile)}
-                          >
-                            <i className="fas fa-message me-2"></i>
-                            Message
-                          </Button>
-                        )}
-                        {!profile.is_self && profile.available_to_help && (
-                          <Button
-                            size="sm"
-                            variant="outline-primary"
-                            onClick={() =>
-                              openConversationWithStudent(
-                                profile,
-                                `Hey ${profile.first_name || ''}! I saw you're available to help with "${profile.help_offering || 'students'}" and would love to connect.`
-                              )
-                            }
-                          >
-                            <i className="fas fa-hands-helping me-2"></i>
-                            Request Support
-                          </Button>
-                        )}
-                        {profile.linkedin_url && (
-                          <a
-                            href={profile.linkedin_url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="btn btn-outline-secondary btn-sm"
-                          >
-                            <i className="fab fa-linkedin me-2"></i>
-                            LinkedIn
-                          </a>
-                        )}
-                        {profile.portfolio_url && (
-                          <a
-                            href={profile.portfolio_url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="btn btn-outline-secondary btn-sm"
-                          >
-                            <i className="fas fa-globe me-2"></i>
-                            Portfolio
-                          </a>
-                        )}
-                      </div>
-                    </Card.Body>
-                  </Card>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+    <CommunityPane
+      activePane={activePane}
+      setActivePane={setActivePane}
+      student={student}
+      communityProfiles={communityProfiles}
+      communityLoading={communityLoading}
+      communityError={communityError}
+      communityScope={communityScope}
+      setCommunityScope={setCommunityScope}
+      communitySearch={communitySearch}
+      setCommunitySearch={setCommunitySearch}
+      handleCommunitySearchSubmit={handleCommunitySearchSubmit}
+      refreshCommunityProfiles={refreshCommunityProfiles}
+      inboxThreads={inboxThreads}
+      inboxLoading={inboxLoading}
+      inboxError={inboxError}
+      refreshInboxThreads={refreshInboxThreads}
+      openConversationWithStudent={openConversationWithStudent}
+      openProfilePreview={openProfilePreview}
+      handleFollow={handleFollow}
+    />
   );
 
   const renderFeedPane = () => {
@@ -3893,14 +3472,63 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
                     )}
 
                     {request.tags?.length > 0 && (
-                      <div className="d-flex flex-wrap gap-2 mb-2">
+                      <div className="d-flex flex-wrap gap-2 mb-3">
                         {request.tags.map((tag) => (
-                          <span key={`${request.id}-tag-${tag}`} className="badge rounded-pill bg-surface text-muted border">
-                            #{tag}
+                          <span key={`${request.id}-tag-${tag}`} className="badge rounded-pill bg-light text-muted border px-2 py-1" style={{ fontSize: '0.65rem' }}>
+                            #{tag.toLowerCase()}
                           </span>
                         ))}
                       </div>
                     )}
+
+                    {/* AI RECOMMENDED HELPERS */}
+                    {(() => {
+                      const requestText = `${request.title} ${request.description || ''}`.toLowerCase();
+                      const reqTokens = requestText.split(/\s+/).filter(w => w.length > 3);
+                      
+                      const matches = (communityProfiles || [])
+                        .filter(p => !p.is_self && (p.community_skills?.length > 0 || p.community_interests?.length > 0))
+                        .map(p => {
+                          const pText = [
+                            ...(p.community_skills || []),
+                            ...(p.community_interests || []),
+                            p.community_headline,
+                            p.study_program
+                          ].filter(Boolean).join(' ').toLowerCase();
+                          
+                          let score = 0;
+                          reqTokens.forEach(t => { if (pText.includes(t)) score++; });
+                          return { ...p, aiScore: score };
+                        })
+                        .filter(p => p.aiScore > 0)
+                        .sort((a, b) => b.aiScore - a.aiScore)
+                        .slice(0, 3);
+
+                      if (matches.length === 0) return null;
+
+                      return (
+                        <div className="ai-matched-helpers p-3 rounded-4 bg-primary bg-opacity-10 border border-primary border-opacity-10 mt-3">
+                           <div className="d-flex align-items-center gap-2 mb-2">
+                              <i className="fas fa-sparkles text-primary" style={{ fontSize: '0.8rem' }}></i>
+                              <small className="fw-bold text-primary text-uppercase tracking-widest" style={{ fontSize: '0.6rem' }}>AI Matched Helpers</small>
+                           </div>
+                           <div className="d-flex align-items-center gap-2">
+                              {matches.map(m => (
+                                <OverlayTrigger key={m.id || m._id} placement="top" overlay={<Tooltip>{m.first_name} is a potential match!</Tooltip>}>
+                                  <div 
+                                    className="rounded-circle border border-white bg-white shadow-sm overflow-hidden" 
+                                    style={{ width: 32, height: 32, cursor: 'pointer' }}
+                                    onClick={() => openProfilePreview(m)}
+                                  >
+                                    <PortalAvatar profile={m} />
+                                  </div>
+                                </OverlayTrigger>
+                              ))}
+                              <small className="text-muted small ms-2">These members might have the best expertise.</small>
+                           </div>
+                        </div>
+                      );
+                    })()}
                   </div>
                   <div className="text-md-end small text-muted">
                     {request.responses?.length > 0 && (
@@ -5125,7 +4753,15 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
                       </div>
                     )}
 
-
+                    {activePane === 'mentorship' && (
+                      <div className="h-100">
+                        <MentorshipHub 
+                          student={student} 
+                          enqueueToast={enqueueToast} 
+                          portalAuthHeaders={portalAuthHeaders || {}} 
+                        />
+                      </div>
+                    )}
 
                     {activePane === 'settings' && (
                       <div className="row justify-content-center">
@@ -5691,6 +5327,194 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
         </Modal.Body>
       </Modal>
 
+      {/* Community Profile Preview Modal */}
+      <Modal 
+        show={showProfilePreview} 
+        onHide={closeProfilePreview} 
+        centered 
+        size="lg"
+        className="profile-preview-modal"
+      >
+        <Modal.Header closeButton className="border-0 pb-0 position-absolute top-0 end-0 z-index-10"></Modal.Header>
+        <Modal.Body className="p-0 overflow-hidden rounded-4">
+           {profilePreview && (
+             <div className="profile-modal-content">
+                {/* Modern Header Background */}
+                <div className="profile-modal-header-bg mb-4" style={{ 
+                  height: '100px', 
+                  background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                  position: 'relative'
+                }}>
+                   <div className="avatar-container shadow-lg rounded-circle p-1 bg-white" style={{ 
+                     width: 100, 
+                     height: 100, 
+                     position: 'absolute',
+                     bottom: '-50px',
+                     left: '50%',
+                     transform: 'translateX(-50%)',
+                     zIndex: 2
+                   }}>
+                     <div className="rounded-circle overflow-hidden w-100 h-100">
+                       <PortalAvatar profile={profilePreview} />
+                     </div>
+                   </div>
+                </div>
+
+                <div className="px-3 px-md-5 pt-4 pb-4 text-center mt-2">
+                  <h2 className="fw-bold mb-1 text-dark" style={{ letterSpacing: '-0.8px', fontSize: '1.5rem' }}>{profilePreview.first_name} {profilePreview.last_name}</h2>
+                  <p className="text-primary fw-bold mb-4 tracking-widest text-uppercase" style={{ fontSize: '0.7rem' }}>
+                     {profilePreview.community_headline || 'HSAPSS Member'}
+                  </p>
+                  
+                  <div className="d-flex justify-content-center gap-2 mb-5">
+                    <Badge bg="primary-subtle" text="primary" className="px-3 py-2 rounded-pill border border-primary border-opacity-10" style={{ fontSize: '0.75rem' }}>{profilePreview.mandal_name || 'Windsor'}</Badge>
+                    <Badge bg="success-subtle" text="success" className="px-3 py-2 rounded-pill border border-success border-opacity-10" style={{ fontSize: '0.75rem' }}>{profilePreview.mukt_type || 'Yuvak'}</Badge>
+                    {profilePreview.available_to_help && (
+                      <Badge bg="warning-subtle" text="warning" className="px-3 py-2 rounded-pill border border-warning border-opacity-10" style={{ fontSize: '0.75rem' }}>Available to Help</Badge>
+                    )}
+                  </div>
+                
+                  <Col md={12}>
+                    <div className="bg-light rounded-4 p-4 text-start mb-4 shadow-sm border border-white">
+                      <h6 className="fw-bold x-small text-muted text-uppercase mb-3 tracking-widest" style={{ fontSize: '0.65rem' }}>Academic Portfolio</h6>
+                      <div className="d-flex align-items-start gap-3 mb-3">
+                         <div className="bg-white p-2 rounded-3 shadow-sm text-primary">
+                            <i className="fas fa-university"></i>
+                         </div>
+                         <div>
+                            <p className="fw-bold mb-0 text-dark" style={{ fontSize: '1rem' }}>{profilePreview.study_institution || 'HSAPSS Network'}</p>
+                            <p className="text-muted mb-0 small">
+                              {(profilePreview.study_program && profilePreview.study_program !== 'Student') ? profilePreview.study_program : (profilePreview.mukt_type || 'HSAPSS Member')}
+                            </p>
+                         </div>
+                      </div>
+
+                      {(profilePreview.employment_role || profilePreview.employment_company) && (
+                        <div className="pt-3 border-top mt-3">
+                          <h6 className="fw-bold x-small text-muted text-uppercase mb-3 tracking-widest" style={{ fontSize: '0.65rem' }}>Professional Experience</h6>
+                          <div className="d-flex align-items-start gap-3">
+                            <div className="bg-white p-2 rounded-3 shadow-sm text-success">
+                               <i className="fas fa-briefcase"></i>
+                            </div>
+                            <div>
+                               <p className="fw-bold mb-0 text-dark" style={{ fontSize: '1rem' }}>{profilePreview.employment_role || 'Professional'}</p>
+                               <p className="text-muted mb-0 small">{profilePreview.employment_company || 'Independent'}</p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {profilePreview.community_bio && (
+                        <div className="pt-3 border-top mt-3">
+                          <h6 className="fw-bold x-small text-muted text-uppercase mb-2 tracking-widest" style={{ fontSize: '0.65rem' }}>Professional Bio</h6>
+                          <p className="small text-muted mb-3 leading-relaxed" style={{ fontSize: '0.88rem' }}>{profilePreview.community_bio}</p>
+                          
+                          {/* NLP: Keyword Extraction */}
+                          {(() => {
+                            const tokens = (profilePreview.community_bio || '').toLowerCase()
+                              .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "")
+                              .split(/\s+/)
+                              .filter(w => w.length > 4 && !['about', 'profile', 'member', 'student', 'working', 'living'].includes(w));
+                            
+                            const freq = {};
+                            tokens.forEach(t => freq[t] = (freq[t] || 0) + 1);
+                            const keywords = Object.keys(freq).sort((a, b) => freq[b] - freq[a]).slice(0, 3);
+                            
+                            if (keywords.length === 0) return null;
+                            
+                            return (
+                              <div className="d-flex flex-wrap align-items-center gap-2 mt-2">
+                                <span className="x-small fw-bold text-primary opacity-50 uppercase" style={{ fontSize: '0.6rem' }}>Analysis:</span>
+                                {keywords.map(kw => (
+                                  <Badge key={kw} bg="primary" className="bg-opacity-10 text-primary border-0 fw-normal rounded-pill" style={{ fontSize: '0.65rem' }}>
+                                    #{kw}
+                                  </Badge>
+                                ))}
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      )}
+                    </div>
+                  </Col>
+
+                  <Row className="g-4 px-3 mb-5">
+                   <Col md={6}>
+                    <div className="p-4 bg-white border border-light rounded-4 h-100 shadow-sm d-flex flex-column">
+                      <h6 className="fw-bold text-muted x-small mb-3 uppercase tracking-widest" style={{ fontSize: '0.65rem' }}>Interests</h6>
+                      <div className="d-flex flex-wrap gap-2">
+                        {(Array.isArray(profilePreview.community_interests) ? profilePreview.community_interests : (typeof profilePreview.community_interests === 'string' ? profilePreview.community_interests.split(',').map(s => s.trim()) : [])).slice(0, 6).map(interest => (
+                          <Badge key={interest} bg="secondary-subtle" text="secondary" className="fw-normal rounded-pill px-3 py-2" style={{ fontSize: '0.7rem' }}>#{interest}</Badge>
+                        ))}
+                      </div>
+                      {(profilePreview.community_interests?.length || 0) === 0 && <div className="text-muted small italic my-auto">No interests listed.</div>}
+                    </div>
+                  </Col>
+                  <Col md={6}>
+                    <div className="p-4 bg-white border border-light rounded-4 h-100 shadow-sm">
+                      <h6 className="fw-bold text-muted x-small mb-3 uppercase tracking-widest" style={{ fontSize: '0.65rem' }}>Network Impact</h6>
+                      <div className="d-flex flex-column gap-3">
+                         <div className="d-flex justify-content-between align-items-center flex-wrap">
+                            <div className="d-flex align-items-center gap-2">
+                               <div className="rounded-circle bg-primary bg-opacity-10 p-2 text-primary">
+                                  <i className="fas fa-award" style={{ fontSize: '0.8rem' }}></i>
+                               </div>
+                               <small className="text-muted fw-medium">Reputation</small>
+                            </div>
+                            <span className="fw-bold text-dark">{profilePreview.reputation_points || 0}</span>
+                         </div>
+                         <div className="d-flex justify-content-between align-items-center flex-wrap">
+                            <div className="d-flex align-items-center gap-2">
+                               <div className="rounded-circle bg-success bg-opacity-10 p-2 text-success">
+                                  <i className="fas fa-users" style={{ fontSize: '0.8rem' }}></i>
+                               </div>
+                               <small className="text-muted fw-medium">Network Reach</small>
+                            </div>
+                            <span className="fw-bold text-dark">{profilePreview.followers?.length || 0}</span>
+                         </div>
+                      </div>
+                    </div>
+                  </Col>
+                  </Row>
+
+               {profilePreview.linkedin_url && (
+                 <div className="text-start mb-5 px-3">
+                    <h6 className="fw-bold x-small text-muted text-uppercase mb-3 tracking-widest" style={{ fontSize: '0.65rem' }}>Connected Channels</h6>
+                    <Button 
+                      href={profilePreview.linkedin_url} 
+                      target="_blank" 
+                      variant="light" 
+                      className="d-flex align-items-center justify-content-center gap-3 border-0 bg-primary bg-opacity-10 text-primary rounded-pill px-5 py-3 shadow-sm hover-scale w-100 w-md-auto"
+                    >
+                      <i className="fab fa-linkedin fs-4"></i>
+                      <span className="fw-bold">LinkedIn Profile</span>
+                    </Button>
+                 </div>
+               )}
+
+               <div className="d-flex flex-wrap gap-3 mt-4 border-top pt-4 px-3">
+                  {!profilePreview.is_self && (
+                    <Button 
+                      variant={(student.following || []).includes(profilePreview.id || profilePreview._id) ? "outline-secondary" : profilePreview.has_requested_follow ? "light" : "primary"} 
+                      size="lg" 
+                      className={`flex-grow-1 rounded-pill py-3 fw-bold shadow-sm ${profilePreview.has_requested_follow ? 'text-muted border-0 bg-light opacity-75' : 'text-white'}`}
+                      disabled={profilePreview.has_requested_follow && !(student.following || []).includes(profilePreview.id || profilePreview._id)}
+                      onClick={() => handleFollow(profilePreview.id || profilePreview._id, (student.following || []).includes(profilePreview.id || profilePreview._id) ? 'unfollow' : 'request')}
+                    >
+                      {(student.following || []).includes(profilePreview.id || profilePreview._id) ? 'Unfollow' : profilePreview.has_requested_follow ? 'Requested' : 'Follow Member'}
+                    </Button>
+                  )}
+                  <Button variant="outline-dark" size="lg" className="flex-grow-1 rounded-pill py-3 fw-bold shadow-sm d-flex align-items-center justify-content-center gap-2" onClick={() => { setProfilePreview(null); openConversationWithStudent({ student: profilePreview }); }}>
+                     <i className="fas fa-comment-alt"></i>
+                     Message
+                  </Button>
+               </div>
+            </div>
+          </div>
+         )}
+      </Modal.Body>
+    </Modal>
+
       {/* Notification Panel */}
 
 
@@ -5744,6 +5568,34 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
         @keyframes typing {
           0%, 80%, 100% { transform: scale(0); }
           40% { transform: scale(1); }
+        }
+        .profile-preview-modal .modal-content {
+          border-radius: 2rem;
+          border: none;
+          background: rgba(255, 255, 255, 0.95);
+          backdrop-filter: blur(20px);
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+          overflow: hidden;
+        }
+        @media (max-width: 576px) {
+          .profile-preview-modal .modal-content {
+            border-radius: 1rem;
+          }
+          .profile-modal-header-bg {
+            height: 80px !important;
+          }
+          .avatar-container {
+            width: 80px !important;
+            height: 80px !important;
+            bottom: -40px !important;
+          }
+        }
+        .profile-preview-modal .x-small {
+          font-size: 0.65rem;
+          letter-spacing: 1px;
+        }
+        .shadow-inner {
+          box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
         }
       `}</style>
     </>

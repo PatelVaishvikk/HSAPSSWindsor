@@ -58,7 +58,7 @@ const CommunityProfileCard = ({
       </h5>
       
       <p className="text-muted small mb-3 text-truncate" style={{ minHeight: '20px' }}>
-        {profile.community_headline || profile.study_program || 'Student'}
+        {profile.community_headline || profile.study_program || profile.mukt_type || 'HSAPSS Member'}
       </p>
 
       {/* Skills / Tags */}

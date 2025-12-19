@@ -160,7 +160,7 @@ const StudentSchema = new mongoose.Schema({
   },
   community_visibility: {
     type: String,
-    enum: ['hidden', 'members'],
+    enum: ['hidden', 'members', 'public'],
     default: 'members'
   },
   community_headline: {

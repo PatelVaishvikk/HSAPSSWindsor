@@ -30,6 +30,10 @@ const MyApp = ({ Component, pageProps }) => {
                 <meta name="description" content="HSAPSS Windsor - Dashboard and Student Management" />
                 <meta name="author" content="HSAPSS Windsor" />
                 <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+                <link
+                    rel="stylesheet"
+                    href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
+                />
 
             </Head>
             {/* <Navigation />  */}
