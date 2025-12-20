@@ -18,7 +18,8 @@ const PostCard = ({
   onUpdate,
   onShowLikes,
   onDeleteComment,
-  onUpdateComment
+  onUpdateComment,
+  onViewProfile
 }) => {
   console.log('[PostCard Debug]', {
      postId: post._id || post.id,
@@ -66,7 +67,21 @@ const PostCard = ({
     <div className="glass-card p-4 mb-4">
       <div className="d-flex justify-content-between align-items-start mb-3">
         <div className="d-flex align-items-center gap-3">
-          <div className="avatar-hover" style={{ width: '48px', height: '48px', borderRadius: '50%', overflow: 'hidden', background: '#e0e7ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div 
+            className="avatar-hover" 
+            onClick={() => onViewProfile && onViewProfile(post.author)}
+            style={{ 
+              width: '48px', 
+              height: '48px', 
+              borderRadius: '50%', 
+              overflow: 'hidden', 
+              background: '#e0e7ff', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              cursor: 'pointer'
+            }}
+          >
              {post.author.profile_picture ? (
                  <img src={post.author.profile_picture} alt="Author" className="w-100 h-100 object-fit-cover" />
              ) : (
@@ -76,7 +91,11 @@ const PostCard = ({
              )}
           </div>
           <div>
-            <h6 className="mb-0 font-weight-bold text-dark">
+            <h6 
+              className="mb-0 font-weight-bold text-dark" 
+              style={{ cursor: 'pointer' }}
+              onClick={() => onViewProfile && onViewProfile(post.author)}
+            >
               {post.author.first_name} {post.author.last_name}
             </h6>
             <small className="text-secondary">

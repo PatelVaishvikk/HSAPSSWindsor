@@ -93,29 +93,29 @@ export default function CommunityPane({
         <Card.Body className="p-4 p-lg-5 text-white position-relative">
           <Row className="align-items-center g-5">
             <Col lg={7} className="z-1">
-              <div className="d-flex align-items-center gap-3 mb-4">
-                <Badge bg="primary" className="px-3 py-2 rounded-pill fw-bold tracking-wider shadow-sm" style={{ fontSize: '0.7rem', background: 'linear-gradient(45deg, #6366f1, #8b5cf6)' }}>
-                  RELIANT ALGORITHM V2.4
+              <div className="d-flex align-items-center gap-2 mb-2">
+                <Badge bg="primary" className="px-2 py-1 rounded-pill fw-bold tracking-wider shadow-sm" style={{ fontSize: '0.6rem', background: 'linear-gradient(45deg, #6366f1, #8b5cf6)' }}>
+                  RELIANT V2.4
                 </Badge>
                 <div className="d-flex align-items-center gap-2 opacity-75">
                   <span className="pulse-dot"></span>
-                  <small className="fw-bold text-uppercase tracking-widest" style={{ fontSize: '0.6rem' }}>Systems Online</small>
+                  <small className="fw-bold text-uppercase tracking-widest d-none d-sm-inline" style={{ fontSize: '0.55rem' }}>Systems Active</small>
                 </div>
               </div>
               
-              <h1 className="display-4 fw-bold mb-3 landing-text-shimmer" style={{ letterSpacing: '-1px', color: '#f8fafc' }}>
+              <h1 className="fw-bold mb-3 landing-text-shimmer" style={{ letterSpacing: '-1px', color: '#f8fafc', fontSize: 'calc(1.5rem + 1.5vw)' }}>
                 Your HSAPSS Network, <br /><span className="text-primary-gradient">Reimagined.</span>
               </h1>
-              <p className="lead mb-5 opacity-75" style={{ maxWidth: '600px', lineHeight: '1.7' }}>
-                Intelligently connecting {communityProfiles.length}+ innovators. Our matching engine identifies peers based on academic synergy and shared professional goals.
+              <p className="lead mb-4 opacity-75 d-none d-md-block" style={{ maxWidth: '600px', lineHeight: '1.7' }}>
+                Intelligently connecting {communityProfiles.length}+ innovators. Our matching engine identifies peers based on academic synergy.
               </p>
               
-              <div className="d-flex flex-wrap gap-3">
-                <Button variant="primary" size="lg" className="rounded-pill px-5 fw-bold shadow-lg border-0" style={{ background: 'linear-gradient(45deg, #6366f1, #4f46e5)' }} onClick={() => setActivePane('help')}>
+              <div className="d-flex flex-wrap gap-2 gap-md-3">
+                <Button variant="primary" size="md" className="rounded-pill px-4 px-md-5 fw-bold shadow-lg border-0" style={{ background: 'linear-gradient(45deg, #6366f1, #4f46e5)' }} onClick={() => setActivePane('help')}>
                    Explore Insights
                 </Button>
-                <Button variant="outline-light" size="lg" className="rounded-pill px-5 fw-bold hover-bg-white text-white" onClick={() => setActivePane('feed')}>
-                   Network Feed
+                <Button variant="outline-light" size="md" className="rounded-pill px-4 px-md-5 fw-bold hover-bg-white text-white" onClick={() => setActivePane('feed')}>
+                   Feed
                 </Button>
               </div>
             </Col>
@@ -175,7 +175,7 @@ export default function CommunityPane({
                      placeholder="Search by name, skill, or role..."
                      value={communitySearch}
                      onChange={(e) => setCommunitySearch(e.target.value)}
-                     className="rounded-pill ps-4 py-3 border-0 bg-light shadow-inner"
+                     className="rounded-pill ps-4 py-3 border-0 bg-light shadow-inner community-search-input"
                    />
                    <Button type="submit" variant="primary" className="search-submit-btn rounded-circle shadow">
                      <i className="fas fa-search"></i>
@@ -302,14 +302,22 @@ export default function CommunityPane({
                      <Card className="profile-card border-0 shadow-sm overflow-hidden h-100 hover-float">
                         <div className="profile-card-header" style={{ background: `linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%)` }}>
                            <div className="p-4 d-flex align-items-center gap-4">
-                              <div className="position-relative shadow-sm rounded-circle p-1 bg-white" style={{ width: 80, height: 80, minWidth: 80 }}>
+                              <div 
+                                className="position-relative shadow-sm rounded-circle p-1 bg-white" 
+                                style={{ width: 80, height: 80, minWidth: 80, cursor: 'pointer' }}
+                                onClick={() => openProfilePreview(profile)}
+                              >
                                 <div className="profile-avatar-wrapper rounded-circle overflow-hidden w-100 h-100">
                                   <PortalAvatar profile={profile} />
                                 </div>
                                 {profile.online && <div className="online-glow" />}
                               </div>
                               <div className="flex-grow-1 overflow-hidden">
-                                 <h6 className="fw-bold mb-1 d-flex align-items-center gap-2 text-dark" style={{ fontSize: '1.05rem', letterSpacing: '-0.3px' }}>
+                                 <h6 
+                                   className="fw-bold mb-1 d-flex align-items-center gap-2 text-dark" 
+                                   style={{ fontSize: '1.05rem', letterSpacing: '-0.3px', cursor: 'pointer' }}
+                                   onClick={() => openProfilePreview(profile)}
+                                 >
                                    {profile.first_name} {profile.last_name}
                                    {profile.is_self && <Badge bg="primary" style={{ fontSize: '0.6rem' }}>You</Badge>}
                                  </h6>

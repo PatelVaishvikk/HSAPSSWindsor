@@ -25,7 +25,8 @@ const Feed = ({
   onDeletePost,
   onUpdatePost,
   onDeleteComment,
-  onUpdateComment
+  onUpdateComment,
+  onViewProfile
 }) => {
   
   // Helper to check if current user follows target
@@ -148,6 +149,7 @@ const Feed = ({
                 onShowLikes={onShowLikes}
                 onDeleteComment={onDeleteComment}
                 onUpdateComment={onUpdateComment}
+                onViewProfile={onViewProfile}
               />
             );
           })

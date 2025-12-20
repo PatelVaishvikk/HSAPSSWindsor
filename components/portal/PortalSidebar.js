@@ -14,137 +14,160 @@ export default function PortalSidebar({
   handleLogout,
   setShowThemePicker,
   className,
-  style
+  style,
+  mobileMode = false
 }) {
   if (!student) return null;
 
   return (
-    <div className={`d-flex flex-column sidebar-modern h-100 ${className || ''}`} style={{ width: 280, overflow: 'hidden', ...style }}>
+    <div className={`d-flex flex-column ${!mobileMode ? 'sidebar-modern' : ''} ${className || ''}`} style={{ 
+      width: mobileMode ? '100%' : 280, 
+      height: '100vh',
+      overflowX: 'hidden', 
+      backgroundColor: '#f8f9fa',
+      ...style 
+    }}>
       {/* Header */}
-      <div className="p-4 pb-2 flex-shrink-0">
-        <div className="d-flex align-items-center justify-content-between">
-          <div className="d-flex align-items-center gap-3">
-            <div className="rounded-3 overflow-hidden shadow-sm" style={{ width: 48, height: 48 }}>
-              <img src="/windsor.jpg" alt="HSAPSS Logo" className="w-100 h-100 object-fit-cover" />
+      {!mobileMode && (
+        <div className="p-4 pb-2 flex-shrink-0">
+          <div className="d-flex align-items-center justify-content-between">
+            <div className="d-flex align-items-center gap-3">
+              <div className="rounded-3 overflow-hidden shadow-sm" style={{ width: 48, height: 48 }}>
+                <img src="/windsor.jpg" alt="HSAPSS Logo" className="w-100 h-100 object-fit-cover" />
+              </div>
+              <div>
+                <h5 className="fw-bold mb-0 text-dark">HSAPSS</h5>
+                <small className="text-muted">Student Portal</small>
+              </div>
             </div>
-            <div>
-              <h5 className="fw-bold mb-0 text-dark">HSAPSS</h5>
-              <small className="text-muted">Student Portal</small>
-            </div>
+            <Button
+              variant="light"
+              size="sm"
+              className="rounded-circle"
+              onClick={() => setShowThemePicker(true)}
+              title="Change Theme"
+            >
+              <i className="fas fa-palette text-muted"></i>
+            </Button>
           </div>
-          <Button
-            variant="light"
-            size="sm"
-            className="rounded-circle"
-            onClick={() => setShowThemePicker(true)}
-            title="Change Theme"
-          >
-            <i className="fas fa-palette text-muted"></i>
-          </Button>
         </div>
-      </div>
+      )}
 
       {/* Scrollable Navigation */}
-      <div className="flex-grow-1 overflow-y-auto custom-scrollbar px-3 py-2" style={{ minHeight: 0 }}>
+      <div className={`flex-grow-1 overflow-y-auto custom-scrollbar px-3 ${mobileMode ? 'pt-4' : 'py-2'}`} style={{ minHeight: 0 }}>
         <div className="d-flex flex-column gap-2">
-          <Button
-            variant="link"
-            className={`text-start d-flex align-items-center gap-3 px-3 py-3 rounded-3 border-0 text-decoration-none nav-btn ${activePane === 'profile' ? 'active' : ''}`}
-            onClick={() => setActivePane('profile')}
-          >
-            <i className={`fas fa-user-circle ${activePane === 'profile' ? '' : 'text-muted'}`} style={{ width: 24 }}></i>
-            <span>My Profile</span>
-          </Button>
+          {!mobileMode && (
+            <Button
+              variant="link"
+              className={`text-start d-flex align-items-center gap-3 px-3 py-3 rounded-3 border-0 text-decoration-none nav-btn ${activePane === 'profile' ? 'active' : ''}`}
+              onClick={() => setActivePane('profile')}
+            >
+              <i className={`fas fa-user-circle ${activePane === 'profile' ? '' : 'text-muted'}`} style={{ width: 24 }}></i>
+              <span>My Profile</span>
+            </Button>
+          )}
 
-          <Button
-            variant="link"
-            className={`text-start d-flex align-items-center gap-3 px-3 py-3 rounded-3 border-0 text-decoration-none nav-btn ${activePane === 'community' ? 'active' : ''}`}
-            onClick={() => setActivePane('community')}
-          >
-            <i className={`fas fa-users ${activePane === 'community' ? '' : 'text-muted'}`} style={{ width: 24 }}></i>
-            <span>Community Hub</span>
-          </Button>
+          {!mobileMode && (
+            <Button
+              variant="link"
+              className={`text-start d-flex align-items-center gap-3 px-3 py-3 rounded-3 border-0 text-decoration-none nav-btn ${activePane === 'community' ? 'active' : ''}`}
+              onClick={() => setActivePane('community')}
+            >
+              <i className={`fas fa-users ${activePane === 'community' ? '' : 'text-muted'}`} style={{ width: 24 }}></i>
+              <span>Community Hub</span>
+            </Button>
+          )}
 
-          <Button
-            variant="link"
-            className={`text-start d-flex align-items-center gap-3 px-3 py-3 rounded-3 border-0 text-decoration-none nav-btn ${activePane === 'mentorship' ? 'active' : ''}`}
-            onClick={() => setActivePane('mentorship')}
-          >
-            <i className={`fas fa-graduation-cap ${activePane === 'mentorship' ? '' : 'text-muted'}`} style={{ width: 24 }}></i>
-            <span className="d-flex align-items-center gap-2">
-              Mentorship
-              <Badge bg="primary" pill style={{ fontSize: '0.6rem' }}>New</Badge>
-            </span>
-          </Button>
+          {!mobileMode && (
+            <Button
+              variant="link"
+              className={`text-start d-flex align-items-center gap-3 px-3 py-3 rounded-3 border-0 text-decoration-none nav-btn ${activePane === 'mentorship' ? 'active' : ''}`}
+              onClick={() => setActivePane('mentorship')}
+            >
+              <i className={`fas fa-graduation-cap ${activePane === 'mentorship' ? '' : 'text-muted'}`} style={{ width: 24 }}></i>
+              <span className="d-flex align-items-center gap-2">
+                Mentorship
+                <Badge bg="primary" pill style={{ fontSize: '0.6rem' }}>New</Badge>
+              </span>
+            </Button>
+          )}
 
           <Button
             variant="link"
             className={`text-start d-flex align-items-center gap-3 px-3 py-3 rounded-3 border-0 text-decoration-none nav-btn ${activePane === 'study-sync' ? 'active' : ''}`}
             onClick={() => setActivePane('study-sync')}
+            style={mobileMode ? { backgroundColor: activePane === 'study-sync' ? '#e7f3ff' : 'white', color: '#212529' } : {}}
           >
-            <i className={`fas fa-fire ${activePane === 'study-sync' ? '' : 'text-muted'}`} style={{ width: 24 }}></i>
-            <span>Study Sync</span>
+            <i className={`fas fa-fire ${activePane === 'study-sync' ? 'text-primary' : 'text-muted'}`} style={{ width: 24 }}></i>
+            <span style={{ color: '#212529' }}>Study Sync</span>
           </Button>
 
           <Button
             variant="link"
             className={`text-start d-flex align-items-center gap-3 px-3 py-3 rounded-3 border-0 text-decoration-none nav-btn ${activePane === 'groups' ? 'active' : ''}`}
             onClick={() => setActivePane('groups')}
+            style={mobileMode ? { backgroundColor: activePane === 'groups' ? '#e7f3ff' : 'white', color: '#212529' } : {}}
           >
-            <i className={`fas fa-comments ${activePane === 'groups' ? '' : 'text-muted'}`} style={{ width: 24 }}></i>
-            <span>Groups</span>
+            <i className={`fas fa-comments ${activePane === 'groups' ? 'text-primary' : 'text-muted'}`} style={{ width: 24 }}></i>
+            <span style={{ color: '#212529' }}>Groups</span>
           </Button>
 
           <Button
             variant="link"
             className={`text-start d-flex align-items-center gap-3 px-3 py-3 rounded-3 border-0 text-decoration-none nav-btn ${activePane === 'help' ? 'active' : ''}`}
             onClick={() => setActivePane('help')}
+            style={mobileMode ? { backgroundColor: activePane === 'help' ? '#e7f3ff' : 'white', color: '#212529' } : {}}
           >
-            <i className={`fas fa-hands-helping ${activePane === 'help' ? '' : 'text-muted'}`} style={{ width: 24 }}></i>
-            <span>Help Board</span>
+            <i className={`fas fa-hands-helping ${activePane === 'help' ? 'text-primary' : 'text-muted'}`} style={{ width: 24 }}></i>
+            <span style={{ color: '#212529' }}>Help Board</span>
           </Button>
 
           <Button
             variant="link"
             className={`text-start d-flex align-items-center gap-3 px-3 py-3 rounded-3 border-0 text-decoration-none nav-btn ${activePane === 'library' ? 'active' : ''}`}
             onClick={() => setActivePane('library')}
+            style={mobileMode ? { backgroundColor: activePane === 'library' ? '#e7f3ff' : 'white', color: '#212529' } : {}}
           >
-            <i className={`fas fa-book ${activePane === 'library' ? '' : 'text-muted'}`} style={{ width: 24 }}></i>
-            <span>The Archive</span>
+            <i className={`fas fa-book ${activePane === 'library' ? 'text-primary' : 'text-muted'}`} style={{ width: 24 }}></i>
+            <span style={{ color: '#212529' }}>The Archive</span>
           </Button>
 
-          <Button
-            variant="link"
-            className={`text-start d-flex align-items-center gap-3 px-3 py-3 rounded-3 border-0 text-decoration-none nav-btn ${activePane === 'feed' ? 'active' : ''}`}
-            onClick={() => setActivePane('feed')}
-          >
-            <i className={`fas fa-rss ${activePane === 'feed' ? '' : 'text-muted'}`} style={{ width: 24 }}></i>
-            <span>Feed</span>
-          </Button>
+          {!mobileMode && (
+            <Button
+              variant="link"
+              className={`text-start d-flex align-items-center gap-3 px-3 py-3 rounded-3 border-0 text-decoration-none nav-btn ${activePane === 'feed' ? 'active' : ''}`}
+              onClick={() => setActivePane('feed')}
+            >
+              <i className={`fas fa-rss ${activePane === 'feed' ? '' : 'text-muted'}`} style={{ width: 24 }}></i>
+              <span>Feed</span>
+            </Button>
+          )}
 
           <Button
             variant="link"
             className={`text-start d-flex align-items-center gap-3 px-3 py-3 rounded-3 border-0 text-decoration-none nav-btn ${showNotificationPanel ? 'active' : ''}`}
             onClick={() => setShowNotificationPanel(!showNotificationPanel)}
+            style={mobileMode ? { backgroundColor: showNotificationPanel ? '#e7f3ff' : 'white', color: '#212529' } : {}}
           >
             <div className="position-relative">
-              <i className={`fas fa-bell ${showNotificationPanel ? '' : 'text-muted'}`} style={{ width: 24 }}></i>
+              <i className={`fas fa-bell ${showNotificationPanel ? 'text-primary' : 'text-muted'}`} style={{ width: 24 }}></i>
               {unreadNotificationCount > 0 && (
                 <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style={{ fontSize: '0.6rem' }}>
                   {unreadNotificationCount}
                 </span>
               )}
             </div>
-            <span>Notifications</span>
+            <span style={{ color: '#212529' }}>Notifications</span>
           </Button>
 
           <Button
             variant="link"
             className={`text-start d-flex align-items-center gap-3 px-3 py-3 rounded-3 border-0 text-decoration-none nav-btn ${activePane === 'settings' ? 'active' : ''}`}
             onClick={() => setActivePane('settings')}
+            style={mobileMode ? { backgroundColor: activePane === 'settings' ? '#e7f3ff' : 'white', color: '#212529' } : {}}
           >
-            <i className={`fas fa-cog ${activePane === 'settings' ? '' : 'text-muted'}`} style={{ width: 24 }}></i>
-            <span>Settings</span>
+            <i className={`fas fa-cog ${activePane === 'settings' ? 'text-primary' : 'text-muted'}`} style={{ width: 24 }}></i>
+            <span style={{ color: '#212529' }}>Settings</span>
           </Button>
 
           {portalMeta.can_access_admin && (

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, Button, Badge, Spinner, Alert, Tabs, Tab, Modal, Form } from 'react-bootstrap';
 import PortalAvatar from './PortalAvatar';
 
-export default function MentorshipHub({ student, enqueueToast, portalAuthHeaders }) {
+export default function MentorshipHub({ student, enqueueToast, portalAuthHeaders, onViewProfile }) {
   const [activeTab, setActiveTab] = useState('discover');
   const [recommended, setRecommended] = useState([]);
   const [myMentorships, setMyMentorships] = useState([]);
@@ -114,53 +114,47 @@ export default function MentorshipHub({ student, enqueueToast, portalAuthHeaders
   return (
     <div className="mentorship-hub animate__animated animate__fadeIn pb-5">
       <Card className="mentorship-hero border-0 mb-4 overflow-hidden" style={{ background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)', borderRadius: '1.5rem' }}>
-        <Card.Body className="p-4 p-md-5 text-white position-relative">
+        <Card.Body className="p-3 p-md-5 text-white position-relative">
           <div className="position-relative z-1">
-            <h2 className="fw-bold mb-2">Mentorship Hub</h2>
-            <p className="lead mb-0 opacity-75">Connect with professionals from your Mandal and beyond.</p>
+            <h2 className="fw-bold mb-1" style={{ fontSize: 'calc(1.375rem + 1.5vw)' }}>Mentorship Hub</h2>
+            <p className="lead mb-0 opacity-75 small text-md-start" style={{ fontSize: '0.9rem' }}>Connect with professionals from your Mandal and beyond.</p>
           </div>
-          <div className="mentorship-hero-decoration" />
+          <div className="mentorship-hero-decoration d-none d-md-block" />
         </Card.Body>
       </Card>
 
-      <div className="discovery-header d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+      <div className="discovery-header d-flex flex-column gap-3 mb-4">
         <Tabs activeKey={activeTab} onSelect={(k) => setActiveTab(k)} className="border-0 custom-tabs">
-          <Tab eventKey="discover" title="Discover Mentors" />
+          <Tab eventKey="discover" title="Discover" />
           <Tab eventKey="active" title="My Connections" />
         </Tabs>
 
         {activeTab === 'discover' && (
-          <div className="d-flex flex-wrap align-items-center gap-2">
+          <div className="d-flex align-items-center gap-2 overflow-x-auto pb-2 mobile-nav-scroll" style={{ whiteSpace: 'nowrap' }}>
             <Form.Control 
               type="text" 
-              placeholder="Search by name, role..." 
+              placeholder="Search..." 
               value={filters.search}
               onChange={(e) => setFilters({...filters, search: e.target.value})}
-              style={{ width: '200px', borderRadius: '2rem' }}
+              style={{ minWidth: '140px', borderRadius: '2rem', height: '36px', fontSize: '0.85rem' }}
               className="border-0 shadow-sm"
             />
             <Form.Select 
               value={filters.mandal} 
               onChange={(e) => setFilters({...filters, mandal: e.target.value})}
-              style={{ width: '140px', borderRadius: '2rem' }}
+              style={{ minWidth: '120px', borderRadius: '2rem', height: '36px', fontSize: '0.85rem' }}
               className="border-0 shadow-sm"
             >
               <option value="all">All Mandals</option>
-              <option value={student.mandal_name}>Your Mandal</option>
-              <option disabled>──────────</option>
-              <option value="Windsor">Windsor</option>
-              <option value="Brampton">Brampton</option>
-              <option value="Mississauga">Mississauga</option>
-              <option value="Etobicoke">Etobicoke</option>
-              <option value="Kitchener">Kitchener</option>
-              <option value="London">London</option>
-              <option value="Hamilton">Hamilton</option>
-              <option value="Other">Other</option>
+              <option value={student.mandal_name}>My Mandal</option>
+              {['Windsor', 'Brampton', 'Mississauga', 'Etobicoke', 'London'].map(m => (
+                <option key={m} value={m}>{m}</option>
+              ))}
             </Form.Select>
              <Form.Select 
               value={filters.mukt_type} 
               onChange={(e) => setFilters({...filters, mukt_type: e.target.value})}
-              style={{ width: '130px', borderRadius: '2rem' }}
+              style={{ minWidth: '110px', borderRadius: '2rem', height: '36px', fontSize: '0.85rem' }}
               className="border-0 shadow-sm"
             >
               <option value="all">Any Status</option>
@@ -191,12 +185,21 @@ export default function MentorshipHub({ student, enqueueToast, portalAuthHeaders
                 <Card className="mentor-card h-100 border-0 shadow-sm hover-lift">
                   <Card.Body className="d-flex flex-column">
                     <div className="d-flex align-items-center gap-3 mb-3">
-                      <div style={{ width: 60, height: 60 }}>
+                      <div 
+                        style={{ width: 60, height: 60, cursor: 'pointer' }}
+                        onClick={() => onViewProfile && onViewProfile(mentor)}
+                      >
                         <PortalAvatar profile={mentor} />
                       </div>
                       <div className="flex-grow-1">
                         <div className="d-flex align-items-center justify-content-between">
-                          <h6 className="fw-bold mb-0">{mentor.first_name} {mentor.last_name}</h6>
+                          <h6 
+                            className="fw-bold mb-0" 
+                            style={{ cursor: 'pointer' }}
+                            onClick={() => onViewProfile && onViewProfile(mentor)}
+                          >
+                            {mentor.first_name} {mentor.last_name}
+                          </h6>
                           <Badge bg="primary-subtle" text="primary" pill>
                             {mentor.matchScore}% Match
                           </Badge>

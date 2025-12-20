@@ -265,12 +265,13 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
   const [inboxError, setInboxError] = useState('');
   const [inboxInitialized, setInboxInitialized] = useState(false);
 
-  const [activeConversation, setActiveConversation] = useState(null);
+   const [activeConversation, setActiveConversation] = useState(null);
   const [conversationMessages, setConversationMessages] = useState([]);
   const [conversationLoading, setConversationLoading] = useState(false);
   const [conversationError, setConversationError] = useState('');
   const [messageDraft, setMessageDraft] = useState('');
   const [showConversationPanel, setShowConversationPanel] = useState(false);
+  const [showMobileSidebar, setShowMobileSidebar] = useState(false);
 
   const removeToast = (id) => {
     setToastQueue((prev) => prev.filter((t) => t.id !== id));
@@ -335,7 +336,6 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
   const [toastQueue, setToastQueue] = useState([]);
   const [profilePreview, setProfilePreview] = useState(null);
   const [showProfilePreview, setShowProfilePreview] = useState(false);
-  const [showMobileSidebar, setShowMobileSidebar] = useState(false);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
 
   // Likes Modal State
@@ -3169,6 +3169,7 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
             onCommentSubmit={handleCommentSubmit}
             onDeleteComment={handleDeleteComment}
             onUpdateComment={handleUpdateComment}
+            onViewProfile={openProfilePreview}
         />
       </div>
     );
@@ -4128,7 +4129,7 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
               background-color: var(--color-bg) !important;
             }
 
-            .feed-card {
+            .card-modern, .glass-panel, .glass-card {
               border-radius: 0 !important;
               border-left: none !important;
               border-right: none !important;
@@ -4136,87 +4137,57 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
               border-bottom: 1px solid rgba(255,255,255,0.05) !important;
               margin-bottom: 0 !important;
               box-shadow: none !important;
-              background-color: var(--color-surface) !important;
+              padding: 16px !important;
             }
             
-            .feed-header {
-              padding: 12px 12px 0 12px !important;
-              margin-bottom: 4px !important;
-              display: flex;
-              align-items: center;
-            }
-            
-            .conversation-avatar-sm {
-               width: 32px !important;
-               height: 32px !important;
-               font-size: 0.8rem !important;
-            }
-
-            .feed-content {
-              font-size: 15px !important;
-              line-height: 1.5 !important;
-              padding: 4px 12px 12px 12px !important;
-              margin-bottom: 0 !important;
-            }
-            
-            .feed-actions {
-              padding: 8px 12px !important;
-              border-top: none !important;
-              justify-content: flex-start !important;
-              gap: 24px !important;
-            }
-
-            .feed-actions .btn {
-              padding: 0 !important;
-              font-size: 18px !important;
-              background-color: transparent !important;
-              border-radius: 0;
-              color: var(--color-textSecondary) !important;
-              display: flex;
-              align-items: center;
-              gap: 6px;
-            }
-            
-            .feed-actions .btn span {
-               font-size: 14px !important;
-               font-weight: 500;
-            }
-            
-            .feed-actions .btn:hover, .feed-actions .btn:active {
-              background-color: transparent !important;
-              color: var(--color-text) !important;
-            }
-
-            /* Full width images on mobile */
-            .feed-image {
-              width: 100% !important;
-              margin: 0 !important;
+            .feed-card {
               border-radius: 0 !important;
-              display: block;
+              border: none !important;
+              border-bottom: 1px solid rgba(0,0,0,0.05) !important;
+              margin-bottom: 0 !important;
+              box-shadow: none !important;
+            }
+
+            .container-fluid {
+              padding: 0 !important;
+            }
+
+            .display-4 {
+              font-size: 2rem !important;
+            }
+
+            .display-5 {
+              font-size: 1.75rem !important;
+            }
+
+            .p-lg-5 {
+              padding: 1rem !important;
+            }
+
+            .p-4 {
+              padding: 1rem !important;
+            }
+            
+            /* Bottom Tab Bar Safe Area */
+            .fixed-bottom-nav {
+               padding-bottom: env(safe-area-inset-bottom, 12px) !important;
             }
           }
           
-          /* General Mobile Improvements */
-          @media (max-width: 576px) {
-            .container, .container-fluid {
-              padding-left: 12px !important;
-              padding-right: 12px !important;
-            }
-            
-            .btn-lg-mobile {
-              padding: 12px 20px !important;
-              font-size: 1.1rem !important;
-            }
-            
-            .modal-dialog {
-              margin: 0.5rem !important;
-            }
+          /* Custom Scrollbar for Mobile Nav */
+          .mobile-nav-scroll::-webkit-scrollbar {
+            display: none;
           }
-            .modal-dialog {
-              margin: 0.5rem !important;
-            }
+          .mobile-nav-scroll {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
           }
 
+          /* Modern Button Scale on Touch */
+          .btn:active {
+            transform: scale(0.96);
+          }
+          
           /* Desktop Sticky Sidebar */
           @media (min-width: 992px) {
             .desktop-sticky {
@@ -4238,27 +4209,20 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
             <span className="fw-bold text-dark">HSAPSS Portal</span>
           </div>
           {student && (
-            <div className="d-flex gap-2">
+            <div className="d-flex gap-2 align-items-center">
+              {activePane === 'community' && (
+                 <Button variant="light" size="sm" className="rounded-pill px-3" onClick={() => {
+                   const searchInput = document.querySelector('.community-search-input');
+                   if (searchInput) searchInput.focus();
+                 }}>
+                   <i className="fas fa-search text-muted opacity-75"></i>
+                 </Button>
+              )}
               <Button
                 variant="light"
                 size="sm"
-                onClick={() => setActivePane('study-sync')}
-                className="me-1"
-              >
-                <i className="fas fa-fire text-danger"></i>
-              </Button>
-              <Button
-                variant="light"
-                size="sm"
-                onClick={() => setShowThemePicker(true)}
-              >
-                <i className="fas fa-palette text-muted"></i>
-              </Button>
-              <Button
-                variant="light"
-                size="sm"
-                className="position-relative me-3"
                 onClick={() => setShowNotificationPanel(!showNotificationPanel)}
+                className="position-relative"
               >
                 <i className={`fas fa-bell ${showNotificationPanel ? 'text-primary' : 'text-muted'}`}></i>
                 {unreadNotificationCount > 0 && (
@@ -4267,9 +4231,9 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
                   </span>
                 )}
               </Button>
-              <Button variant="light" size="sm" onClick={handleLogout}>
-                <i className="fas fa-sign-out-alt text-danger"></i>
-              </Button>
+              <div className="portal-logo-sm rounded-circle overflow-hidden ms-2 shadow-sm" style={{ width: 32, height: 32 }} onClick={() => setActivePane('profile')}>
+                <PortalAvatar profile={student} />
+              </div>
             </div>
           )}
         </div>
@@ -4291,34 +4255,90 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
           />
         </div>
 
+        {/* Mobile Sidebar (Drawer) */}
+        <Offcanvas show={showMobileSidebar} onHide={() => setShowMobileSidebar (false)} placement="start" style={{ width: '280px' }}>
+          <Offcanvas.Header closeButton className="border-bottom">
+            <Offcanvas.Title className="fw-bold">
+              <i className="fas fa-bars me-2 text-primary"></i>
+              More Options
+            </Offcanvas.Title>
+          </Offcanvas.Header>
+          <Offcanvas.Body className="p-0">
+            <PortalSidebar
+              student={student}
+              activePane={activePane}
+              setActivePane={(p) => { setActivePane(p); setShowMobileSidebar(false); }}
+              showNotificationPanel={showNotificationPanel}
+              setShowNotificationPanel={setShowNotificationPanel}
+              unreadNotificationCount={unreadNotificationCount}
+              portalMeta={portalMeta}
+              handleLogout={handleLogout}
+              setShowThemePicker={setShowThemePicker}
+              className="w-100"
+              mobileMode={true}
+            />
+          </Offcanvas.Body>
+        </Offcanvas>
+
 
         {/* Main Content Area */}
         <div className={`flex-grow-1 ${student ? 'ms-lg-auto' : ''}`} style={{ marginLeft: 0, width: '100%' }}>
           <div className="container-fluid p-0">
             {student && (
-              <div className="d-lg-none bg-white border-top position-fixed bottom-0 start-0 end-0 shadow-lg d-flex justify-content-between align-items-center px-2 py-1" 
-                   style={{ zIndex: 1050, height: '70px', paddingBottom: 'env(safe-area-inset-bottom, 10px)' }}>
-                <div className="d-flex w-100 align-items-center justify-content-between" style={{ overflowX: 'auto', whiteSpace: 'nowrap', WebkitOverflowScrolling: 'touch' }}>
-                  {['profile', 'community', 'feed', 'study-sync', 'help', 'library', 'groups', 'settings'].map(pane => (
+              <div className="d-lg-none bg-white border-top position-fixed bottom-0 start-0 end-0 shadow-lg d-flex justify-content-between align-items-center px-2 py-1 fixed-bottom-nav" 
+                   style={{ 
+                     zIndex: 2000, 
+                     height: '75px', 
+                     paddingBottom: 'env(safe-area-inset-bottom, 12px)',
+                     backgroundColor: 'rgba(255, 255, 255, 0.9) !important',
+                     backdropFilter: 'blur(10px)',
+                     WebkitBackdropFilter: 'blur(10px)',
+                     borderTop: '1px solid rgba(0,0,0,0.08) !important'
+                   }}>
+                <div className="d-flex w-100 align-items-center justify-content-around">
+                  {[
+                    { key: 'feed', icon: 'home', label: 'Feed' },
+                    { key: 'community', icon: 'users', label: 'Hub' },
+                    { key: 'help', icon: 'plus-circle', label: 'Post' }, 
+                    { key: 'mentorship', icon: 'graduation-cap', label: 'Mentors' },
+                    { key: 'profile', icon: 'user', label: 'Profile' }
+                  ].map(item => (
                     <Button
-                      key={pane}
-                      variant={activePane === pane ? 'primary-soft' : 'link'}
-                      size="sm"
-                      className={`d-flex flex-column align-items-center justify-content-center border-0 rounded-3 mx-1 ${activePane === pane ? 'text-primary bg-primary bg-opacity-10' : 'text-muted'}`}
-                      onClick={() => setActivePane(pane)}
-                      style={{ minWidth: '60px', height: '56px' }}
+                      key={item.key}
+                      variant="link"
+                      className={`d-flex flex-column align-items-center justify-content-center border-0 p-0 ${activePane === item.key ? 'active-nav-item' : 'text-muted opacity-75'}`}
+                      onClick={() => setActivePane(item.key)}
+                      style={{ width: '64px', height: '60px', textDecoration: 'none', transition: 'all 0.2s ease' }}
                     >
-                      <i className={`fas fa-${pane === 'profile' ? 'user' : pane === 'community' ? 'users' : pane === 'groups' ? 'comments' : pane === 'study-sync' ? 'fire' : pane === 'help' ? 'hands-helping' : pane === 'library' ? 'book' : pane === 'feed' ? 'rss' : 'cog'} mb-1`} style={{ fontSize: '1.2rem' }}></i>
-                      <span style={{ fontSize: '0.65rem', fontWeight: activePane === pane ? 'bold' : 'normal' }}>
-                        {pane === 'study-sync' ? 'Sync' : pane === 'library' ? 'Archive' : pane.charAt(0).toUpperCase() + pane.slice(1)}
+                      <i className={`fas fa-${item.icon}`} style={{ 
+                        fontSize: '1.4rem',
+                        color: activePane === item.key ? 'var(--color-primary)' : 'inherit'
+                      }}></i>
+                      <span style={{ 
+                        fontSize: '0.65rem', 
+                        marginTop: '4px', 
+                        fontWeight: activePane === item.key ? '700' : '500',
+                        color: activePane === item.key ? 'var(--color-primary)' : 'inherit'
+                      }}>
+                        {item.label}
                       </span>
                     </Button>
                   ))}
+                  {/* More Button */}
+                  <Button
+                    variant="link"
+                    className="d-flex flex-column align-items-center justify-content-center border-0 p-0 text-muted opacity-75"
+                    onClick={() => setShowMobileSidebar(true)}
+                    style={{ width: '64px', height: '60px', textDecoration: 'none' }}
+                  >
+                    <i className="fas fa-bars" style={{ fontSize: '1.4rem' }}></i>
+                    <span style={{ fontSize: '0.65rem', marginTop: '4px', fontWeight: '500' }}>More</span>
+                  </Button>
                 </div>
               </div>
             )}
 
-            <div className={`p-3 p-lg-5 ${activePane === 'feed' ? 'p-0 p-lg-5' : ''}`} style={{ maxWidth: 1200, marginLeft: 'auto', marginRight: 'auto', paddingBottom: '100px' }}>
+            <div className={`p-2 p-lg-5 ${activePane === 'feed' ? 'p-0 p-lg-5' : ''}`} style={{ maxWidth: 1200, marginLeft: 'auto', marginRight: 'auto', paddingBottom: '100px' }}>
               {/* Content Render */}
               <div className="fade-in-up">
                 {!student ? (
@@ -4682,6 +4702,7 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
                                              onCommentSubmit={handleCommentSubmit}
                                              onDeleteComment={handleDeleteComment}
                                              onUpdateComment={handleUpdateComment}
+                                             onViewProfile={openProfilePreview}
                                           />
                                       ) : (
                                           <div className="text-center text-muted py-5">
@@ -4759,6 +4780,7 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
                           student={student} 
                           enqueueToast={enqueueToast} 
                           portalAuthHeaders={portalAuthHeaders || {}} 
+                          onViewProfile={openProfilePreview}
                         />
                       </div>
                     )}
@@ -5333,186 +5355,140 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
         onHide={closeProfilePreview} 
         centered 
         size="lg"
+        fullscreen="md-down"
         className="profile-preview-modal"
       >
         <Modal.Header closeButton className="border-0 pb-0 position-absolute top-0 end-0 z-index-10"></Modal.Header>
-        <Modal.Body className="p-0 overflow-hidden rounded-4">
+        <Modal.Body className="p-0 overflow-hidden bg-white">
            {profilePreview && (
-             <div className="profile-modal-content">
-                {/* Modern Header Background */}
-                <div className="profile-modal-header-bg mb-4" style={{ 
-                  height: '100px', 
-                  background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-                  position: 'relative'
-                }}>
-                   <div className="avatar-container shadow-lg rounded-circle p-1 bg-white" style={{ 
-                     width: 100, 
-                     height: 100, 
-                     position: 'absolute',
-                     bottom: '-50px',
+             <div className="profile-modal-container d-flex flex-column h-100" style={{ maxHeight: '90vh' }}>
+                {/* Fixed Header Section */}
+                <div className="profile-header-premium position-relative" style={{ minHeight: '140px' }}>
+                   <div style={{ 
+                     height: '140px', 
+                     background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+                     width: '100%' 
+                   }}></div>
+                   
+                   <div className="avatar-wrapper position-absolute shadow-lg rounded-circle p-1 bg-white" style={{ 
+                     width: 120, 
+                     height: 120, 
+                     bottom: '-60px',
                      left: '50%',
                      transform: 'translateX(-50%)',
-                     zIndex: 2
+                     zIndex: 2,
+                     boxShadow: '0 10px 40px rgba(79, 70, 229, 0.4)'
                    }}>
-                     <div className="rounded-circle overflow-hidden w-100 h-100">
+                     <div className="rounded-circle overflow-hidden w-100 h-100" style={{ border: '4px solid #fff' }}>
                        <PortalAvatar profile={profilePreview} />
                      </div>
                    </div>
                 </div>
 
-                <div className="px-3 px-md-5 pt-4 pb-4 text-center mt-2">
-                  <h2 className="fw-bold mb-1 text-dark" style={{ letterSpacing: '-0.8px', fontSize: '1.5rem' }}>{profilePreview.first_name} {profilePreview.last_name}</h2>
-                  <p className="text-primary fw-bold mb-4 tracking-widest text-uppercase" style={{ fontSize: '0.7rem' }}>
-                     {profilePreview.community_headline || 'HSAPSS Member'}
-                  </p>
-                  
-                  <div className="d-flex justify-content-center gap-2 mb-5">
-                    <Badge bg="primary-subtle" text="primary" className="px-3 py-2 rounded-pill border border-primary border-opacity-10" style={{ fontSize: '0.75rem' }}>{profilePreview.mandal_name || 'Windsor'}</Badge>
-                    <Badge bg="success-subtle" text="success" className="px-3 py-2 rounded-pill border border-success border-opacity-10" style={{ fontSize: '0.75rem' }}>{profilePreview.mukt_type || 'Yuvak'}</Badge>
-                    {profilePreview.available_to_help && (
-                      <Badge bg="warning-subtle" text="warning" className="px-3 py-2 rounded-pill border border-warning border-opacity-10" style={{ fontSize: '0.75rem' }}>Available to Help</Badge>
-                    )}
-                  </div>
-                
-                  <Col md={12}>
-                    <div className="bg-light rounded-4 p-4 text-start mb-4 shadow-sm border border-white">
-                      <h6 className="fw-bold x-small text-muted text-uppercase mb-3 tracking-widest" style={{ fontSize: '0.65rem' }}>Academic Portfolio</h6>
-                      <div className="d-flex align-items-start gap-3 mb-3">
-                         <div className="bg-white p-2 rounded-3 shadow-sm text-primary">
-                            <i className="fas fa-university"></i>
-                         </div>
-                         <div>
-                            <p className="fw-bold mb-0 text-dark" style={{ fontSize: '1rem' }}>{profilePreview.study_institution || 'HSAPSS Network'}</p>
-                            <p className="text-muted mb-0 small">
-                              {(profilePreview.study_program && profilePreview.study_program !== 'Student') ? profilePreview.study_program : (profilePreview.mukt_type || 'HSAPSS Member')}
-                            </p>
-                         </div>
+                {/* Scrollable Content Section */}
+                <div className="profile-body-scrollable px-3 px-md-5 pt-5 pb-4 mt-3 flex-grow-1 overflow-y-auto custom-scrollbar">
+                   <div className="text-center mt-2 mb-4">
+                      <h2 className="fw-bold mb-1 text-dark" style={{ letterSpacing: '-0.8px', fontSize: '1.6rem' }}>
+                        {profilePreview.first_name} {profilePreview.last_name}
+                      </h2>
+                      <p className="text-primary fw-bold mb-3 tracking-widest text-uppercase" style={{ fontSize: '0.75rem' }}>
+                         {profilePreview.community_headline || 'HSAPSS Member'}
+                      </p>
+                      
+                      <div className="d-flex justify-content-center flex-wrap gap-2 mb-4">
+                        <Badge bg="primary-subtle" text="primary" className="px-3 py-2 rounded-pill border border-primary border-opacity-10" style={{ fontSize: '0.7rem' }}>{profilePreview.mandal_name || 'Windsor'}</Badge>
+                        <Badge bg="success-subtle" text="success" className="px-3 py-2 rounded-pill border border-success border-opacity-10" style={{ fontSize: '0.7rem' }}>{profilePreview.mukt_type || 'Yuvak'}</Badge>
+                        {profilePreview.available_to_help && (
+                          <Badge bg="warning-subtle" text="warning" className="px-3 py-2 rounded-pill border border-warning border-opacity-10" style={{ fontSize: '0.7rem' }}>Available to Help</Badge>
+                        )}
                       </div>
 
-                      {(profilePreview.employment_role || profilePreview.employment_company) && (
-                        <div className="pt-3 border-top mt-3">
-                          <h6 className="fw-bold x-small text-muted text-uppercase mb-3 tracking-widest" style={{ fontSize: '0.65rem' }}>Professional Experience</h6>
-                          <div className="d-flex align-items-start gap-3">
-                            <div className="bg-white p-2 rounded-3 shadow-sm text-success">
-                               <i className="fas fa-briefcase"></i>
+                      {/* Network Impact Metrics */}
+                      <div className="stats-box bg-light bg-opacity-50 rounded-4 p-3 mb-4 d-flex justify-content-around align-items-center shadow-sm border border-white">
+                         <div className="stat-node text-center">
+                            <div className="fw-bold text-dark h5 mb-0">{profilePreview.reputation_points || 0}</div>
+                            <div className="text-muted x-small text-uppercase tracking-wider" style={{ fontSize: '0.6rem' }}>Points</div>
+                         </div>
+                         <div className="vr opacity-10" style={{ height: '20px' }}></div>
+                         <div className="stat-node text-center">
+                            <div className="fw-bold text-dark h5 mb-0">{profilePreview.followers?.length || 0}</div>
+                            <div className="text-muted x-small text-uppercase tracking-wider" style={{ fontSize: '0.6rem' }}>Followers</div>
+                         </div>
+                         <div className="vr opacity-10" style={{ height: '20px' }}></div>
+                         <div className="stat-node text-center">
+                            <div className="fw-bold text-dark h5 mb-0">{profilePreview.following?.length || 0}</div>
+                            <div className="text-muted x-small text-uppercase tracking-wider" style={{ fontSize: '0.6rem' }}>Following</div>
+                         </div>
+                      </div>
+                   </div>
+
+                   <div className="d-flex flex-column gap-3">
+                      <div className="info-card bg-white rounded-4 p-4 shadow-sm border border-light">
+                         <h6 className="fw-bold text-muted text-uppercase mb-3 tracking-widest" style={{ fontSize: '0.65rem' }}>Academic & Career</h6>
+                         
+                         <div className="d-flex align-items-start gap-3 mb-3">
+                            <div className="bg-primary bg-opacity-10 p-2 rounded-3 text-primary">
+                               <i className="fas fa-university"></i>
                             </div>
                             <div>
-                               <p className="fw-bold mb-0 text-dark" style={{ fontSize: '1rem' }}>{profilePreview.employment_role || 'Professional'}</p>
-                               <p className="text-muted mb-0 small">{profilePreview.employment_company || 'Independent'}</p>
+                               <p className="fw-bold mb-0 text-dark" style={{ fontSize: '0.95rem' }}>{profilePreview.study_institution || 'HSAPSS Network'}</p>
+                               <small className="text-muted">{profilePreview.study_program || profilePreview.mukt_type || 'HSAPSS Member'}</small>
                             </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {profilePreview.community_bio && (
-                        <div className="pt-3 border-top mt-3">
-                          <h6 className="fw-bold x-small text-muted text-uppercase mb-2 tracking-widest" style={{ fontSize: '0.65rem' }}>Professional Bio</h6>
-                          <p className="small text-muted mb-3 leading-relaxed" style={{ fontSize: '0.88rem' }}>{profilePreview.community_bio}</p>
-                          
-                          {/* NLP: Keyword Extraction */}
-                          {(() => {
-                            const tokens = (profilePreview.community_bio || '').toLowerCase()
-                              .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "")
-                              .split(/\s+/)
-                              .filter(w => w.length > 4 && !['about', 'profile', 'member', 'student', 'working', 'living'].includes(w));
-                            
-                            const freq = {};
-                            tokens.forEach(t => freq[t] = (freq[t] || 0) + 1);
-                            const keywords = Object.keys(freq).sort((a, b) => freq[b] - freq[a]).slice(0, 3);
-                            
-                            if (keywords.length === 0) return null;
-                            
-                            return (
-                              <div className="d-flex flex-wrap align-items-center gap-2 mt-2">
-                                <span className="x-small fw-bold text-primary opacity-50 uppercase" style={{ fontSize: '0.6rem' }}>Analysis:</span>
-                                {keywords.map(kw => (
-                                  <Badge key={kw} bg="primary" className="bg-opacity-10 text-primary border-0 fw-normal rounded-pill" style={{ fontSize: '0.65rem' }}>
-                                    #{kw}
-                                  </Badge>
-                                ))}
-                              </div>
-                            );
-                          })()}
-                        </div>
-                      )}
-                    </div>
-                  </Col>
-
-                  <Row className="g-4 px-3 mb-5">
-                   <Col md={6}>
-                    <div className="p-4 bg-white border border-light rounded-4 h-100 shadow-sm d-flex flex-column">
-                      <h6 className="fw-bold text-muted x-small mb-3 uppercase tracking-widest" style={{ fontSize: '0.65rem' }}>Interests</h6>
-                      <div className="d-flex flex-wrap gap-2">
-                        {(Array.isArray(profilePreview.community_interests) ? profilePreview.community_interests : (typeof profilePreview.community_interests === 'string' ? profilePreview.community_interests.split(',').map(s => s.trim()) : [])).slice(0, 6).map(interest => (
-                          <Badge key={interest} bg="secondary-subtle" text="secondary" className="fw-normal rounded-pill px-3 py-2" style={{ fontSize: '0.7rem' }}>#{interest}</Badge>
-                        ))}
-                      </div>
-                      {(profilePreview.community_interests?.length || 0) === 0 && <div className="text-muted small italic my-auto">No interests listed.</div>}
-                    </div>
-                  </Col>
-                  <Col md={6}>
-                    <div className="p-4 bg-white border border-light rounded-4 h-100 shadow-sm">
-                      <h6 className="fw-bold text-muted x-small mb-3 uppercase tracking-widest" style={{ fontSize: '0.65rem' }}>Network Impact</h6>
-                      <div className="d-flex flex-column gap-3">
-                         <div className="d-flex justify-content-between align-items-center flex-wrap">
-                            <div className="d-flex align-items-center gap-2">
-                               <div className="rounded-circle bg-primary bg-opacity-10 p-2 text-primary">
-                                  <i className="fas fa-award" style={{ fontSize: '0.8rem' }}></i>
-                               </div>
-                               <small className="text-muted fw-medium">Reputation</small>
-                            </div>
-                            <span className="fw-bold text-dark">{profilePreview.reputation_points || 0}</span>
                          </div>
-                         <div className="d-flex justify-content-between align-items-center flex-wrap">
-                            <div className="d-flex align-items-center gap-2">
-                               <div className="rounded-circle bg-success bg-opacity-10 p-2 text-success">
-                                  <i className="fas fa-users" style={{ fontSize: '0.8rem' }}></i>
-                               </div>
-                               <small className="text-muted fw-medium">Network Reach</small>
-                            </div>
-                            <span className="fw-bold text-dark">{profilePreview.followers?.length || 0}</span>
+
+                         {profilePreview.community_bio && (
+                           <div className="pt-3 border-top mt-1">
+                              <p className="small text-muted mb-0 leading-relaxed" style={{ fontSize: '0.88rem', fontStyle: 'italic' }}>
+                                "{profilePreview.community_bio}"
+                              </p>
+                           </div>
+                         )}
+                      </div>
+
+                      <div className="info-card bg-white rounded-4 p-4 shadow-sm border border-light">
+                         <h6 className="fw-bold text-muted text-uppercase mb-3 tracking-widest" style={{ fontSize: '0.65rem' }}>Interests</h6>
+                         <div className="d-flex flex-wrap gap-2">
+                            {(Array.isArray(profilePreview.community_interests) ? profilePreview.community_interests : (typeof profilePreview.community_interests === 'string' ? profilePreview.community_interests.split(',').map(s => s.trim()) : [])).slice(0, 10).map(interest => (
+                              <Badge key={interest} bg="secondary-subtle" text="secondary" className="fw-normal rounded-pill px-3 py-2" style={{ fontSize: '0.7rem' }}>#{interest}</Badge>
+                            ))}
+                            {(profilePreview.community_interests?.length || 0) === 0 && <span className="text-muted small">No interests shared.</span>}
                          </div>
                       </div>
-                    </div>
-                  </Col>
-                  </Row>
 
-               {profilePreview.linkedin_url && (
-                 <div className="text-start mb-5 px-3">
-                    <h6 className="fw-bold x-small text-muted text-uppercase mb-3 tracking-widest" style={{ fontSize: '0.65rem' }}>Connected Channels</h6>
-                    <Button 
-                      href={profilePreview.linkedin_url} 
-                      target="_blank" 
-                      variant="light" 
-                      className="d-flex align-items-center justify-content-center gap-3 border-0 bg-primary bg-opacity-10 text-primary rounded-pill px-5 py-3 shadow-sm hover-scale w-100 w-md-auto"
-                    >
-                      <i className="fab fa-linkedin fs-4"></i>
-                      <span className="fw-bold">LinkedIn Profile</span>
-                    </Button>
-                 </div>
-               )}
+                      {profilePreview.linkedin_url && (
+                        <Button 
+                          href={profilePreview.linkedin_url} 
+                          target="_blank" 
+                          variant="light" 
+                          className="d-flex align-items-center justify-content-center gap-3 border-0 bg-primary bg-opacity-5 text-primary rounded-4 py-3 shadow-sm hover-lift"
+                        >
+                          <i className="fab fa-linkedin fs-4"></i>
+                          <span className="fw-bold">LinkedIn Profile</span>
+                        </Button>
+                      )}
+                   </div>
+                </div>
 
-               <div className="d-flex flex-wrap gap-3 mt-4 border-top pt-4 px-3">
-                  {!profilePreview.is_self && (
-                    <Button 
-                      variant={(student.following || []).includes(profilePreview.id || profilePreview._id) ? "outline-secondary" : profilePreview.has_requested_follow ? "light" : "primary"} 
-                      size="lg" 
-                      className={`flex-grow-1 rounded-pill py-3 fw-bold shadow-sm ${profilePreview.has_requested_follow ? 'text-muted border-0 bg-light opacity-75' : 'text-white'}`}
-                      disabled={profilePreview.has_requested_follow && !(student.following || []).includes(profilePreview.id || profilePreview._id)}
-                      onClick={() => handleFollow(profilePreview.id || profilePreview._id, (student.following || []).includes(profilePreview.id || profilePreview._id) ? 'unfollow' : 'request')}
-                    >
-                      {(student.following || []).includes(profilePreview.id || profilePreview._id) ? 'Unfollow' : profilePreview.has_requested_follow ? 'Requested' : 'Follow Member'}
-                    </Button>
-                  )}
-                  <Button variant="outline-dark" size="lg" className="flex-grow-1 rounded-pill py-3 fw-bold shadow-sm d-flex align-items-center justify-content-center gap-2" onClick={() => { setProfilePreview(null); openConversationWithStudent({ student: profilePreview }); }}>
-                     <i className="fas fa-comment-alt"></i>
-                     Message
-                  </Button>
-               </div>
-            </div>
-          </div>
-         )}
-      </Modal.Body>
+                {/* Sticky Action Footer */}
+                <div className="modal-footer-sticky bg-white border-top p-3 d-flex gap-2 position-sticky bottom-0 mt-auto" style={{ zIndex: 10 }}>
+                   {!profilePreview.is_self && (
+                     <Button 
+                       variant={(student.following || []).includes(profilePreview.id || profilePreview._id) ? "outline-secondary" : profilePreview.has_requested_follow ? "light" : "primary"} 
+                       className={`flex-grow-1 rounded-pill py-2 fw-bold shadow-sm ${profilePreview.has_requested_follow ? 'text-muted border-0 bg-light opacity-75' : 'text-white'}`}
+                       disabled={profilePreview.has_requested_follow && !(student.following || []).includes(profilePreview.id || profilePreview._id)}
+                       onClick={() => handleFollow(profilePreview.id || profilePreview._id, (student.following || []).includes(profilePreview.id || profilePreview._id) ? 'unfollow' : 'request')}
+                     >
+                       {(student.following || []).includes(profilePreview.id || profilePreview._id) ? 'Unfollow' : profilePreview.has_requested_follow ? 'Requested' : 'Follow'}
+                     </Button>
+                   )}
+                   <Button variant="outline-dark" className="flex-grow-1 rounded-pill py-2 fw-bold shadow-sm d-flex align-items-center justify-content-center gap-2" onClick={() => { setProfilePreview(null); openConversationWithStudent({ student: profilePreview }); }}>
+                      <i className="fas fa-comment-alt"></i>
+                      Message
+                   </Button>
+                </div>
+             </div>
+           )}
+        </Modal.Body>
     </Modal>
 
       {/* Notification Panel */}
