@@ -1,6 +1,7 @@
 ﻿// pages/_app.js
-import React, { useEffect } from 'react';
+import React from 'react';
 import Head from 'next/head';
+import { useRouter } from 'next/router';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '../styles/globals.css';
 import DarkModeToggle from '@/components/DarkModeToggle';
@@ -17,6 +18,9 @@ const BirthdayReminder = dynamic(
 );
 
 const MyApp = ({ Component, pageProps }) => {
+    const router = useRouter();
+    const showBirthdayReminder = router.pathname !== '/yuvak-details';
+
     // React Bootstrap does not require bootstrap.js
     // useEffect(() => {
     //     import('bootstrap/dist/js/bootstrap.bundle.min.js');
@@ -30,11 +34,6 @@ const MyApp = ({ Component, pageProps }) => {
                 <meta name="description" content="HSAPSS Windsor - Dashboard and Student Management" />
                 <meta name="author" content="HSAPSS Windsor" />
                 <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
-                <link
-                    rel="stylesheet"
-                    href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
-                />
-
             </Head>
             {/* <Navigation />  */}
             <div className="app-container">
@@ -82,7 +81,7 @@ const MyApp = ({ Component, pageProps }) => {
                 h1, h2, h3, h4, h5, h6 {
                     font-family: var(--font-heading);
                     font-weight: 700;
-                    letter-spacing: -0.025em;
+                    letter-spacing: 0;
                 }
 
                 .app-container {
@@ -139,7 +138,7 @@ const MyApp = ({ Component, pageProps }) => {
             `}</style>
              <DarkModeToggle />
 
-             <BirthdayReminder />
+             {showBirthdayReminder && <BirthdayReminder />}
 
         </NotificationProvider>
     );

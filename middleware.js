@@ -13,11 +13,23 @@ const PUBLIC_PATHS = new Set([
   '/',
   '/login',
   '/register',
+  '/yuvak-details',
   '/api/student-portal/login',
   '/api/student-portal/register',
   '/api/student-portal/logout',
   '/api/auth',
   '/api/notifications/birthdays'
+]);
+
+const ADMIN_MANAGED_PATHS = new Set([
+  '/add-student',
+  '/add-yuvak',
+  '/attendance',
+  '/call-logs',
+  '/full-student-list',
+  '/grocery',
+  '/moved-out-students',
+  '/students-table'
 ]);
 
 const PUBLIC_PREFIXES = ['/api/auth/', '/_next', '/favicon.ico', '/public', '/api/health', '/student-portal'];
@@ -31,6 +43,9 @@ const isPublicPath = (pathname) => {
     return true;
   }
   if (PUBLIC_PATHS.has(pathname)) {
+    return true;
+  }
+  if (ADMIN_MANAGED_PATHS.has(pathname)) {
     return true;
   }
   return PUBLIC_PREFIXES.some((prefix) => pathname.startsWith(prefix));
