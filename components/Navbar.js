@@ -16,13 +16,13 @@ const Navigation = () => {
 
   const navItems = useMemo(
     () => [
-      { href: '/admin/dashboard', label: 'Dashboard', icon: 'fas fa-gauge-high' },
+      { href: '/admin/dashboard', label: 'Dashboard', icon: 'fas fa-tachometer-alt' },
       { href: '/students-table', label: 'Yuvaks', icon: 'fas fa-users' },
       { href: '/yuvak-details-dashboard', label: 'Details', icon: 'fas fa-address-card' },
-      { href: '/moved-out-students', label: 'Locations', icon: 'fas fa-location-dot' },
+      { href: '/moved-out-students', label: 'Locations', icon: 'fas fa-map-marker-alt' },
       { href: '/call-logs', label: 'Calls', icon: 'fas fa-phone-volume' },
       { href: '/attendance', label: 'Attendance', icon: 'fas fa-calendar-check' },
-      { href: '/grocery', label: 'Grocery', icon: 'fas fa-basket-shopping' },
+      { href: '/grocery', label: 'Grocery', icon: 'fas fa-shopping-basket' },
       { href: '/add-yuvak', label: 'Add Yuvak', icon: 'fas fa-user-plus' }
     ],
     []
