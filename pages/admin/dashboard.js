@@ -215,26 +215,29 @@ export default function AdminDashboard() {
     <>
       <Head>
         <title>Admin Dashboard | HSAPSS Windsor</title>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="true" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
-          rel="stylesheet"
-        />
       </Head>
       <Navbar />
-      <div className="container-fluid py-4" style={{ fontFamily: 'Inter, sans-serif' }}>
-        <div className="d-flex justify-content-between align-items-center mb-4">
-          <h1 className="h3 mb-0 fw-bold" style={{ letterSpacing: '0.5px' }}>
-            Admin Dashboard
-          </h1>
-          <Button
-            variant="info"
-            onClick={() => setShowChat((prev) => !prev)}
-            style={{ fontWeight: 600 }}
-          >
-            {showChat ? 'Hide Chat' : 'Chat with AI'}
-          </Button>
+      <div className="admin-dashboard-page container-fluid py-4">
+        <div className="admin-dashboard-header mb-4">
+          <div>
+            <p className="admin-dashboard-eyebrow mb-1">Admin console</p>
+            <h1 className="h3 mb-1 fw-bold">Operations Dashboard</h1>
+            <p className="text-muted mb-0">
+              Student records, call follow-ups, and weekly operating signals.
+            </p>
+          </div>
+          <div className="d-flex flex-wrap gap-2">
+            <Link href="/students-table" className="btn btn-outline-dark fw-semibold">
+              Student Directory
+            </Link>
+            <Button
+              variant="outline-secondary"
+              onClick={() => setShowChat((prev) => !prev)}
+              className="fw-semibold"
+            >
+              {showChat ? 'Hide Assistant' : 'Assistant'}
+            </Button>
+          </div>
         </div>
         {error && (
           <div className="alert alert-danger shadow-sm border-0" role="alert">
@@ -487,41 +490,71 @@ export default function AdminDashboard() {
         }
       `}</style>
       <style jsx global>{`
+        .admin-dashboard-page {
+          color: #111827;
+          background: #f8fafc;
+          min-height: calc(100vh - 72px);
+        }
+        .admin-dashboard-header {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 1rem;
+          padding-bottom: 1rem;
+          border-bottom: 1px solid #e5e7eb;
+        }
+        .admin-dashboard-eyebrow {
+          color: #b45309;
+          font-size: 0.75rem;
+          font-weight: 800;
+          letter-spacing: 0;
+          text-transform: uppercase;
+        }
+        .admin-dashboard-page .card {
+          border: 1px solid #e5e7eb !important;
+          border-radius: 8px !important;
+          box-shadow: none !important;
+          background: #ffffff;
+        }
+        .admin-dashboard-page .btn {
+          border-radius: 8px;
+        }
         .metric-card {
-          border-radius: 1.4rem;
-          background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+          background: #ffffff;
         }
         .metric-label {
           font-size: 0.85rem;
-          letter-spacing: 0.03em;
-          text-transform: uppercase;
+          letter-spacing: 0;
+          text-transform: none;
           color: #64748b;
         }
         .metric-value {
-          font-size: 2.1rem;
-          font-weight: 700;
-          color: #0f172a;
+          font-size: 2rem;
+          font-weight: 760;
+          color: #111827;
         }
         .metric-icon {
-          width: 54px;
-          height: 54px;
-          border-radius: 16px;
+          width: 48px;
+          height: 48px;
+          border-radius: 8px;
           display: inline-flex;
           align-items: center;
           justify-content: center;
           font-size: 1.25rem;
         }
         .chart-wrapper {
-          background: linear-gradient(180deg, rgba(99, 102, 241, 0.08), rgba(59, 130, 246, 0.04));
-          border-radius: 1.5rem;
+          background: #f8fafc;
+          border: 1px solid #e5e7eb;
+          border-radius: 8px;
         }
         .call-summary-chip {
           display: flex;
           justify-content: space-between;
           align-items: center;
           padding: 0.75rem 1rem;
-          border-radius: 0.75rem;
-          background: rgba(15, 23, 42, 0.04);
+          border: 1px solid #e5e7eb;
+          border-radius: 8px;
+          background: #ffffff;
         }
         .chip-label {
           color: #475569;
@@ -536,7 +569,7 @@ export default function AdminDashboard() {
           padding: 0.6rem 0;
         }
         .residency-pill {
-          border-radius: 999px;
+          border-radius: 8px;
           padding: 0.4rem 0.95rem;
           font-size: 0.85rem;
           font-weight: 600;
@@ -546,27 +579,27 @@ export default function AdminDashboard() {
           align-items: center;
           gap: 1rem;
           padding: 1rem 1.15rem;
-          border-radius: 1.1rem;
-          background: rgba(148, 163, 184, 0.12);
+          border: 1px solid #e5e7eb;
+          border-radius: 8px;
+          background: #ffffff;
           text-decoration: none;
-          transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+          transition: border-color 0.15s ease, background 0.15s ease;
           color: inherit;
         }
         .shortcut-card:hover {
-          transform: translateY(-4px);
-          background: rgba(59, 130, 246, 0.12);
-          box-shadow: 0 18px 32px rgba(15, 23, 42, 0.08);
+          background: #f8fafc;
+          border-color: #cbd5e1;
           color: inherit;
         }
         .shortcut-icon {
-          width: 48px;
-          height: 48px;
-          border-radius: 14px;
-          background: linear-gradient(135deg, rgba(59, 130, 246, 0.12), rgba(147, 197, 253, 0.18));
+          width: 44px;
+          height: 44px;
+          border-radius: 8px;
+          background: #f1f5f9;
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          color: #2563eb;
+          color: #334155;
           font-size: 1.1rem;
         }
         @media (max-width: 991px) {
@@ -576,6 +609,9 @@ export default function AdminDashboard() {
           }
           .shortcut-card i.fas.fa-arrow-right {
             margin-left: 0;
+          }
+          .admin-dashboard-header {
+            flex-direction: column;
           }
         }
       `}</style>
