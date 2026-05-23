@@ -29,7 +29,8 @@ const ADMIN_MANAGED_PATHS = new Set([
   '/full-student-list',
   '/grocery',
   '/moved-out-students',
-  '/students-table'
+  '/students-table',
+  '/yuvak-details-dashboard'
 ]);
 
 const PUBLIC_PREFIXES = ['/api/auth/', '/_next', '/favicon.ico', '/public', '/api/health', '/student-portal'];

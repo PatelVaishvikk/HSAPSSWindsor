@@ -18,7 +18,8 @@ const Navigation = () => {
     () => [
       { href: '/admin/dashboard', label: 'Dashboard', icon: 'fas fa-gauge-high' },
       { href: '/students-table', label: 'Yuvaks', icon: 'fas fa-users' },
-      { href: '/moved-out-students', label: 'Moved Out', icon: 'fas fa-route' },
+      { href: '/yuvak-details-dashboard', label: 'Details', icon: 'fas fa-address-card' },
+      { href: '/moved-out-students', label: 'Locations', icon: 'fas fa-location-dot' },
       { href: '/call-logs', label: 'Calls', icon: 'fas fa-phone-volume' },
       { href: '/attendance', label: 'Attendance', icon: 'fas fa-calendar-check' },
       { href: '/grocery', label: 'Grocery', icon: 'fas fa-basket-shopping' },
@@ -55,7 +56,7 @@ const Navigation = () => {
                 </span>
                 <span className="brand-text d-flex flex-column">
                   <span className="brand-title">HSAPSS Windsor</span>
-                  <span className="brand-subtitle">Youth Services Command Centre</span>
+                  <span className="brand-subtitle">Admin console</span>
                 </span>
               </Navbar.Brand>
             </Link>
@@ -112,10 +113,9 @@ const Navigation = () => {
                   )}
                 </Button>
 
-                <Badge bg="light" text="dark" className="analytics-pill">
-                  <span className="pulse-dot" aria-hidden="true"></span>
-                  <i className="fas fa-bolt me-2 text-warning"></i>
-                  KPIs live
+                <Badge bg="light" text="dark" className="admin-status-pill">
+                  <i className="fas fa-shield-alt me-2 text-secondary"></i>
+                  Admin
                 </Badge>
                 <div className="dark-mode-wrapper">
                   <DarkModeToggle />
@@ -141,53 +141,53 @@ const Navigation = () => {
           position: sticky;
           top: 0;
           z-index: 1020;
-          padding: 0.75rem 0;
-          background: linear-gradient(180deg, rgba(241, 245, 255, 0.92) 0%, rgba(241, 245, 255, 0.72) 60%, transparent);
-          backdrop-filter: blur(18px);
+          padding: 0;
+          background: #ffffff;
+          border-bottom: 1px solid #e5e7eb;
         }
 
         .hsapss-navbar {
-          border-radius: 1.5rem;
           padding: 0.65rem 0;
-          background: rgba(255, 255, 255, 0.92);
-          backdrop-filter: blur(28px);
-          box-shadow: 0 20px 45px rgba(15, 23, 42, 0.12);
-          border: 1px solid rgba(148, 163, 184, 0.16);
+          background: #ffffff;
+          box-shadow: none;
+          border: 0;
         }
 
         .hsapss-brand {
-          color: #1e293b !important;
+          color: #111827 !important;
           text-decoration: none;
         }
 
         .hsapss-brand:hover {
-          color: #4338ca !important;
+          color: #111827 !important;
         }
 
         .brand-mark {
-          width: 44px;
-          height: 44px;
-          border-radius: 14px;
-          background: linear-gradient(135deg, rgba(129, 140, 248, 0.2), rgba(56, 189, 248, 0.24));
-          box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.35);
+          width: 40px;
+          height: 40px;
+          border-radius: 8px;
+          background: #ffffff;
+          border: 1px solid #e5e7eb;
+          overflow: hidden;
         }
 
         .brand-logo {
-          max-height: 32px;
-          width: auto;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
         }
 
         .brand-title {
-          font-size: 1.15rem;
-          font-weight: 700;
-          letter-spacing: 0.04em;
+          font-size: 1rem;
+          font-weight: 750;
+          letter-spacing: 0;
           line-height: 1;
         }
 
         .brand-subtitle {
-          font-size: 0.75rem;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
+          font-size: 0.78rem;
+          letter-spacing: 0;
+          text-transform: none;
           color: #64748b;
         }
 
@@ -202,20 +202,20 @@ const Navigation = () => {
         }
 
         .navbar-collapse {
-          background: rgba(255, 255, 255, 0.96);
-          border-radius: 1rem;
+          background: #ffffff;
+          border-radius: 8px;
           margin-top: 0.75rem;
           padding: 1rem;
-          border: 1px solid rgba(148, 163, 184, 0.12);
+          border: 1px solid #e5e7eb;
         }
 
         .hsapss-nav-link {
-          padding: 0.55rem 1rem !important;
-          margin: 0.2rem 0.35rem;
-          border-radius: 0.85rem;
+          padding: 0.5rem 0.7rem !important;
+          margin: 0;
+          border-radius: 8px;
           font-weight: 600;
           color: #334155 !important;
-          transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease;
+          transition: background 0.18s ease, color 0.18s ease;
           position: relative;
           overflow: hidden;
         }
@@ -224,30 +224,29 @@ const Navigation = () => {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          width: 30px;
-          height: 30px;
-          border-radius: 50%;
-          background: rgba(99, 102, 241, 0.12);
-          color: #4338ca;
+          width: 26px;
+          height: 26px;
+          border-radius: 8px;
+          background: #f1f5f9;
+          color: #475569;
           font-size: 0.85rem;
         }
 
         .hsapss-nav-link:hover,
         .hsapss-nav-link:focus {
-          transform: translateY(-2px);
-          background: rgba(129, 140, 248, 0.15);
-          color: #1e1b4b !important;
+          background: #f8fafc;
+          color: #111827 !important;
         }
 
         .hsapss-nav-link.active {
-          background: linear-gradient(135deg, #6366f1, #8b5cf6);
-          color: #f8fafc !important;
-          box-shadow: 0 14px 30px rgba(99, 102, 241, 0.35);
+          background: #111827;
+          color: #ffffff !important;
+          box-shadow: none;
         }
 
         .hsapss-nav-link.active .nav-link-icon {
-          background: rgba(248, 250, 252, 0.2);
-          color: #f8fafc;
+          background: rgba(255, 255, 255, 0.14);
+          color: #ffffff;
         }
 
         .hsapss-nav-utilities {
@@ -257,48 +256,40 @@ const Navigation = () => {
           flex-wrap: wrap;
         }
 
-        .analytics-pill {
-          border: 1px solid rgba(99, 102, 241, 0.25);
-          background: rgba(240, 244, 255, 0.85) !important;
-          color: #312e81;
+        .admin-status-pill {
+          border: 1px solid #e5e7eb;
+          background: #ffffff !important;
+          color: #334155;
           border-radius: 999px;
-          padding: 0.4rem 0.85rem;
+          padding: 0.42rem 0.8rem;
           font-weight: 600;
           display: inline-flex;
           align-items: center;
-          gap: 0.45rem;
-        }
-
-        .pulse-dot {
-          width: 0.6rem;
-          height: 0.6rem;
-          border-radius: 50%;
-          background: #22c55e;
-          box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.45);
-          animation: pulse 2s infinite;
         }
 
         .dark-mode-wrapper {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          padding: 0.3rem 0.45rem;
-          border-radius: 0.75rem;
-          background: rgba(241, 245, 255, 0.7);
-          border: 1px solid rgba(148, 163, 184, 0.2);
+          padding: 0.25rem 0.4rem;
+          border-radius: 8px;
+          background: #ffffff;
+          border: 1px solid #e5e7eb;
         }
 
         .hsapss-logout-btn {
-          border-radius: 0.85rem;
-          padding: 0.55rem 1rem;
+          border-radius: 8px;
+          padding: 0.52rem 0.9rem;
           font-weight: 600;
-          background: linear-gradient(135deg, #ef4444, #f97316);
-          border: none;
-          color: #ffffff;
+          background: #ffffff;
+          border: 1px solid #fecaca;
+          color: #b91c1c;
         }
 
         .hsapss-logout-btn:hover {
-          background: linear-gradient(135deg, #dc2626, #ea580c);
+          background: #fef2f2;
+          border-color: #fca5a5;
+          color: #991b1b;
         }
 
         @media (min-width: 992px) {
@@ -329,17 +320,6 @@ const Navigation = () => {
           }
         }
 
-        @keyframes pulse {
-          0% {
-            box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.45);
-          }
-          70% {
-            box-shadow: 0 0 0 8px rgba(34, 197, 94, 0);
-          }
-          100% {
-            box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
-          }
-        }
       `}</style>
     </>
   );
