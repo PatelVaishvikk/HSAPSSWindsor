@@ -16,12 +16,27 @@ export default async function handler(req, res) {
 
   if (method === 'GET') {
     try {
-      const messages = await GroupMessage.find({ group: id })
-        .sort({ created_at: 1 }) // Oldest first for chat history
-        .populate('sender', 'first_name last_name profile_picture')
-        .limit(100); // Limit to last 100 messages for now
+      const PAGE_LIMIT = Math.min(parseInt(req.query.limit) || 40, 100);
+      const before = req.query.before; // cursor: fetch messages older than this ID
 
-      return res.status(200).json({ messages });
+      const query = { group: id };
+      if (before) {
+        // Only fetch messages older than the given message ID
+        query._id = { $lt: before };
+      }
+
+      const messages = await GroupMessage.find(query)
+        .sort({ created_at: -1 }) // Newest first so we can slice then reverse
+        .populate('sender', 'first_name last_name profile_picture')
+        .limit(PAGE_LIMIT + 1); // Fetch one extra to detect if more pages exist
+
+      const hasMore = messages.length > PAGE_LIMIT;
+      if (hasMore) messages.pop(); // Remove the extra record
+
+      // Reverse to chronological order (oldest → newest) for the client
+      messages.reverse();
+
+      return res.status(200).json({ messages, hasMore });
     } catch (error) {
       console.error('Error fetching group messages:', error);
       return res.status(500).json({ error: 'Failed to fetch messages' });

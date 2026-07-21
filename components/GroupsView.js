@@ -4,7 +4,7 @@ import io from 'socket.io-client';
 
 let socket;
 
-export default function GroupsView({ student, portalAuthHeaders }) {
+export default function GroupsView({ student, portalAuthHeaders, enqueueToast }) {
   const [activeTab, setActiveTab] = useState('my-groups'); // 'my-groups', 'discover', 'chat'
   const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -14,7 +14,12 @@ export default function GroupsView({ student, portalAuthHeaders }) {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newGroupData, setNewGroupData] = useState({ name: '', description: '', icon: 'users' });
   const [creating, setCreating] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [typingUser, setTypingUser] = useState(null); // who is typing in group chat
   const messagesEndRef = useRef(null);
+  const messagesTopRef = useRef(null);
+  const typingTimeoutRef = useRef(null);
 
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [inviteCode, setInviteCode] = useState(null);
@@ -45,12 +50,19 @@ export default function GroupsView({ student, portalAuthHeaders }) {
         }
       });
 
+      socket.on('group:typing', ({ senderName }) => {
+        setTypingUser(senderName);
+        // Auto-clear after 3 seconds of no new typing events
+        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+        typingTimeoutRef.current = setTimeout(() => setTypingUser(null), 3000);
+      });
+
       socket.on('group:chat_cleared', () => {
         setMessages([]);
       });
 
       socket.on('group:deleted', () => {
-        alert('This group has been deleted by an admin.');
+        enqueueToast({ variant: 'warning', title: 'Group Deleted', message: 'This group has been deleted by an admin.' });
         setSelectedGroup(null);
         fetchGroups();
       });
@@ -113,14 +125,47 @@ export default function GroupsView({ student, portalAuthHeaders }) {
 
   const fetchMessages = async (groupId) => {
     try {
-      const res = await fetch(`/api/student-portal/groups/${groupId}/messages`, { headers: portalAuthHeaders });
+      const res = await fetch(`/api/student-portal/groups/${groupId}/messages?limit=40`, { headers: portalAuthHeaders });
       const data = await res.json();
       if (data.messages) {
         setMessages(data.messages);
+        setHasMore(data.hasMore || false);
         setTimeout(scrollToBottom, 100);
       }
     } catch (error) {
       console.error('Error fetching messages:', error);
+    }
+  };
+
+  const loadMoreMessages = async () => {
+    if (!selectedGroup || loadingMore || !hasMore || messages.length === 0) return;
+    setLoadingMore(true);
+    const oldestId = messages[0]._id;
+    try {
+      const res = await fetch(
+        `/api/student-portal/groups/${selectedGroup._id}/messages?limit=40&before=${oldestId}`,
+        { headers: portalAuthHeaders }
+      );
+      const data = await res.json();
+      if (data.messages && data.messages.length > 0) {
+        // Save scroll position before prepending
+        const container = messagesTopRef.current?.parentElement;
+        const prevHeight = container ? container.scrollHeight : 0;
+        setMessages(prev => [...data.messages, ...prev]);
+        setHasMore(data.hasMore || false);
+        // Restore scroll so user stays at the same position
+        requestAnimationFrame(() => {
+          if (container) {
+            container.scrollTop = container.scrollHeight - prevHeight;
+          }
+        });
+      } else {
+        setHasMore(false);
+      }
+    } catch (error) {
+      console.error('Error loading more messages:', error);
+    } finally {
+      setLoadingMore(false);
     }
   };
 
@@ -149,7 +194,7 @@ export default function GroupsView({ student, portalAuthHeaders }) {
 
   const handleJoinToggle = async (group) => {
     if (!portalAuthHeaders) {
-      alert("Authentication missing. Please try refreshing the page.");
+      enqueueToast({ variant: 'warning', title: 'Session Error', message: 'Authentication missing. Please try refreshing the page.' });
       return;
     }
 
@@ -164,7 +209,7 @@ export default function GroupsView({ student, portalAuthHeaders }) {
 
       if (data.success) {
         if (data.status === 'requested') {
-          alert("Join request sent! Waiting for admin approval.");
+          enqueueToast({ variant: 'info', title: 'Request Sent', message: 'Join request sent! Waiting for admin approval.' });
           // Optimistically update UI
           const updatedGroup = { ...group, hasRequested: true };
           // Update in list
@@ -178,11 +223,11 @@ export default function GroupsView({ student, portalAuthHeaders }) {
           await fetchGroups();
         }
       } else {
-        alert(data.error || "Failed to join group.");
+        enqueueToast({ variant: 'danger', title: 'Failed', message: data.error || 'Failed to join group.' });
       }
     } catch (error) {
       console.error('Error joining/leaving group:', error);
-      alert("An error occurred while trying to join the group.");
+      enqueueToast({ variant: 'danger', title: 'Error', message: 'An error occurred while trying to join the group.' });
     }
   };
 
@@ -298,15 +343,15 @@ export default function GroupsView({ student, portalAuthHeaders }) {
       });
       const data = await res.json();
       if (data.success) {
-        alert('Member added successfully!');
+        enqueueToast({ variant: 'success', title: 'Member Added', message: 'Member added successfully!' });
         setAddMemberEmail('');
         fetchGroups(); // Refresh to update member count/list
       } else {
-        alert(data.message || 'Failed to add member');
+        enqueueToast({ variant: 'danger', title: 'Failed', message: data.message || 'Failed to add member' });
       }
     } catch (error) {
       console.error('Error adding member:', error);
-      alert('Error adding member');
+      enqueueToast({ variant: 'danger', title: 'Error', message: 'Error adding member' });
     } finally {
       setAddMemberLoading(false);
     }
@@ -341,6 +386,22 @@ export default function GroupsView({ student, portalAuthHeaders }) {
 
         {/* Messages Area */}
         <div className="flex-grow-1 p-3 overflow-auto custom-scrollbar" style={{ backgroundColor: 'var(--bg-body)' }}>
+          {/* Load More Button */}
+          <div ref={messagesTopRef} className="text-center mb-2">
+            {hasMore && (
+              <Button
+                variant="outline-secondary"
+                size="sm"
+                className="rounded-pill px-4"
+                onClick={loadMoreMessages}
+                disabled={loadingMore}
+              >
+                {loadingMore
+                  ? <><Spinner size="sm" animation="border" className="me-2" />Loading...</>
+                  : <><i className="fas fa-chevron-up me-2"></i>Load older messages</>}
+              </Button>
+            )}
+          </div>
           {messages.length === 0 ? (
             <div className="text-center text-muted mt-5">
               <div className="mb-3 opacity-50"><i className="fas fa-comments fa-3x"></i></div>
@@ -378,6 +439,16 @@ export default function GroupsView({ student, portalAuthHeaders }) {
           <div ref={messagesEndRef} />
         </div>
 
+        {/* Typing Indicator */}
+        {typingUser && (
+          <div className="px-3 py-1 text-muted small fst-italic" style={{ fontSize: '0.78rem', minHeight: 24 }}>
+            <span className="typing-dots me-1">
+              <span>.</span><span>.</span><span>.</span>
+            </span>
+            {typingUser} is typing
+          </div>
+        )}
+
         {/* Input Area */}
         <div className="p-3 bg-surface border-top">
           <Form onSubmit={handleSendMessage}>
@@ -386,7 +457,14 @@ export default function GroupsView({ student, portalAuthHeaders }) {
                 type="text"
                 placeholder="Type a message..."
                 value={messageText}
-                onChange={(e) => setMessageText(e.target.value)}
+                onChange={(e) => {
+                  setMessageText(e.target.value);
+                  // Emit typing event (debounced via timeout on server)
+                  if (socket && selectedGroup) {
+                    const senderName = `${student?.first_name || ''} ${student?.last_name || ''}`.trim();
+                    socket.emit('group:typing', { groupId: selectedGroup._id, senderName });
+                  }
+                }}
                 className="rounded-pill bg-surface border-0 px-4"
                 autoFocus
               />
@@ -432,7 +510,7 @@ export default function GroupsView({ student, portalAuthHeaders }) {
                       />
                       <Button variant="outline-primary" onClick={() => {
                         navigator.clipboard.writeText(`${window.location.origin}/student-portal?invite=${selectedGroup.invite_code}`);
-                        alert('Link copied!');
+                        enqueueToast({ variant: 'success', title: 'Copied!', message: 'Invite link copied to clipboard.' });
                       }}>
                         <i className="fas fa-copy"></i>
                       </Button>
@@ -563,11 +641,11 @@ export default function GroupsView({ student, portalAuthHeaders }) {
                       });
                       if (res.ok) {
                         setMessages([]);
-                        alert('Chat cleared successfully');
+                        enqueueToast({ variant: 'success', title: 'Chat Cleared', message: 'All message history has been deleted.' });
                       }
                     } catch (err) {
                       console.error(err);
-                      alert('Failed to clear chat');
+                      enqueueToast({ variant: 'danger', title: 'Error', message: 'Failed to clear chat. Please try again.' });
                     }
                   }
                 }}>
@@ -584,11 +662,11 @@ export default function GroupsView({ student, portalAuthHeaders }) {
                         setShowInfoModal(false);
                         setSelectedGroup(null);
                         fetchGroups();
-                        alert('Group deleted successfully');
+                        enqueueToast({ variant: 'success', title: 'Group Deleted', message: 'The group has been permanently deleted.' });
                       }
                     } catch (err) {
                       console.error(err);
-                      alert('Failed to delete group');
+                      enqueueToast({ variant: 'danger', title: 'Error', message: 'Failed to delete group. Please try again.' });
                     }
                   }
                 }}>
@@ -884,7 +962,7 @@ export default function GroupsView({ student, portalAuthHeaders }) {
                         />
                         <Button variant="outline-primary" onClick={() => {
                           navigator.clipboard.writeText(`${window.location.origin}/student-portal?invite=${selectedGroup.invite_code}`);
-                          alert('Link copied!');
+                        enqueueToast({ variant: 'success', title: 'Copied!', message: 'Invite link copied to clipboard.' });
                         }}>
                           <i className="fas fa-copy"></i>
                         </Button>
@@ -1023,11 +1101,11 @@ export default function GroupsView({ student, portalAuthHeaders }) {
                         });
                         if (res.ok) {
                           setMessages([]);
-                          alert('Chat cleared successfully');
+                        enqueueToast({ variant: 'success', title: 'Chat Cleared', message: 'All chat history has been deleted.' });
                         }
                       } catch (err) {
                         console.error(err);
-                        alert('Failed to clear chat');
+                      enqueueToast({ variant: 'danger', title: 'Error', message: 'Failed to clear chat. Please try again.' });
                       }
                     }
                   }}>
@@ -1044,11 +1122,11 @@ export default function GroupsView({ student, portalAuthHeaders }) {
                           setShowInfoModal(false);
                           setSelectedGroup(null);
                           fetchGroups();
-                          alert('Group deleted successfully');
+                        enqueueToast({ variant: 'success', title: 'Group Deleted', message: 'The group has been permanently deleted.' });
                         }
                       } catch (err) {
                         console.error(err);
-                        alert('Failed to delete group');
+                      enqueueToast({ variant: 'danger', title: 'Error', message: 'Failed to delete group. Please try again.' });
                       }
                     }
                   }}>
