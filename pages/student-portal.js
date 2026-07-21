@@ -4752,6 +4752,7 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
                         <GroupsView
                           student={student}
                           portalAuthHeaders={portalAuthHeaders}
+                          enqueueToast={enqueueToast}
                         />
                       </div>
                     )}
@@ -5238,17 +5239,30 @@ export default function StudentPortalPage({ initialStudent, initialPortalMeta })
                   onChange={(e) => handleTyping(e)}
                   className="rounded-pill bg-light border-0 px-4 py-2"
                   autoFocus
+                  maxLength={500}
                 />
                 <Button
                   type="submit"
                   variant="primary"
                   className="rounded-circle d-flex align-items-center justify-content-center shadow-sm"
                   style={{ width: 46, height: 46 }}
-                  disabled={!messageDraft.trim()}
+                  disabled={!messageDraft.trim() || messageDraft.length > 500}
                 >
                   <i className="fas fa-paper-plane"></i>
                 </Button>
               </div>
+              {messageDraft.length > 400 && (
+                <div
+                  className="text-end mt-1 small"
+                  style={{
+                    color: messageDraft.length >= 480 ? '#dc3545' : messageDraft.length >= 450 ? '#fd7e14' : '#6c757d',
+                    fontWeight: messageDraft.length >= 480 ? '600' : '400'
+                  }}
+                >
+                  {messageDraft.length}/500
+                  {messageDraft.length >= 480 && ' — approaching limit'}
+                </div>
+              )}
             </Form>
             <div className="d-lg-none" style={{ height: 80 }}></div>
           </div>

@@ -93,6 +93,14 @@ app.prepare().then(() => {
       }
     });
 
+    // Forward typing indicator to all other members in the group room
+    socket.on('group:typing', ({ groupId, senderName }) => {
+      if (groupId && senderName) {
+        // Broadcast to everyone in the room EXCEPT the sender
+        socket.to(`group:${groupId}`).emit('group:typing', { senderName });
+      }
+    });
+
     socket.on('disconnect', () => {
       console.log('Client disconnected');
     });
